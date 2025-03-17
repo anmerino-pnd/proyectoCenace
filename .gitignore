@@ -3,4 +3,4 @@
 /notebooks
 /quarto
 /.env
-/src/cenacellm.egg-info
+/src/cenacellm.egg-info/
