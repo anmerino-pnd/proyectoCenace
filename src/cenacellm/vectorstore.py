@@ -1,4 +1,5 @@
 import faiss
+
 import numpy as np
 from typing import List, Tuple
 from cenacellm.tools.embedder import Embedder
