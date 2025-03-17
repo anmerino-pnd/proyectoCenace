@@ -1,0 +1,60 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "---\n",
+        "title: \"Desarrollo de un help desk basado en un modelo de lenguaje grande\"\n",
+        "format: \n",
+        "    html:\n",
+        "         page-layout: article\n",
+        "theme: \"cosmo\"\n",
+        "toc: false\n",
+        "author: \n",
+        "    - name: \"🧑‍🎓 Estudiante: Ángel Alberto Merino Cedeño\"\n",
+        "    - name: \"👨‍🏫 Director de trabajo terminal: Eduardo Acuña Yeomans\"\n",
+        "    - name: \"👥 Comité Tutorial: Olivia Gutú Ocampo y Juan Pablo Soto Barrera\"\n",
+        "    - name: \"🏛️ Beneficiario o usuario: Centro Nacional de Control de Energía (CENACE)\"\n",
+        "    - name: \"🧑‍💼 Experto asesor: Hector Alberto Gutiérrez Ibarra\"\n",
+        "date: last-modified\n",
+        "lang: es\n",
+        "\n",
+        "---\n",
+        "\n",
+        "```{css, echo = FALSE}\n",
+        ".justify {\n",
+        "  text-align: justify !important\n",
+        "}\n",
+        "```\n",
+        "\n",
+        "\n",
+        "\n",
+        "\n",
+        "::: {.justify}\n",
+        "\n",
+        "## Introducción\n",
+        "\n",
+        "Este proyecto se enfoca en elaborar un sistema de **Help Desk** utilizando la base de conocimientos del **Centro Nacional de Control de Energía (CENACE)** y **modelos de lenguaje grande** para que los ingenieros tengan apoyo de inmediato y puedan tomar decisiones rápidas al alcance de la mano y con esto ahorrar tiempo en la **clasificación**, **recuperación** y **generación** de la información técnica.\n",
+        "\n",
+        "El proyecto se enfoca en tres áreas principales:\n",
+        "\n",
+        "1.\t**Clasificación de Tickets con un chatbot:** Implementación de un modelo para categorizar tickets y mejorar la clasificación de incidentes de forma automática, ya que actualmente es manual. El chatbot da una propuesta de solución general sin comprometer la información sensible.\n",
+        "2.\t**Base de Conocimientos:** Desarrollo de una base de datos que se actualice automáticamente con soluciones verificadas.\n",
+        "3.\t**Chatbot de Sugerencias:** Creación de un chatbot que sugiera soluciones basadas en la información disponible y la base de conocimientos.\n",
+        ":::"
+      ],
+      "id": "f2c2065d"
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "name": "python3",
+      "language": "python",
+      "display_name": "Python 3 (ipykernel)",
+      "path": "C:\\Users\\panda\\AppData\\Roaming\\Python\\share\\jupyter\\kernels\\python3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}

@@ -1,0 +1,37 @@
+---
+title: "Desarrollo de un help desk basado en un modelo de lenguaje grande"
+format: 
+    html:
+         page-layout: article
+theme: "cosmo"
+toc: false
+author: 
+    - name: "🧑‍🎓 Estudiante: Ángel Alberto Merino Cedeño"
+    - name: "👨‍🏫 Director de trabajo terminal: Eduardo Acuña Yeomans"
+    - name: "👥 Comité Tutorial: Olivia Gutú Ocampo y Juan Pablo Soto Barrera"
+    - name: "🏛️ Beneficiario o usuario: Centro Nacional de Control de Energía (CENACE)"
+    - name: "🧑‍💼 Experto asesor: Hector Alberto Gutiérrez Ibarra"
+date: last-modified
+lang: es
+
+---
+
+
+:::{style="text-align: justify;"}
+## Introducción
+
+Este proyecto se enfoca en elaborar un sistema de **Help Desk** utilizando la base de conocimientos del **Centro Nacional de Control de Energía (CENACE)** y **modelos de lenguaje grande** para que los ingenieros tengan apoyo de inmediato y puedan tomar decisiones rápidas al alcance de la mano y con esto ahorrar tiempo en la **clasificación**, **recuperación** y **generación** de la información técnica.
+:::
+
+:::{style="text-align: justify;"}
+El proyecto se enfoca en tres áreas principales:
+
+1. **Clasificación de Tickets con un chatbot:** Implementación de un modelo para categorizar tickets y mejorar la clasificación de incidentes de forma automática, ya que actualmente es manual. El chatbot da una propuesta de solución general sin comprometer la información sensible.
+2. **Base de Conocimientos:** Desarrollo de una base de datos que se actualice automáticamente con soluciones verificadas.
+3. **Chatbot de Sugerencias:** Creación de un chatbot que sugiera soluciones basadas en la información disponible y la base de conocimientos.
+:::
+
+:::{style="text-align: justify;"}
+Las fases del proyecto se dividen de la siguiente manera:
+
+:::

@@ -1,0 +1,17 @@
+---
+title: "Comprensión del negocio"
+format: 
+    html:
+         page-layout: article
+number-sections: false
+toc: true
+toc-title: "Tabla de contenidos"
+---
+
+::: {.text-justify}
+
+## Introducción
+
+En contextos donde se trabaja con grandes cantidades de documentos escritos en lenguaje natural se presentan problemas relacionados con:
+
+:::
