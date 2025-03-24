@@ -15,7 +15,7 @@ google_api_key = os.getenv("GOOGLE_API_KEY")
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 openai_api_key = os.getenv("OPENAI_API_KEY")
 mistral_api_key = os.getenv("MISTRAL_API_KEY")
-ollama_base_url = os.getenv("OLLAMA_BASE_URL")
+ollama_base_url: str = os.getenv("OLLAMA_BASE_URL")
 
 google = google_api.Client(api_key=google_api_key)
 anthropic = anthropic_api.Anthropic(api_key=anthropic_api_key)

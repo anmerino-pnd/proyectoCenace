@@ -47,6 +47,8 @@ class RAGassistant(VectorStore):
     def report_user(self) -> str:
         tpl = (
             "Usa los siguientes fragmentos de contexto para brindar una solución. "
+            "La solución debes buscarla en la base de datos de conocimiento."
+            "\n\n"
             "Si no son suficientes, pide más información al usuario, "
             "basandote en las 5 preguntas W (qué, quién, cuándo, dónde, por qué)."
             "\n\n"
