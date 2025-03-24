@@ -20,13 +20,13 @@ class RAGassistant(VectorStore):
         self.retriever = self.asRetriever(VECTOR_DB_PATH, embedding_model)
         
 
-    def offer_system(self) -> str:
-        return (
-            "Eres un asistente para dudas sobre productos y sus precios. "
-            "Ayudas a los clientes a buscar productos que les interesa. "
+    def report_system(self) -> str:
+        return ("""
+        Eres un asistente técnico de TI y ayudas a los usuarios a resolver problemas técnicos.
+        """
         )
 
-    def offer_history_prompt(self) -> str:
+    def report_history_prompt(self) -> str:
         return (
             "Dada una historia de chat y la última pregunta del usuario "
             "que podría hacer referencia al contexto en la historia de chat, "
@@ -44,13 +44,11 @@ class RAGassistant(VectorStore):
             ]
         )
 
-    def offer_user(self) -> str:
+    def report_user(self) -> str:
         tpl = (
-            "Usa los siguientes fragmentos de contexto para responder. "
-            "Si no hay información de precios en la lista correspondiente, indica que no está disponible. "
-            "El usuario pertenece a la lista de precios {listaPrecio}, así que usa solo los precios que correspondan a esta lista. "
-            "Si no encuentras un precio que coincida con la lista {listaPrecio}, indica que el precio no está disponible. "
-            "Solo menciona el precio al usuario, no la lista."
+            "Usa los siguientes fragmentos de contexto para brindar una solución. "
+            "Si no son suficientes, pide más información al usuario, "
+            "basandote en las 5 preguntas W (qué, quién, cuándo, dónde, por qué)."
             "\n\n"
             "{context}"  
         )
@@ -92,10 +90,10 @@ class RAGassistant(VectorStore):
             output_messages_key="answer",
         )
 
-    def prompt(self, user_enquery: str, user_id: str, listaPrecio: str) -> str:
+    def prompt(self, user_enquery: str, user_id: str) -> str:
         try:
             return self.build_conversational_chain().invoke(
-                {"input": user_enquery, "listaPrecio": listaPrecio}, 
+                {"input": user_enquery}, 
                 config={"configurable": {"session_id": user_id}}
             )
         except Exception as e:

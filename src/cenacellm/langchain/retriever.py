@@ -15,7 +15,7 @@ class VectorStore:
         else:
             raise FileNotFoundError(f"No se encontró la base de datos en {self.VECTOR_DB_PATH}")
 
-    def asRetriever(self, search_kwargs = {"k": 3}):
+    def asRetriever(self, search_kwargs = {"k": 5}):
         """Carga la base de datos vectorial."""
         vdb = self.load_retriever()
         return vdb.as_retriever(search_kwargs=search_kwargs)
