@@ -17,7 +17,7 @@ class RAGassistant(VectorStore):
         self.llm = llm
         self.history = ChatHistoryManager()
         self.histories = self.history.histories
-        self.retriever = self.asRetriever(VECTOR_DB_PATH, embedding_model)
+        self.retriever = self.asRetriever()
         
 
     def report_system(self) -> str:
@@ -38,7 +38,7 @@ class RAGassistant(VectorStore):
     def QpromptTemplate(self):
         return ChatPromptTemplate.from_messages(
             [
-                ("system", self.offer_history_prompt()),
+                ("system", self.report_history_prompt()),
                 MessagesPlaceholder("chat_history"),
                 ("human", "{input}"),
             ]
@@ -58,7 +58,7 @@ class RAGassistant(VectorStore):
     def QApromptTemplate(self):
         return ChatPromptTemplate.from_messages(
             [
-                ("system", self.offer_user()),
+                ("system", self.report_user()),
                 MessagesPlaceholder("chat_history"),
                 ("human", "{input}"),
             ]
@@ -90,10 +90,10 @@ class RAGassistant(VectorStore):
             output_messages_key="answer",
         )
 
-    def prompt(self, user_enquery: str, user_id: str) -> str:
+    def prompt(self, user_inquiry: str, user_id: str) -> str:
         try:
             return self.build_conversational_chain().invoke(
-                {"input": user_enquery}, 
+                {"input": user_inquiry}, 
                 config={"configurable": {"session_id": user_id}}
             )
         except Exception as e:
