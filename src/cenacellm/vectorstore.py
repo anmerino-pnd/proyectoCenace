@@ -47,6 +47,7 @@ class FAISSVectorStore(VectorStore):
         self.index.add(v)
         idx = self.index.ntotal - 1  # Obtener el índice en FAISS
         self.text_dict[idx] = (v, t)  # Guardar en el diccionario
+    
 
     def save_index(self):
         if self.index_path:
