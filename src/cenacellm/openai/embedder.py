@@ -6,4 +6,4 @@ class OpenAIEmbedder(Embedder):
         self.model = 'text-embedding-3-small'
 
     def vectorize(self, s):
-        return api.embeddings.create(model=self.model, texts=[s])
+        return api.embeddings.create(model=self.model, input=[s])
