@@ -21,10 +21,12 @@ class RAGassistant(VectorStore):
         
 
     def report_system(self) -> str:
-        return ("""
-        Eres un asistente técnico de TI y ayudas a los usuarios a resolver problemas técnicos.
-        """
-        )
+        return (
+        "Eres un asistente de soporte técnico. Usa la base de datos de conocimiento "
+        "para responder. Si la información es insuficiente, solicita más detalles al usuario."
+    )
+
+
 
     def report_history_prompt(self) -> str:
         return (
@@ -45,16 +47,11 @@ class RAGassistant(VectorStore):
         )
 
     def report_user(self) -> str:
-        tpl = (
-            "Usa los siguientes fragmentos de contexto para brindar una solución. "
-            "La solución debes buscarla en la base de datos de conocimiento."
-            "\n\n"
-            "Si no son suficientes, pide más información al usuario, "
-            "basandote en las 5 preguntas W (qué, quién, cuándo, dónde, por qué)."
-            "\n\n"
-            "{context}"  
+        return (
+            "Usa la base de datos de conocimiento para responder. "
+            "Si el contexto no es suficiente, solicita más información con preguntas específicas."
+            "\n\n{context}"
         )
-        return tpl
 
 
     def QApromptTemplate(self):
@@ -92,11 +89,30 @@ class RAGassistant(VectorStore):
             output_messages_key="answer",
         )
 
-    def prompt(self, user_inquiry: str, user_id: str) -> str:
+    def prompt(self, user_inquiry: str, user_id: str) -> dict:
         try:
-            return self.build_conversational_chain().invoke(
+            chain = self.build_conversational_chain()
+            response = chain.invoke(
                 {"input": user_inquiry}, 
                 config={"configurable": {"session_id": user_id}}
             )
+            
+            # Recuperar documentos desde el retriever
+            retrieved_docs = self.retriever.invoke(user_inquiry)
+
+            return {
+                "answer": response,
+                "retrieved_documents": retrieved_docs  # Aquí tienes los documentos recuperados
+            }
+
         except Exception as e:
             raise LLMAPIResponseError(response=None, message="Error al invocar el modelo LLM.", exception=e)
+        
+    # def prompt(self, user_inquiry: str, user_id: str) -> str:
+    #     try:
+    #         return self.build_conversational_chain().invoke(
+    #             {"input": user_inquiry}, 
+    #             config={"configurable": {"session_id": user_id}}
+    #         )
+    #     except Exception as e:
+    #         raise LLMAPIResponseError(response=None, message="Error al invocar el modelo LLM.", exception=e)
