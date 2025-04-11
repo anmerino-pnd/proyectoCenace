@@ -44,6 +44,8 @@ def call_metadata(
 class TextMetadata(BaseModel):
     source : str
     reference : str
+    collection: str = None  # ← Esto permite que esté presente en metadata
+
 
 class Text(BaseModel):
     content : str

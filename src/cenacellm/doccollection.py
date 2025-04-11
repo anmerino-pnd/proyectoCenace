@@ -2,6 +2,7 @@ from cenacellm.tools.doccollection import DocCollection
 from semantic_text_splitter import TextSplitter
 from cenacellm.types import TextMetadata, Text
 from pypdf import PdfReader
+import uuid
 from uuid import uuid4
 import os
 
@@ -18,12 +19,8 @@ class DisjointCollection(DocCollection):
     def load_pdf(self, pdf_path: str, collection: str = "documentos") -> Text:
         reader = PdfReader(pdf_path)
         content = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
-        
-        metadata = TextMetadata(
-            source=pdf_path,
-            reference=str(uuid4()),
-        )
-        # Puedes extenderlo a un diccionario si decides hacerlo más flexible luego
+
+        # Extraer metadatos básicos
         metadata_dict = {
             "source": pdf_path,
             "reference": str(uuid4()),
@@ -32,7 +29,7 @@ class DisjointCollection(DocCollection):
             "total_pages": len(reader.pages),
         }
 
-        # Si te interesa extraer metadatos del PDF como autor, título, etc.
+        # Agregar metadatos del documento si existen
         doc_info = reader.metadata
         if doc_info:
             metadata_dict.update({
@@ -45,4 +42,6 @@ class DisjointCollection(DocCollection):
                 "modification_date": getattr(doc_info, "modification_date", None),
             })
 
+        # Crear y retornar el objeto Text con su metadata
         return Text(content=content, metadata=TextMetadata(**metadata_dict))
+

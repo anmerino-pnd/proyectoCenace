@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 import os
 from typing import Dict, List, Tuple
+from cenacellm.types import Text
 from cenacellm.tools.embedder import Embedder
 from cenacellm.tools.vectorstore import VectorStore
 
@@ -10,8 +11,8 @@ from cenacellm.tools.vectorstore import VectorStore
 class FAISSVectorStore(VectorStore):
     def __init__(self, embeddings: Embedder, dim: int, index_path: str = None, dict_path: str = None):
         self.embeddings = embeddings
-        self.index_path = index_path
-        self.dict_path = dict_path or "faiss_text_dict.pkl"  # Ruta por defecto para guardar el diccionario
+        self.index_path = index_path or "faiss_index.index"  # Ruta por defecto para guardar el índice
+        self.dict_path = dict_path or "faiss_dict.pkl"  # Ruta por defecto para guardar el diccionario
         self.text_dict: Dict[int, Tuple[np.ndarray, str, Dict[str, str]]] = {}
 
         # Cargar índice FAISS si existe
@@ -28,13 +29,12 @@ class FAISSVectorStore(VectorStore):
                 self.text_dict = pickle.load(f)
             print(f"Diccionario cargado desde {self.dict_path}")
 
-    def get_similar(self, v: np.ndarray, k=5, filter_metadata: Dict[str, str] = None) -> List[Tuple[np.ndarray, Text]]:
+    def get_similar(self, v: np.ndarray, k: int = 5, filter_metadata: Dict[str, str] = None):
         v = np.array([v]).astype("float32")
-        distances, indices = self.index.search(v, k * 5)  # busca más de lo necesario
+        D, I = self.index.search(v, k)
+        resultados = []
 
-        results = []
-        for i in range(len(indices[0])):
-            idx = indices[0][i]
+        for idx in I[0]:
             if idx == -1 or idx not in self.text_dict:
                 continue
 
@@ -44,19 +44,17 @@ class FAISSVectorStore(VectorStore):
                 if not all(text.metadata.dict().get(k) == v for k, v in filter_metadata.items()):
                     continue
 
-            results.append((vector, text))
-            if len(results) >= k:
-                break
+            resultados.append((vector, text))
 
-        return results
+        return resultados
 
 
-
-    def add_text(self, v: np.ndarray, t: str, metadata: Dict[str, str] = None):
+    def add_text(self, v: np.ndarray, t: Text):
         v = np.array([v]).astype("float32")
         self.index.add(v)
         idx = self.index.ntotal - 1
-        self.text_dict[idx] = (v, t, metadata or {})
+        self.text_dict[idx] = (v, t)  # solo vector y el objeto Text
+
 
     
 
