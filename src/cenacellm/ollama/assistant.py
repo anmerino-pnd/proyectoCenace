@@ -9,7 +9,7 @@ import time
 
 class OllamaAssistant(Assistant):
     def __init__(self):
-        self.model = "phi4"
+        self.model = "phi4:latest"
         
     def make_metadata(self, res : GenerateResponse, duration : float) -> CallMetadata:
         input_tokens = res.prompt_eval_count

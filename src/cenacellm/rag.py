@@ -1,7 +1,7 @@
-from cenacellm.doccollection import DocCollection
-from cenacellm.vectorstore import VectorStore
-from cenacellm.ollama.assistant import Assistant
-from cenacellm.ollama.embedder import Embedder
+from cenacellm.tools.doccollection import DocCollection
+from cenacellm.tools.vectorstore import VectorStore
+from cenacellm.tools.assistant import Assistant
+from cenacellm.tools.embedder import Embedder
 from cenacellm.types import Text, Chunks, LLMError
 
 class RAG:

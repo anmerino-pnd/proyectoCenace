@@ -11,7 +11,7 @@ class VectorStore(ABC):
     def add_text(self, v : Vector, t : Text) -> bool:
         pass
 
-    @abstractmethod
+  
     def del_text(self, v : Vector) -> bool:
         pass
 

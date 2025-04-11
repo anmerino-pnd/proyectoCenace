@@ -12,7 +12,7 @@ class FAISSVectorStore(VectorStore):
         self.embeddings = embeddings
         self.index_path = index_path
         self.dict_path = dict_path or "faiss_text_dict.pkl"  # Ruta por defecto para guardar el diccionario
-        self.text_dict: Dict[int, Tuple[np.ndarray, str]] = {}  # Diccionario para almacenar (vector, texto)
+        self.text_dict: Dict[int, Tuple[np.ndarray, str, Dict[str, str]]] = {}
 
         # Cargar índice FAISS si existe
         if index_path and os.path.exists(index_path):
@@ -28,25 +28,36 @@ class FAISSVectorStore(VectorStore):
                 self.text_dict = pickle.load(f)
             print(f"Diccionario cargado desde {self.dict_path}")
 
-    def get_similar(self, v: np.ndarray, k=5) -> List[Tuple[np.ndarray, str]]:
+    def get_similar(self, v: np.ndarray, k=5, filter_metadata: Dict[str, str] = None) -> List[Tuple[np.ndarray, Text]]:
         v = np.array([v]).astype("float32")
-        distances, indices = self.index.search(v, k)
+        distances, indices = self.index.search(v, k * 5)  # busca más de lo necesario
 
         results = []
-        for i in range(k):
+        for i in range(len(indices[0])):
             idx = indices[0][i]
             if idx == -1 or idx not in self.text_dict:
+                continue
+
+            vector, text = self.text_dict[idx]
+
+            if filter_metadata:
+                if not all(text.metadata.dict().get(k) == v for k, v in filter_metadata.items()):
+                    continue
+
+            results.append((vector, text))
+            if len(results) >= k:
                 break
-            vector, texto = self.text_dict[idx]
-            results.append((vector, texto))
 
         return results
 
-    def add_text(self, v: np.ndarray, t: str):
+
+
+    def add_text(self, v: np.ndarray, t: str, metadata: Dict[str, str] = None):
         v = np.array([v]).astype("float32")
         self.index.add(v)
-        idx = self.index.ntotal - 1  # Obtener el índice en FAISS
-        self.text_dict[idx] = (v, t)  # Guardar en el diccionario
+        idx = self.index.ntotal - 1
+        self.text_dict[idx] = (v, t, metadata or {})
+
     
 
     def save_index(self):
