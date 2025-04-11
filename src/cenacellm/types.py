@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime, timezone
 from typing import Optional, List
 import numpy as np
@@ -45,7 +45,7 @@ class TextMetadata(BaseModel):
     source : str
     reference : str
     collection: str = None  # ← Esto permite que esté presente en metadata
-
+    model_config = ConfigDict(extra="allow")
 
 class Text(BaseModel):
     content : str

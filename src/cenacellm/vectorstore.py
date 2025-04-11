@@ -6,28 +6,28 @@ from typing import Dict, List, Tuple
 from cenacellm.types import Text
 from cenacellm.tools.embedder import Embedder
 from cenacellm.tools.vectorstore import VectorStore
-
+from pathlib import Path
 
 class FAISSVectorStore(VectorStore):
     def __init__(self, embeddings: Embedder, dim: int, index_path: str = None, dict_path: str = None):
         self.embeddings = embeddings
-        self.index_path = index_path or "faiss_index.index"  # Ruta por defecto para guardar el índice
-        self.dict_path = dict_path or "faiss_dict.pkl"  # Ruta por defecto para guardar el diccionario
         self.text_dict: Dict[int, Tuple[np.ndarray, str, Dict[str, str]]] = {}
 
-        # Cargar índice FAISS si existe
-        if index_path and os.path.exists(index_path):
-            self.index = faiss.read_index(index_path)
-            print(f"Índice cargado desde {index_path}")
+        if index_path and os.path.isdir(index_path):
+            # Si pasan una carpeta, guarda los archivos con nombres estándar
+            index_path = os.path.join(index_path, "index.faiss")
+            dict_path = os.path.join(index_path.replace("index.faiss", "index.pkl"))
+
+        self.index_path = index_path or "index.faiss"
+        self.dict_path = dict_path or "index.pkl"
+
+        if os.path.exists(self.index_path):
+            self.index = faiss.read_index(self.index_path)
+            print(f"Índice cargado desde {self.index_path}")
         else:
             print("No se encontró el archivo de índice, creando nuevo índice.")
             self.index = faiss.IndexFlatL2(dim)
 
-        # Cargar diccionario si existe
-        if os.path.exists(self.dict_path):
-            with open(self.dict_path, "rb") as f:
-                self.text_dict = pickle.load(f)
-            print(f"Diccionario cargado desde {self.dict_path}")
 
     def get_similar(self, v: np.ndarray, k: int = 5, filter_metadata: Dict[str, str] = None):
         v = np.array([v]).astype("float32")
@@ -56,16 +56,12 @@ class FAISSVectorStore(VectorStore):
         self.text_dict[idx] = (v, t)  # solo vector y el objeto Text
 
 
-    
-
     def save_index(self):
-        if self.index_path:
-            faiss.write_index(self.index, self.index_path)
-            print(f"Índice guardado en {self.index_path}")
-        else:
-            print("No se especificó una ruta para guardar el índice.")
+        os.makedirs(os.path.dirname(self.index_path), exist_ok=True)
 
-        # Guardar el diccionario
+        faiss.write_index(self.index, self.index_path)
+        print(f"Índice guardado en {self.index_path}")
+
         with open(self.dict_path, "wb") as f:
             pickle.dump(self.text_dict, f)
         print(f"Diccionario guardado en {self.dict_path}")

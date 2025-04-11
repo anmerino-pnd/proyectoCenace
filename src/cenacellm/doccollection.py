@@ -18,9 +18,11 @@ class DisjointCollection(DocCollection):
 
     def load_pdf(self, pdf_path: str, collection: str = "documentos") -> Text:
         reader = PdfReader(pdf_path)
-        content = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+        content = "\n".join([
+            page.extract_text() for page in reader.pages if page.extract_text()
+        ])
 
-        # Extraer metadatos básicos
+        # Metadatos básicos
         metadata_dict = {
             "source": pdf_path,
             "reference": str(uuid4()),
@@ -29,19 +31,16 @@ class DisjointCollection(DocCollection):
             "total_pages": len(reader.pages),
         }
 
-        # Agregar metadatos del documento si existen
+        # Agregar dinámicamente metadatos del PDF si están disponibles
         doc_info = reader.metadata
         if doc_info:
-            metadata_dict.update({
-                "author": getattr(doc_info, "author", None),
-                "creator": getattr(doc_info, "creator", None),
-                "producer": getattr(doc_info, "producer", None),
-                "title": getattr(doc_info, "title", None),
-                "subject": getattr(doc_info, "subject", None),
-                "creation_date": getattr(doc_info, "creation_date", None),
-                "modification_date": getattr(doc_info, "modification_date", None),
-            })
+            for key, value in doc_info.items():
+                print(f"{key}: {value}")
 
-        # Crear y retornar el objeto Text con su metadata
+            # Añadir dinámicamente los metadatos
+            for key, value in doc_info.items():
+                clean_key = key.lstrip('/')
+                metadata_dict[clean_key.lower()] = str(value) if value is not None else None
+
         return Text(content=content, metadata=TextMetadata(**metadata_dict))
 
