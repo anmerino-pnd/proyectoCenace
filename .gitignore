@@ -1,6 +1,5 @@
 /.venv
 /datos
-/notebooks
 /quarto
 /.env
 /src/cenacellm.egg-info/
