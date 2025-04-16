@@ -4,7 +4,7 @@ from cenacellm.clients import ollama as api
 
 
 class OllamaEmbedder(Embedder):
-    def __init__(self, model = 'mxbai-embed-large:latest'):
+    def __init__(self, model = 'bge-m3:latest'):
         self.model = model
 
     def vectorize(self, s):
@@ -13,4 +13,4 @@ class OllamaEmbedder(Embedder):
         
     
     def dim(self):
-        return 1024
+        return len(self.vectorize("Hola"))  # <-- aquí está la clave

@@ -1,7 +1,11 @@
 from cenacellm.tools.doccollection import DocCollection
 from semantic_text_splitter import TextSplitter
 from cenacellm.types import TextMetadata, Text
-from pypdf import PdfReader
+from typing import List, Union
+from uuid import uuid4
+from PyPDF2 import PdfReader
+import os
+from cenacellm.types import Text, TextMetadata
 import uuid
 from uuid import uuid4
 import os
@@ -11,36 +15,52 @@ class DisjointCollection(DocCollection):
         self.chunk_size = 1000
         self.max_overlap = 0
 
-    def get_chunks(self, t: Text):
+    def get_chunks(self, texts: Union[Text, List[Text]]):
         splitter = TextSplitter(self.chunk_size, self.max_overlap)
-        chunks = splitter.chunks(t.content)
-        return [Text(content=chunk, metadata=t.metadata) for chunk in chunks]
+        if isinstance(texts, Text):
+            texts = [texts]
 
-    def load_pdf(self, pdf_path: str, collection: str = "documentos") -> Text:
+        all_chunks = []
+        for t in texts:
+            chunks = splitter.chunks(t.content)
+            all_chunks.extend([Text(content=chunk, metadata=t.metadata) for chunk in chunks])
+        return all_chunks
+
+
+
+    def load_pdf(self, pdf_path: str, collection: str = "documentos") -> List[Text]:
         reader = PdfReader(pdf_path)
-        content = "\n".join([
-            page.extract_text() for page in reader.pages if page.extract_text()
-        ])
+        texts: List[Text] = []
+        total_pages = len(reader.pages)
+        filename = os.path.basename(pdf_path)
+        reference_id = str(uuid4())
 
-        # Metadatos básicos
-        metadata_dict = {
-            "source": pdf_path,
-            "reference": str(uuid4()),
-            "filename": os.path.basename(pdf_path),
-            "collection": collection,
-            "total_pages": len(reader.pages),
-        }
-
-        # Agregar dinámicamente metadatos del PDF si están disponibles
+        # Obtener metadatos del PDF si están disponibles
         doc_info = reader.metadata
+        extra_metadata = {}
         if doc_info:
             for key, value in doc_info.items():
-                print(f"{key}: {value}")
-
-            # Añadir dinámicamente los metadatos
-            for key, value in doc_info.items():
                 clean_key = key.lstrip('/')
-                metadata_dict[clean_key.lower()] = str(value) if value is not None else None
+                extra_metadata[clean_key.lower()] = str(value) if value is not None else None
 
-        return Text(content=content, metadata=TextMetadata(**metadata_dict))
+        for i, page in enumerate(reader.pages):
+            page_text = page.extract_text()
+            if not page_text:
+                continue
+
+            metadata_dict = {
+                "source": pdf_path,
+                "reference": reference_id,
+                "filename": filename,
+                "collection": collection,
+                "total_pages": total_pages,
+                "page_number": i + 1,  # páginas inician en 1
+                **extra_metadata
+            }
+
+            text = Text(content=page_text, metadata=TextMetadata(**metadata_dict))
+            texts.append(text)
+
+        return texts
+
 
