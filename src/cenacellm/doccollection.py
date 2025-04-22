@@ -12,8 +12,8 @@ import os
 
 class DisjointCollection(DocCollection):
     def __init__(self):
-        self.chunk_size = 1000
-        self.max_overlap = 0
+        self.chunk_size = 1500
+        self.max_overlap = 200
 
     def get_chunks(self, texts: Union[Text, List[Text]]):
         splitter = TextSplitter(self.chunk_size, self.max_overlap)
