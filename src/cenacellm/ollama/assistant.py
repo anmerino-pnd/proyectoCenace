@@ -31,7 +31,7 @@ class OllamaAssistant(Assistant):
                 options={
                     "temperature": 0,
                 },
-                user=user,
+                prompt=user,
             )
         except Exception as e:
             raise LLMError("ollama assistant", e)
@@ -49,7 +49,8 @@ class OllamaAssistant(Assistant):
                 content=res.response,
                 metadata=TextMetadata(
                     source=self.model,
-                    reference=self.__class__.__name__,
+                    reference=cs[0].metadata.reference if cs else None,
+                    collection=cs[0].metadata.collection if cs else None,
                 ),
             ),
             metadata,

@@ -43,7 +43,7 @@ def call_metadata(
 
 class TextMetadata(BaseModel):
     source : str
-    reference : str
+    reference : Optional[str]
     collection: str = None  # ← Esto permite que esté presente en metadata
     model_config = ConfigDict(extra="allow")
 

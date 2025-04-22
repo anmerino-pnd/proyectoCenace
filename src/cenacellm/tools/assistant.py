@@ -46,6 +46,6 @@ Pregunta: ${question}
             """
         )
         return prompt_tpl.substitute(
-            question=q.content,
+            question=q,
             refs=refs,
         )
