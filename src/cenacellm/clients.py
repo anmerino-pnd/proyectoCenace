@@ -3,8 +3,7 @@ import anthropic as anthropic_api
 import openai as openai_api
 import mistralai as mistral_api
 import ollama as ollama_api
-
-
+from ollama import AsyncClient
 
 from dotenv import load_dotenv
 import os
@@ -22,3 +21,5 @@ anthropic = anthropic_api.Anthropic(api_key=anthropic_api_key)
 openai = openai_api.OpenAI(api_key=openai_api_key)
 mistral = mistral_api.Mistral(api_key=mistral_api_key)
 ollama = ollama_api.Client(host=ollama_base_url)
+
+

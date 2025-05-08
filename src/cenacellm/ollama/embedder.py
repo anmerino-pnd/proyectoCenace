@@ -4,8 +4,8 @@ from cenacellm.clients import ollama as api
 
 
 class OllamaEmbedder(Embedder):
-    def __init__(self, model = 'bge-m3:latest'):
-        self.model = model
+    def __init__(self):
+        self.model = 'bge-m3:latest'
 
     def vectorize(self, s):
             response = api.embeddings(self.model, prompt=s)

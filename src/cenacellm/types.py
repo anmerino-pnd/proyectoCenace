@@ -21,7 +21,7 @@ class CallMetadata(BaseModel):
     duration : float      # Request duration in seconds
     input_tokens : Optional[int]    # Number of tokens in the input prompt
     output_tokens : Optional[int]   # Number of tokens in the generated response
-    timestamp : datetime  # Response timestamp in UTC
+    timestamp : str   # Response timestamp in UTC
 
 def call_metadata(
         provider : str,
@@ -38,7 +38,7 @@ def call_metadata(
         duration=duration,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
 class TextMetadata(BaseModel):

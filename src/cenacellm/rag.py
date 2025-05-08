@@ -1,33 +1,212 @@
-from cenacellm.tools.doccollection import DocCollection
-from cenacellm.tools.vectorstore import VectorStore
-from cenacellm.tools.assistant import Assistant
-from cenacellm.tools.embedder import Embedder
-from cenacellm.types import Text, Chunks, LLMError
+import os
+import json
+from typing import List, Dict, Any, Generator, Optional, Union, Tuple
+from datetime import datetime
+from cenacellm.config import VECTORS_DIR, PROCESSED_FILES
+from cenacellm.ollama.embedder import OllamaEmbedder
+from cenacellm.vectorstore import FAISSVectorStore
+from cenacellm.doccollection import DisjointCollection
+from cenacellm.ollama.assistant import OllamaAssistant
+
 
 class RAG:
     def __init__(
-            self, 
-            model: Assistant, 
-            embedder: Embedder, 
-            vectorStore: VectorStore, 
-            documents: DocCollection
+        self, 
+        vectorstore_path: str = VECTORS_DIR,
+        documents_path: Optional[str] = None,
+        collection_name: str = None,
+        user_id: str = None,
+        force_reload: bool = False
     ):
-        self.model = model
-        self.embedder = embedder
-        self.vectorStore = vectorStore
-        self.documents = documents
+        self.user_id = user_id
+        self.collection_name = collection_name
+        self.vectorstore_path = vectorstore_path
+        self.processed_files_path = PROCESSED_FILES
         
-    def add_doc(self, t):
-        chunks = self.documents.get_chunks(t)
-        vectors = [self.embedder.vectorize(chunk.content) for chunk in chunks]
-        for vector, chunk in zip(vectors, chunks):
-            ok = self.vectorStore.add_text(vector, chunk)
-            if not ok:
-                raise LLMError("Oh no!")
+        os.makedirs(vectorstore_path, exist_ok=True)
+        
+        self.assistant = OllamaAssistant()
+        self.collection = DisjointCollection()
+        self.embedder = OllamaEmbedder()
+        
+        self.vectorstore = FAISSVectorStore(
+            dim=self.embedder.dim(),
+            embeddings=self.embedder,
+            folder_path=vectorstore_path
+        )
+        
+        self.processed_files = self._load_processed_files()
+        
+        if force_reload:
+            self.processed_files = {}
+            self._save_processed_files()
+        
+        if documents_path:
+            self.load_documents(documents_path, force_reload=force_reload)
+    
+    def _load_processed_files(self) -> Dict[str, Any]:
+        if os.path.exists(self.processed_files_path):
+            try:
+                with open(self.processed_files_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"Error al cargar registro de archivos procesados: {e}")
+                return {}
+        return {}
+    
+    def _save_processed_files(self) -> None:
+        with open(self.processed_files_path, 'w', encoding='utf-8') as f:
+            json.dump(self.processed_files, f, indent=2, ensure_ascii=False)
+    
+    def load_documents(self, folder_path: str, force_reload: bool = False) -> None:
+        if not os.path.exists(folder_path):
+            raise FileNotFoundError(f"La carpeta {folder_path} no existe")
+        
+        docs_count = 0
+        new_docs_count = 0
+        chunks_count = 0
+        
+        print(f"Comprobando documentos en {folder_path}...")
+        
+        for archivo in os.listdir(folder_path):
+            if not archivo.endswith(".pdf"):
+                continue
+                
+            ruta_pdf = os.path.join(folder_path, archivo)
+            file_stat = os.stat(ruta_pdf)
+            last_modified = int(file_stat.st_mtime)
+            file_size = file_stat.st_size
+            
+            file_key = f"{archivo}"
+            file_info = self.processed_files.get(file_key, {})
+            
+            if (not force_reload and file_key in self.processed_files and 
+                file_info.get("last_modified") == last_modified and 
+                file_info.get("size") == file_size):
+                print(f"Omitiendo archivo sin cambios: {archivo}")
+                docs_count += 1
+                continue
+            
+            print(f"Procesando nuevo archivo o archivo modificado: {archivo}")
+            
+            textos = self.collection.load_pdf(ruta_pdf, collection=self.collection_name)
+            chunks = self.collection.get_chunks(textos)
+            
+            doc_chunks_count = 0
+            for chunk in chunks:
+                vector = self.embedder.vectorize(chunk.content)
+                self.vectorstore.add_text(vector, chunk)
+                doc_chunks_count += 1
+                chunks_count += 1
+            
+            self.processed_files[file_key] = {
+                "last_modified": last_modified,
+                "size": file_size,
+                "processed_at": datetime.now().isoformat(),
+                "chunks": doc_chunks_count
+            }
+            
+            new_docs_count += 1
+            docs_count += 1
+        
+        if new_docs_count > 0:
+            self.vectorstore.save_index()
+            self._save_processed_files()
+            print(f"Índice vectorial actualizado con {new_docs_count} nuevos documentos.")
+        
+        print(f"Procesamiento completado. Total: {docs_count} documentos ({new_docs_count} nuevos/modificados), generando {chunks_count} chunks")
+    
+    def add_document(self, file_path: str, force_reload: bool = False) -> None:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"El archivo {file_path} no existe")
+        
+        if not file_path.endswith(".pdf"):
+            raise ValueError("Solo se admiten archivos PDF")
+        
+        archivo = os.path.basename(file_path)
+        file_stat = os.stat(file_path)
+        last_modified = int(file_stat.st_mtime)
+        file_size = file_stat.st_size
+        
+        file_key = f"{archivo}"
+        file_info = self.processed_files.get(file_key, {})
+        
+        if (not force_reload and file_key in self.processed_files and 
+            file_info.get("last_modified") == last_modified and 
+            file_info.get("size") == file_size):
+            print(f"El documento {archivo} ya está procesado y no ha cambiado.")
+            return
+        
+        print(f"Procesando: {archivo}")
+        
+        textos = self.collection.load_pdf(file_path, collection=self.collection_name)
+        chunks = self.collection.get_chunks(textos)
+        
+        chunks_count = 0
+        for chunk in chunks:
+            vector = self.embedder.vectorize(chunk.content)
+            self.vectorstore.add_text(vector, chunk)
+            chunks_count += 1
+        
+        self.processed_files[file_key] = {
+            "last_modified": last_modified,
+            "size": file_size,
+            "processed_at": datetime.now().isoformat(),
+            "chunks": chunks_count
+        }
+        
+        self.vectorstore.save_index()
+        self._save_processed_files()
+        
+        print(f"Documento procesado con {chunks_count} chunks generados")
+    
+    def get_processed_documents(self) -> Dict[str, Any]:
+        return self.processed_files
+    
+    def query(self, 
+              question: str, 
+              k: int = 10,
+              filter_metadata: Optional[Dict[str, Any]] = None
+             ) ->  Tuple[Generator[str, None, None], List]:
+        if filter_metadata is None and self.collection_name is not None:
+            filter_metadata = {"collection": self.collection_name}
+        
+        query_vector = self.embedder.vectorize(question)
+        
+        relevant_chunks = self.vectorstore.get_similar(
+            query_vector, 
+            k=k,
+            filter_metadata=filter_metadata
+        )
+        
+        text_chunks = [chunk[1] for chunk in relevant_chunks]
+        
+        return self.assistant.answer(question, text_chunks, user_id=self.user_id), text_chunks
 
-    def answer(self, q):
-        v = self.embedder.vectorize(q.content)
-        S = self.vectorStore.get_similar(v)
-        refs = [t for _, t in S]
-        r, _ = self.model.answer(q, refs)
-        return r
+    def answer(self, 
+            question: str, 
+            k: int = 10,
+            filter_metadata: Optional[Dict[str, Any]] = None
+            ) -> Generator[str, None, None]:
+        
+        print("\nPregunta:", question)
+        print("\nRespuesta:", end=" ")
+
+        token_generator, text_chunks = self.query(
+            question, k=k, filter_metadata=filter_metadata
+        )
+
+        self.last_chunks = text_chunks
+        
+        for token in token_generator:
+            yield token
+
+        
+    def get_user_history(self) -> List[Dict[str, Any]]:
+        return self.assistant.histories.get(self.user_id, [])
+    
+    def clear_user_history(self) -> None:
+        if self.user_id in self.assistant.histories:
+            self.assistant.histories[self.user_id] = []
+            self.assistant.save_history()
+            print(f"Historial para el usuario {self.user_id} eliminado.")

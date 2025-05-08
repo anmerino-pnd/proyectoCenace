@@ -28,7 +28,7 @@ class DisjointCollection(DocCollection):
 
 
 
-    def load_pdf(self, pdf_path: str, collection: str = "documentos") -> List[Text]:
+    def load_pdf(self, pdf_path: str, collection: str = None) -> List[Text]:
         reader = PdfReader(pdf_path)
         texts: List[Text] = []
         total_pages = len(reader.pages)

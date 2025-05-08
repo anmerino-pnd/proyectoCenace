@@ -6,10 +6,10 @@ from typing import Dict, List, Tuple
 from cenacellm.types import Text
 from cenacellm.tools.embedder import Embedder
 from cenacellm.tools.vectorstore import VectorStore
-from pathlib import Path
+from cenacellm.config import VECTORS_DIR
 
 class FAISSVectorStore(VectorStore):
-    def __init__(self, embeddings: Embedder, dim: int, folder_path: str = "vectorstore"):
+    def __init__(self, embeddings: Embedder, dim: int, folder_path: str = VECTORS_DIR):
         self.embeddings = embeddings
         self.text_dict: Dict[int, Tuple[np.ndarray, str, Dict[str, str]]] = {}
 
