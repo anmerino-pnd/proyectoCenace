@@ -36,7 +36,7 @@
                         <label for="filter-metadata">Colección:</label>
                         <select id="filter-metadata">
                             <option value="documentos" selected>Documentos</option>
-                        </select>
+                            </select>
                     </div>
                 </div>
 
@@ -53,10 +53,26 @@
         </div>
 
         <div id="documentos-tab-content" class="tab-content hidden">
-            <div style="padding: 20px;">
-                <h3>Sección de Documentos</h3>
-                <p>Aquí se mostrará la información de los documentos.</p>
+            <div class="document-manager">
+                <h3>Gestor de Documentos</h3>
+
+                <div class="upload-area">
+                    <h4>Subir nuevo documento PDF</h4>
+                    <input type="file" id="documentUploadInput" accept=".pdf">
+                    <button id="uploadDocumentBtn" class="primary-button">Subir Documento</button>
+                    <div id="uploadStatus" class="status-message"></div>
                 </div>
+
+                <div class="document-list-area">
+                    <h4>Documentos disponibles</h4>
+                    <button id="refreshDocumentsBtn" class="secondary-button">Actualizar Lista</button>
+                    <ul id="documentList">
+                        <li>Cargando documentos...</li>
+                    </ul>
+                    <button id="processDocumentsBtn" class="primary-button" style="margin-top: 15px;">Procesar Documentos (Cargar en RAG)</button>
+                     <div id="processStatus" class="status-message"></div>
+                </div>
+            </div>
         </div>
 
         <div id="soluciones-tab-content" class="tab-content hidden">
@@ -98,6 +114,9 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+<!-- Tus scripts al final del documento -->
+<script src="app.js"></script>
+<script src="documentos.js"></script>
+<script src="tabs.js"></script> <!-- Añadir esta línea -->
 </body>
 </html>
