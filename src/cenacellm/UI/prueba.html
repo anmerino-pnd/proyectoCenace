@@ -3,24 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salsas Castillo - Chat</title>
+    <title>CENACE</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <div class="app-container">
-        <!-- Eliminamos el setup-area completamente -->
-        
-        <!-- Área del chat (ahora visible desde el inicio) -->
-        <div id="chat-area" class="chat-area">
+        <div id="chat-area" class="chat-area hidden">
             <div class="chat-header">
-                <h2>Salsas Castillo</h2>
+                <h2>CENACE - Chat</h2>
                 <button id="deleteHistoryBtn" class="delete-button">Eliminar historial</button>
             </div>
-            
-            <div id="messages-container" class="messages-container"></div>
-            
+
+            <div id="messages-container" class="messages-container">
+            </div>
+
             <div class="chat-input-area">
+                <div class="search-parameters">
+                    <div class="parameter-group">
+                        <label for="k-value">Resultados (k):</label>
+                        <input type="number" id="k-value" min="1" max="10" value="10">
+                    </div>
+
+                    <div class="parameter-group">
+                        <label for="filter-metadata">Colección:</label>
+                        <select id="filter-metadata">
+                            <option value="documentos" selected>Documentos</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="textarea-container">
                     <textarea id="userQuery" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
                     <button id="sendBtn" class="send-button">
@@ -34,8 +46,20 @@
         </div>
     </div>
 
-    <!-- Modal de confirmación para eliminar historial -->
-    <div class="modal-overlay hidden">
+    <div id="username-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-message">Por favor, ingresa tu nombre de usuario para comenzar:</div>
+            <div class="input-group">
+                <label for="username-input">Nombre de usuario:</label>
+                <input type="text" id="username-input" placeholder="Tu nombre">
+            </div>
+            <div class="modal-buttons" style="justify-content: center;">
+                <button id="submit-username-btn" class="primary-button" style="width: auto;">Comenzar Chat</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-confirmation-modal-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <div class="modal-message">¿Estás seguro de que quieres eliminar todo el historial?</div>
             <div class="modal-buttons">

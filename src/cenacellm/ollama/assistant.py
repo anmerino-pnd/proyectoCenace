@@ -53,7 +53,10 @@ class OllamaAssistant(Assistant):
         user_msg = self.answer_user(q, cs)
         system = self.answer_system()
 
-        history = self.histories.get(user_id, [])
+        # Obtener historial completo del usuario o inicializar uno vacío si no existe
+        history : list = self.histories.get(user_id, [])
+        
+        # Obtener ventana de historial para construcción del prompt
         window = history[-self.memory_window_size:]
 
         if window:
@@ -83,10 +86,10 @@ class OllamaAssistant(Assistant):
         duration = end_time - start_time
         metadata = self.make_metadata(chunk, duration)
 
-        # Actualizar historial con nueva entrada
-        new_entries = window + [
-            {"role": "user", "content": q},
-            {"role": "assistant", "content": response, "metadata": metadata.model_dump()},
-        ]
-        self.histories[user_id] = new_entries
+        # Añadir nuevos mensajes al historial existente en lugar de reemplazarlo
+        history.append({"role": "user", "content": q})
+        history.append({"role": "assistant", "content": response, "metadata": metadata.model_dump()})
+        
+        # Actualizar el historial completo
+        self.histories[user_id] = history
         self.save_history()

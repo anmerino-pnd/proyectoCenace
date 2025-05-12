@@ -84,7 +84,7 @@ body {
     color: #555;
 }
 
-.input-group input, 
+.input-group input,
 .input-group select {
     width: 100%;
     padding: 12px 16px;
@@ -94,7 +94,7 @@ body {
     transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.input-group input:focus, 
+.input-group input:focus,
 .input-group select:focus {
     outline: none;
     border-color: var(--primary-color);
@@ -188,10 +188,9 @@ body {
 
 .message.bot {
     align-self: flex-start;
-    background-color: var(--bot-msg-bg);
+    background-color: transparent;
     border-bottom-left-radius: 4px;
     color: #333;
-    box-shadow: var(--shadow-light);
 }
 
 .message.error-message {
@@ -229,12 +228,64 @@ body {
     border-top: 1px solid var(--border-color);
 }
 
+/* Estilos para los parámetros de búsqueda */
+.search-parameters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 8px 12px; /* Adjusted padding */
+    background-color: var(--light-bg); /* Kept light background */
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color); /* Kept border */
+}
+
+.parameter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Reduced gap */
+}
+
+.parameter-group label {
+    font-size: 13px; /* Slightly smaller font */
+    font-weight: 500;
+    color: #555;
+    white-space: nowrap;
+}
+
+#k-value {
+    width: 50px; /* Adjusted width */
+    padding: 4px 6px; /* Adjusted padding */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px; /* Slightly smaller font */
+    text-align: center; /* Center text */
+}
+
+#filter-metadata {
+    padding: 4px 6px; /* Adjusted padding */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px; /* Slightly smaller font */
+}
+
+#k-value:focus,
+#filter-metadata:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(76, 105, 249, 0.2);
+}
+
 .textarea-container {
     position: relative;
     border-radius: var(--radius-md);
     background-color: var(--light-bg);
     border: 1px solid var(--border-color);
     transition: border-color 0.3s, box-shadow 0.3s;
+    display: flex; /* Use flexbox for alignment */
+    align-items: flex-end; /* Align items to the bottom */
+    /* Removed padding-right here as it's now handled by the textarea padding */
 }
 
 .textarea-container:focus-within {
@@ -243,17 +294,18 @@ body {
 }
 
 textarea {
-    width: 100%;
+    flex-grow: 1; /* Allow textarea to grow */
     border: none;
     background: transparent;
     resize: none;
     outline: none;
-    padding: 16px 50px 16px 16px;
+    padding: 12px 50px 12px 16px; /* Adjusted padding: top, right, bottom, left */
     font-family: var(--font-main);
     font-size: 16px;
     border-radius: var(--radius-md);
     max-height: 120px;
     line-height: 1.4;
+    min-height: 20px; /* Minimum height to ensure button alignment */
 }
 
 .send-button {
@@ -271,6 +323,8 @@ textarea {
     justify-content: center;
     cursor: pointer;
     transition: background-color 0.2s;
+    flex-shrink: 0; /* Prevent button from shrinking */
+    z-index: 1; /* Ensure button is above the textarea */
 }
 
 .send-button:hover {
@@ -440,4 +494,41 @@ textarea {
     .message {
         max-width: 90%;
     }
+
+    /* Ajustes responsive para los parámetros de búsqueda */
+    .search-parameters {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .parameter-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #k-value, #filter-metadata {
+        flex: 1;
+        max-width: 60%;
+    }
+}
+
+
+.message.bot p {
+    margin-bottom: 1em;
+}
+
+.message.bot ul,
+.message.bot ol {
+    margin-bottom: 1em; 
+    padding-left: 20px; 
+}
+
+.message.bot li {
+    margin-bottom: 0.5em; 
+}
+
+.message.bot pre {
+    margin-top: 1em; 
+    margin-bottom: 1em; 
 }

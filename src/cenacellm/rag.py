@@ -12,17 +12,10 @@ from cenacellm.ollama.assistant import OllamaAssistant
 class RAG:
     def __init__(
         self, 
-        vectorstore_path: str = VECTORS_DIR,
-        documents_path: Optional[str] = None,
-        collection_name: str = None,
-        user_id: str = None,
-        force_reload: bool = False
+        vectorstore_path: str = VECTORS_DIR
     ):
-        self.user_id = user_id
-        self.collection_name = collection_name
         self.vectorstore_path = vectorstore_path
         self.processed_files_path = PROCESSED_FILES
-        
         os.makedirs(vectorstore_path, exist_ok=True)
         
         self.assistant = OllamaAssistant()
@@ -37,12 +30,6 @@ class RAG:
         
         self.processed_files = self._load_processed_files()
         
-        if force_reload:
-            self.processed_files = {}
-            self._save_processed_files()
-        
-        if documents_path:
-            self.load_documents(documents_path, force_reload=force_reload)
     
     def _load_processed_files(self) -> Dict[str, Any]:
         if os.path.exists(self.processed_files_path):
@@ -58,7 +45,10 @@ class RAG:
         with open(self.processed_files_path, 'w', encoding='utf-8') as f:
             json.dump(self.processed_files, f, indent=2, ensure_ascii=False)
     
-    def load_documents(self, folder_path: str, force_reload: bool = False) -> None:
+    def load_documents(self, folder_path: str, 
+                       collection_name : str = None,
+                       force_reload : bool = False
+                       ) -> None:
         if not os.path.exists(folder_path):
             raise FileNotFoundError(f"La carpeta {folder_path} no existe")
         
@@ -89,7 +79,7 @@ class RAG:
             
             print(f"Procesando nuevo archivo o archivo modificado: {archivo}")
             
-            textos = self.collection.load_pdf(ruta_pdf, collection=self.collection_name)
+            textos = self.collection.load_pdf(ruta_pdf, collection=collection_name)
             chunks = self.collection.get_chunks(textos)
             
             doc_chunks_count = 0
@@ -116,7 +106,10 @@ class RAG:
         
         print(f"Procesamiento completado. Total: {docs_count} documentos ({new_docs_count} nuevos/modificados), generando {chunks_count} chunks")
     
-    def add_document(self, file_path: str, force_reload: bool = False) -> None:
+    def add_document(self, 
+                     file_path: str, 
+                     collection_name: Optional[str] = None,
+                     force_reload: bool = False) -> None:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"El archivo {file_path} no existe")
         
@@ -139,7 +132,7 @@ class RAG:
         
         print(f"Procesando: {archivo}")
         
-        textos = self.collection.load_pdf(file_path, collection=self.collection_name)
+        textos = self.collection.load_pdf(file_path, collection=collection_name)
         chunks = self.collection.get_chunks(textos)
         
         chunks_count = 0
@@ -164,12 +157,11 @@ class RAG:
         return self.processed_files
     
     def query(self, 
+              user_id: str,
               question: str, 
               k: int = 10,
               filter_metadata: Optional[Dict[str, Any]] = None
              ) ->  Tuple[Generator[str, None, None], List]:
-        if filter_metadata is None and self.collection_name is not None:
-            filter_metadata = {"collection": self.collection_name}
         
         query_vector = self.embedder.vectorize(question)
         
@@ -181,19 +173,18 @@ class RAG:
         
         text_chunks = [chunk[1] for chunk in relevant_chunks]
         
-        return self.assistant.answer(question, text_chunks, user_id=self.user_id), text_chunks
+        return self.assistant.answer(question, text_chunks, user_id=user_id), text_chunks
 
     def answer(self, 
+            user_id: str,
             question: str, 
             k: int = 10,
             filter_metadata: Optional[Dict[str, Any]] = None
             ) -> Generator[str, None, None]:
         
-        print("\nPregunta:", question)
-        print("\nRespuesta:", end=" ")
 
         token_generator, text_chunks = self.query(
-            question, k=k, filter_metadata=filter_metadata
+            user_id, question, k=k, filter_metadata=filter_metadata
         )
 
         self.last_chunks = text_chunks
@@ -202,11 +193,10 @@ class RAG:
             yield token
 
         
-    def get_user_history(self) -> List[Dict[str, Any]]:
-        return self.assistant.histories.get(self.user_id, [])
+    def get_user_history(self, user_id : str) -> List[Dict[str, Any]]:
+        return self.assistant.histories.get(user_id, [])
     
-    def clear_user_history(self) -> None:
-        if self.user_id in self.assistant.histories:
-            self.assistant.histories[self.user_id] = []
+    def clear_user_history(self, user_id) -> None:
+        if user_id in self.assistant.histories:
+            self.assistant.histories[user_id] = []
             self.assistant.save_history()
-            print(f"Historial para el usuario {self.user_id} eliminado.")

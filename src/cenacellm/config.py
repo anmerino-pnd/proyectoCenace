@@ -9,4 +9,6 @@ def find_project_root(start_path: Path, marker_file: str = "pyproject.toml") -> 
 BASE_DIR = find_project_root(Path(__file__))
 VECTORS_DIR = BASE_DIR / "datos" / "vectorstores"
 HISTORY_FILE = BASE_DIR / "datos" / "historial.json"
+BACKUP_HISTORY_FILE = BASE_DIR / "datos" / "historial_backup.json"
 PROCESSED_FILES = BASE_DIR / "datos" / "processed_files.json"
+DOCUMENTS_DIR = BASE_DIR / "datos" / "documentos"
