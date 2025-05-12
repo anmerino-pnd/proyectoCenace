@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentBotMessageElement = null;
 
 
-
     function requestUsername() {
         if (chatArea) chatArea.classList.add('hidden');
         if (usernameModal) {
@@ -37,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadHistory();
             if (userQueryTextarea) userQueryTextarea.focus();
         } else {
-            alert("Por favor, ingresa un nombre de usuario para continuar.");
+            console.warn("Nombre de usuario vacío."); // O muestra un mensaje en la UI
             if (usernameInput) usernameInput.focus();
         }
     }
@@ -52,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     requestUsername();
 
+    // Modificada para asignar un ID único a los mensajes del bot
     function appendMessage(sender, message, isStreaming = false) {
         if (!chatbox) return null;
 
@@ -70,6 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return currentBotMessageElement;
         } else {
             const msgDiv = document.createElement("div");
+            // Asignar un ID único a los mensajes del bot
+            if (sender === "bot") {
+                msgDiv.id = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            }
             msgDiv.classList.add("message", sender);
             if (sender === "bot") {
                 currentBotMessageElement = msgDiv;
@@ -97,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!userQueryTextarea) return;
         userQueryTextarea.style.height = 'auto';
         userQueryTextarea.style.height = userQueryTextarea.scrollHeight + 'px';
-        const maxHeight = 120;
+        const maxHeight = 150;
         if (userQueryTextarea.scrollHeight > maxHeight) {
             userQueryTextarea.style.overflowY = 'auto';
             userQueryTextarea.style.height = maxHeight + 'px';
@@ -150,12 +154,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 appendMessage("bot", `¡Hola ${userName}! ¿En qué puedo ayudarte hoy?`);
                 return;
             }
-            history.forEach(msg => {
+            // Cargar historial y luego intentar cargar metadatos para cada mensaje del bot
+            for (const msg of history) {
                 if (msg && typeof msg.role === 'string' && typeof msg.content === 'string') {
                     const sender = msg.role === "user" ? "user" : "bot";
-                    appendMessage(sender, msg.content);
+                    const msgElement = appendMessage(sender, msg.content);
+                    if (sender === "bot" && msgElement) {
+                         // Nota: Cargar metadatos para mensajes históricos puede ser costoso/lento
+                         // Considera si realmente necesitas hacer esto o solo para mensajes nuevos
+                         // fetchAndDisplayMetadata(msgElement.id);
+                    }
                 }
-            });
+            }
             chatbox.scrollTop = chatbox.scrollHeight;
         } catch (error) {
             console.error('Error fetching history:', error);
@@ -200,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Error ${response.status}:`, errorText);
-                alert(`Error al borrar historial: ${response.status} ${response.statusText}`);
+                 appendMessage("bot", `Error al borrar historial: ${response.status} ${response.statusText}`);
                 return;
             }
 
@@ -210,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Error al borrar historial:", error);
-            alert(`Error al borrar historial: ${error.message}`);
+             appendMessage("bot", `Error al borrar historial: ${error.message}`);
         } finally {
             hideDeleteConfirmation();
         }
@@ -237,9 +247,95 @@ document.addEventListener('DOMContentLoaded', () => {
         return filterOptions[selectedValue] || {};
     }
 
+    // Nueva función para obtener y mostrar metadatos de forma colapsable
+    async function fetchAndDisplayMetadata(messageElementId) {
+        try {
+            const response = await fetch(`${apiEndpoint}/metadata`);
+            if (!response.ok) {
+                console.error(`Error fetching metadata: ${response.status}`);
+                return;
+            }
+            const metadataArray = await response.json(); // Esperamos un array
+
+            const messageElement = document.getElementById(messageElementId);
+
+            if (messageElement && Array.isArray(metadataArray) && metadataArray.length > 0) {
+                const metadataSection = document.createElement('div');
+                metadataSection.classList.add('metadata-section');
+
+                const metadataHeader = document.createElement('div');
+                metadataHeader.classList.add('metadata-header');
+                metadataHeader.innerHTML = '<h5>Referencias <span class="toggle-icon">+</span></h5>'; // Título y icono
+
+                const metadataDetails = document.createElement('div');
+                metadataDetails.classList.add('metadata-details', 'hidden'); // Inicialmente oculto
+
+                // Iterar sobre el array de objetos de metadatos
+                metadataArray.forEach((item, index) => {
+                    if (item.metadata) { // Verificar si el objeto tiene la clave 'metadata'
+                        const metadataItemDiv = document.createElement('div');
+                        metadataItemDiv.classList.add('metadata-item');
+
+                        const itemTitle = document.createElement('h6');
+                        // Usar el título si existe, o un identificador genérico
+                        itemTitle.textContent = `Referencia ${index + 1}${item.metadata.title ? ': ' + item.metadata.title : ''}`;
+                        metadataItemDiv.appendChild(itemTitle);
+
+                        const detailsList = document.createElement('ul');
+                        // Mostrar solo algunos campos relevantes, ajusta según necesites
+                        const fieldsToShow = ['source', 'filename', 'page_number', 'author', 'subject'];
+                        fieldsToShow.forEach(field => {
+                            if (item.metadata[field]) {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = `${field.replace('_', ' ')}: ${item.metadata[field]}`;
+                                detailsList.appendChild(listItem);
+                            }
+                        });
+
+                        // Opcional: Añadir un enlace si hay una URL o forma de acceder a la fuente
+                        // if (item.metadata.url) {
+                        //     const listItem = document('li');
+                        //     const link = document.createElement('a');
+                        //     link.href = item.metadata.url;
+                        //     link.textContent = 'Ver fuente';
+                        //     link.target = "_blank";
+                        //     listItem.appendChild(link);
+                        //     detailsList.appendChild(listItem);
+                        // }
+
+
+                        metadataItemDiv.appendChild(detailsList);
+                        metadataDetails.appendChild(metadataItemDiv);
+                    }
+                });
+
+                metadataSection.appendChild(metadataHeader);
+                metadataSection.appendChild(metadataDetails);
+                messageElement.appendChild(metadataSection);
+                chatbox.scrollTop = chatbox.scrollHeight; // Desplazar para ver la nueva sección
+
+                // Añadir evento para colapsar/expandir
+                metadataHeader.addEventListener('click', () => {
+                    metadataDetails.classList.toggle('hidden');
+                    const icon = metadataHeader.querySelector('.toggle-icon');
+                    if (metadataDetails.classList.contains('hidden')) {
+                        icon.textContent = '+';
+                    } else {
+                        icon.textContent = '-';
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error("Error fetching or displaying metadata:", error);
+             // Opcional: Mostrar un mensaje de error en la UI si falla la carga de metadatos
+        }
+    }
+
+
     async function sendMessage() {
         if (!userQueryTextarea || !userQueryTextarea.value.trim() || !userName) {
-             if (!userName) alert("Por favor, ingresa tu nombre de usuario primero.");
+             if (!userName) console.warn("Intento de enviar mensaje sin nombre de usuario."); // O muestra un mensaje en la UI
              return;
         }
         const userQuery = userQueryTextarea.value.trim();
@@ -248,10 +344,12 @@ document.addEventListener('DOMContentLoaded', () => {
         resizeTextarea();
         userQueryTextarea.focus();
         showSpinner();
-        currentBotMessageElement = null;
+        currentBotMessageElement = null; // Reset antes de la nueva respuesta
 
         const kValue = getKValue();
         const filterMetadata = getFilterMetadata();
+
+        let latestBotMessageId = null; // Variable para guardar el ID del último mensaje del bot
 
         try {
             const response = await fetch(`${apiEndpoint}/chat`, {
@@ -290,10 +388,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const chunkValue = decoder.decode(value, { stream: true });
                 if (firstChunk) {
                     hideSpinner();
-                    appendMessage("bot", chunkValue, false);
+                    // Capturar el elemento del mensaje del bot la primera vez
+                    const msgElement = appendMessage("bot", chunkValue, false);
+                    if (msgElement) {
+                         latestBotMessageId = msgElement.id; // Guardar su ID
+                    }
                     firstChunk = false;
                 } else {
                     appendMessage("bot", chunkValue, true);
+                    // currentBotMessageElement ya apunta al último, no necesitamos su ID aquí
                 }
             }
         } catch (error) {
@@ -301,11 +404,24 @@ document.addEventListener('DOMContentLoaded', () => {
             appendMessage("bot", "Hubo un problema al enviar el mensaje. Intenta nuevamente.");
         } finally {
             hideSpinner();
+             // Asegurarse de que el contenido Markdown se renderice después de que termine el streaming
              if (currentBotMessageElement && typeof marked !== "undefined" && currentBotMessageElement.dataset.rawContent) {
                  currentBotMessageElement.innerHTML = marked.parse(currentBotMessageElement.dataset.rawContent);
-            }
-            currentBotMessageElement = null;
+             }
+
+
             chatbox.scrollTop = chatbox.scrollHeight;
+
+            // Llamar a la función para obtener y mostrar metadatos después de la respuesta principal
+            if (latestBotMessageId) {
+                 fetchAndDisplayMetadata(latestBotMessageId);
+            } else if (currentBotMessageElement && currentBotMessageElement.id) {
+                 // En caso de que no se haya capturado el ID en el primer chunk (aunque appendMessage lo asigna)
+                 fetchAndDisplayMetadata(currentBotMessageElement.id);
+            }
+
+             // Ahora sí, resetear currentBotMessageElement para el próximo mensaje
+             currentBotMessageElement = null;
         }
     }
 

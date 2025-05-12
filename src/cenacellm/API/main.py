@@ -6,7 +6,8 @@ from cenacellm.API.chat import (
     clear_user_history,
     load_documents,
     QueryRequest,
-    get_chat_history
+    get_chat_history,
+    get_preprocessed_files
 )
 
 app = FastAPI()
@@ -47,6 +48,10 @@ async def delete_history(user_id: str):
 async def load_docs(collection_name: str, force_reload: bool = False):
     load_documents(collection_name, force_reload)
     return {"status": "ok", "message": f"Documents loaded for {collection_name}"}
+
+@app.get("/documents")
+async def documents():
+    return get_preprocessed_files()
 
 
 # uvicorn cenacellm.API.main:app --host 0.0.0.0 --port 80 --workers 4 --reload           // windows 

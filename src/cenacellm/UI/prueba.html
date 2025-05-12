@@ -9,8 +9,15 @@
 </head>
 <body>
     <div class="app-container">
-        <div id="chat-area" class="chat-area hidden">
-            <div class="chat-header">
+        <div class="tab-nav">
+            <button class="tab-button active" data-tab="chat">Chat</button>
+            <button class="tab-button" data-tab="documentos">Documentos</button>
+            <button class="tab-button" data-tab="soluciones">Soluciones</button>
+            <button class="tab-button" data-tab="tickets">Tickets</button>
+        </div>
+
+        <div id="chat-tab-content" class="tab-content">
+             <div class="chat-header">
                 <h2>CENACE - Chat</h2>
                 <button id="deleteHistoryBtn" class="delete-button">Eliminar historial</button>
             </div>
@@ -21,8 +28,8 @@
             <div class="chat-input-area">
                 <div class="search-parameters">
                     <div class="parameter-group">
-                        <label for="k-value">Resultados (k):</label>
-                        <input type="number" id="k-value" min="1" max="10" value="10">
+                        <label for="k-value">Número de referencias:</label>
+                        <input type="number" id="k-value" min="1" max="10" value="5">
                     </div>
 
                     <div class="parameter-group">
@@ -36,7 +43,7 @@
                 <div class="textarea-container">
                     <textarea id="userQuery" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
                     <button id="sendBtn" class="send-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="5" height="5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
                             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                         </svg>
@@ -44,6 +51,28 @@
                 </div>
             </div>
         </div>
+
+        <div id="documentos-tab-content" class="tab-content hidden">
+            <div style="padding: 20px;">
+                <h3>Sección de Documentos</h3>
+                <p>Aquí se mostrará la información de los documentos.</p>
+                </div>
+        </div>
+
+        <div id="soluciones-tab-content" class="tab-content hidden">
+             <div style="padding: 20px;">
+                <h3>Sección de Soluciones</h3>
+                <p>Aquí se mostrará la información de soluciones.</p>
+                </div>
+        </div>
+
+        <div id="tickets-tab-content" class="tab-content hidden">
+             <div style="padding: 20px;">
+                <h3>Sección de Tickets</h3>
+                <p>Aquí se mostrará la información de tickets.</p>
+                </div>
+        </div>
+
     </div>
 
     <div id="username-modal" class="modal-overlay">

@@ -63,6 +63,8 @@ def load_documents(collection_name : str, force_reload : bool = False) -> None:
     )
     return print(rag.get_processed_documents())
 
+def get_preprocessed_files() -> dict:
+    return rag.get_processed_documents()
 
 
 
