@@ -55,7 +55,6 @@ class RAG:
                 # Eliminamos el '_id' de MongoDB si no lo necesitamos en el diccionario interno
                 doc.pop("_id", None)
                 processed_files_dict[file_key] = doc
-        print(f"Cargados {len(processed_files_dict)} registros de archivos procesados desde MongoDB.")
         return processed_files_dict
 
 
@@ -70,7 +69,6 @@ class RAG:
                 {"$set": document_to_save},
                 upsert=True # Inserta si no existe, actualiza si sí
             )
-        print("Registro de archivos procesados guardado en MongoDB.")
 
 
     def load_documents(self,
@@ -85,7 +83,6 @@ class RAG:
         new_docs_count = 0
         chunks_count = 0
 
-        print(f"Comprobando documentos en {folder_path}...")
 
         for archivo in os.listdir(folder_path):
             if not archivo.endswith(".pdf"):
