@@ -48,7 +48,7 @@ class RAG:
     def load_documents(self, folder_path: str, 
                        collection_name : str = None,
                        force_reload : bool = False
-                       ) -> None:
+                       ) -> list:
         if not os.path.exists(folder_path):
             raise FileNotFoundError(f"La carpeta {folder_path} no existe")
         
@@ -105,6 +105,7 @@ class RAG:
             print(f"Índice vectorial actualizado con {new_docs_count} nuevos documentos.")
         
         print(f"Procesamiento completado. Total: {docs_count} documentos ({new_docs_count} nuevos/modificados), generando {chunks_count} chunks")
+        return [docs_count, new_docs_count, chunks_count]
     
     def add_document(self, 
                      file_path: str, 

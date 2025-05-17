@@ -50,8 +50,8 @@ async def delete_history(user_id: str):
 
 @app.post("/load_documents")
 async def load_docs(collection_name: str, force_reload: bool = False):
-    load_documents(collection_name, force_reload)
-    return {"status": "ok", "message": f"Documents loaded for {collection_name}"}
+    return load_documents(collection_name, force_reload)
+    
 
 @app.get("/documents")
 async def documents():
@@ -59,7 +59,6 @@ async def documents():
 
 @app.post("/upload_document")
 async def upload_document(file: UploadFile = File(...)):
-    # Validar que el archivo sea PDF (opcional pero recomendado)
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF.")
 

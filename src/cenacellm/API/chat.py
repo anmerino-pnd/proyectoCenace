@@ -55,13 +55,13 @@ def metadata_generator():
 def clear_user_history(user_id: str) -> None:
     rag.clear_user_history(user_id)
 
-def load_documents(collection_name : str, force_reload : bool = False) -> None:
-    rag.load_documents(
+def load_documents(collection_name : str, force_reload : bool = False) -> list:
+    lista = rag.load_documents(
         collection_name=collection_name,
         folder_path=DOCUMENTS_DIR,
         force_reload=force_reload
     )
-    return print(rag.get_processed_documents())
+    return lista
 
 def get_preprocessed_files() -> dict:
     return rag.get_processed_documents()

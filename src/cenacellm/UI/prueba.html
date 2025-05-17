@@ -59,17 +59,18 @@
                 <div class="upload-area">
                     <h4>Subir nuevo documento PDF</h4>
                     <input type="file" id="documentUploadInput" accept=".pdf">
-                    <button id="uploadDocumentBtn" class="primary-button">Subir Documento</button>
+                    <label for="documentUploadInput">Choose File</label>
+                    <button id="uploadDocumentBtn" class="minimal-primary-button">Subir Documento en Carpeta</button>
                     <div id="uploadStatus" class="status-message"></div>
                 </div>
 
                 <div class="document-list-area">
                     <h4>Documentos disponibles</h4>
-                    <button id="refreshDocumentsBtn" class="secondary-button">Actualizar Lista</button>
+                    <button id="refreshDocumentsBtn">Actualizar Lista</button>
                     <ul id="documentList">
                         <li>Cargando documentos...</li>
                     </ul>
-                    <button id="processDocumentsBtn" class="primary-button" style="margin-top: 15px;">Procesar Documentos (Cargar en RAG)</button>
+                    <button id="processDocumentsBtn" class="minimal-primary-button" style="margin-top: 15px;">Procesar Documentos (Cargar en RAG)</button>
                      <div id="processStatus" class="status-message"></div>
                 </div>
             </div>
@@ -99,7 +100,7 @@
                 <input type="text" id="username-input" placeholder="Tu nombre">
             </div>
             <div class="modal-buttons" style="justify-content: center;">
-                <button id="submit-username-btn" class="primary-button" style="width: auto;">Comenzar Chat</button>
+                <button id="submit-username-btn" class="minimal-primary-button" style="width: auto;">Comenzar Chat</button>
             </div>
         </div>
     </div>
