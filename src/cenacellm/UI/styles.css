@@ -297,8 +297,8 @@ body {
     transition: transform 0.2s;
 }
 
-.message.bot .metadata-details {
-    /* Se ocultará/mostrará con la clase 'hidden' de utilidad */
+.message.bot .metadata-section .metadata-header .toggle-icon.open {
+    transform: rotate(180deg);
 }
 
 .message.bot .metadata-item {
