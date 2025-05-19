@@ -2,8 +2,10 @@ import os
 import json
 import time
 from typing import Generator
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 from ollama import GenerateResponse
-from cenacellm.clients import ollama as api
+from cenacellm.clients import ollama as api, mongo_uri, db_name
 
 from cenacellm.config import HISTORY_FILE
 from cenacellm.tools.assistant import Assistant
@@ -19,23 +21,26 @@ class OllamaAssistant(Assistant):
     def __init__(self, memory_window_size: int = 1):
         self.model = "phi4:latest"
         self.memory_window_size = memory_window_size
-        self.history_file = HISTORY_FILE
-        self._ensure_history_file()
-        self.histories = self.load_history()
 
-    def _ensure_history_file(self):
-        os.makedirs(os.path.dirname(self.history_file), exist_ok=True)
-        if not os.path.exists(self.history_file):
-            with open(self.history_file, "w", encoding="utf-8") as f:
-                json.dump({}, f, indent=4, ensure_ascii=False)
+        self.mongo_uri = mongo_uri
+        self.db_name = db_name
+        self.collection_name = "user_histories"
 
-    def load_history(self) -> dict:
-        with open(self.history_file, "r", encoding="utf-8") as f:
-            return json.load(f)
+        client = MongoClient(self.mongo_uri)
+        self.db = client[self.db_name]
+        self.collection = self.db[self.collection_name]
 
-    def save_history(self):
-        with open(self.history_file, "w", encoding="utf-8") as f:
-            json.dump(self.histories, f, indent=4, ensure_ascii=False)
+
+    def load_history(self, user_id: str) -> list:
+        doc = self.collection.find_one({"user_id": user_id})
+        return doc["history"] if doc else []
+
+    def save_history(self, user_id: str, history: list):
+        self.collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"history": history}},
+            upsert=True
+        )
 
     def make_metadata(self, res: GenerateResponse, duration: float) -> CallMetadata:
         input_tokens = res.prompt_eval_count
@@ -53,10 +58,7 @@ class OllamaAssistant(Assistant):
         user_msg = self.answer_user(q, cs)
         system = self.answer_system()
 
-        # Obtener historial completo del usuario o inicializar uno vacío si no existe
-        history : list = self.histories.get(user_id, [])
-        
-        # Obtener ventana de historial para construcción del prompt
+        history: list = self.load_history(user_id)
         window = history[-self.memory_window_size:]
 
         if window:
@@ -86,10 +88,7 @@ class OllamaAssistant(Assistant):
         duration = end_time - start_time
         metadata = self.make_metadata(chunk, duration)
 
-        # Añadir nuevos mensajes al historial existente en lugar de reemplazarlo
         history.append({"role": "user", "content": q})
         history.append({"role": "assistant", "content": response, "metadata": metadata.model_dump()})
-        
-        # Actualizar el historial completo
-        self.histories[user_id] = history
-        self.save_history()
+
+        self.save_history(user_id, history)

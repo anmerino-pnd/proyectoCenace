@@ -3,7 +3,7 @@ from typing import Generator
 from pymongo import MongoClient
 from ollama import GenerateResponse
 
-from cenacellm.clients import ollama as api
+from cenacellm.clients import ollama as api, mongo_uri, db_name
 from cenacellm.tools.assistant import Assistant
 from cenacellm.types import (
     LLMError,
@@ -19,8 +19,8 @@ class OllamaAssistant(Assistant):
         self.memory_window_size = memory_window_size
 
         # Conexión a MongoDB
-        self.mongo_uri = "mongodb://localhost:27017/"
-        self.db_name = "asistente_db"
+        self.mongo_uri = mongo_uri
+        self.db_name = db_name
         self.collection_name = "user_histories"
 
         client = MongoClient(self.mongo_uri)
