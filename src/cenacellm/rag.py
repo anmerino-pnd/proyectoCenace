@@ -28,22 +28,37 @@ class RAG:
             folder_path=vectorstore_path
         )
         
-        self.processed_files = self._load_processed_files()
+        self.client = self.assistant.client 
+        self.db = self.client["chat_db"] 
+        self.processed_files_collection = self.db["processed_files_registro"]  
+        self.processed_files_collection.create_index("file_key", unique=True)
         
-    
+        self.processed_files : dict = self._load_processed_files()
+
+
     def _load_processed_files(self) -> Dict[str, Any]:
-        if os.path.exists(self.processed_files_path):
-            try:
-                with open(self.processed_files_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"Error al cargar registro de archivos procesados: {e}")
-                return {}
-        return {}
+        processed_files_dict = {}
+        for doc in self.processed_files_collection.find():
+            file_key = doc.get("file_key")
+            if file_key:
+                doc.pop("_id", None)
+                processed_files_dict[file_key] = doc
+        return processed_files_dict
     
     def _save_processed_files(self) -> None:
-        with open(self.processed_files_path, 'w', encoding='utf-8') as f:
-            json.dump(self.processed_files, f, indent=2, ensure_ascii=False)
+        for file_key, file_info in self.processed_files.items():
+            document_to_save = {"file_key": file_key, **file_info}
+            self.processed_files_collection.update_one(
+                {"file_key": file_key},
+                {"$set": document_to_save},
+                upsert=True 
+            )
+    
+    def _delete_processed_file(self, file_key: List[str]) -> None:
+        for file_key in file_key:
+            self.processed_files_collection.delete_one({"file_key": file_key})
+            if file_key in self.processed_files:
+                del self.processed_files[file_key]
     
     def load_documents(self, folder_path: str, 
                        collection_name : str = None,
@@ -107,55 +122,6 @@ class RAG:
         print(f"Procesamiento completado. Total: {docs_count} documentos ({new_docs_count} nuevos/modificados), generando {chunks_count} chunks")
         return [docs_count, new_docs_count, chunks_count]
     
-    def add_document(self, 
-                     file_path: str, 
-                     collection_name: Optional[str] = None,
-                     force_reload: bool = False) -> None:
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"El archivo {file_path} no existe")
-        
-        if not file_path.endswith(".pdf"):
-            raise ValueError("Solo se admiten archivos PDF")
-        
-        archivo = os.path.basename(file_path)
-        file_stat = os.stat(file_path)
-        last_modified = int(file_stat.st_mtime)
-        file_size = file_stat.st_size
-        
-        file_key = f"{archivo}"
-        file_info = self.processed_files.get(file_key, {})
-        
-        if (not force_reload and file_key in self.processed_files and 
-            file_info.get("last_modified") == last_modified and 
-            file_info.get("size") == file_size):
-            print(f"El documento {archivo} ya está procesado y no ha cambiado.")
-            return
-        
-        print(f"Procesando: {archivo}")
-        
-        textos = self.collection.load_pdf(file_path, collection=collection_name)
-        chunks = self.collection.get_chunks(textos)
-        
-        chunks_count = 0
-        for chunk in chunks:
-            vector = self.embedder.vectorize(chunk.content)
-            self.vectorstore.add_text(vector, chunk)
-            chunks_count += 1
-        
-        self.processed_files[file_key] = {
-            "last_modified": last_modified,
-            "size": file_size,
-            "processed_at": datetime.now().isoformat(),
-            "chunks": chunks_count
-        }
-        
-        self.vectorstore.save_index()
-        self._save_processed_files()
-        
-        print(f"Documento procesado con {chunks_count} chunks generados")
-    
-    def get_processed_documents(self) -> Dict[str, Any]:
-        return self.processed_files
     
     def query(self, 
               user_id: str,
@@ -195,9 +161,7 @@ class RAG:
 
         
     def get_user_history(self, user_id : str) -> List[Dict[str, Any]]:
-        return self.assistant.histories.get(user_id, [])
+        return self.assistant.load_history(user_id)
     
     def clear_user_history(self, user_id) -> None:
-        if user_id in self.assistant.histories:
-            self.assistant.histories[user_id] = []
-            self.assistant.save_history()
+        return self.assistant.clear_user_history(user_id)

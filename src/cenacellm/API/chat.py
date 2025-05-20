@@ -1,8 +1,13 @@
+import os
+import shutil
 from cenacellm.rag import RAG
 from pydantic import BaseModel
-from typing import AsyncGenerator
+from typing import AsyncGenerator, List
+from fastapi.responses import JSONResponse 
 from fastapi.responses import StreamingResponse
 from cenacellm.config import VECTORS_DIR, DOCUMENTS_DIR
+from fastapi import FastAPI, UploadFile, File, HTTPException
+
 
 
 rag = RAG(vectorstore_path=VECTORS_DIR)
@@ -64,9 +69,31 @@ def load_documents(collection_name : str, force_reload : bool = False) -> list:
     return lista
 
 def get_preprocessed_files() -> dict:
-    return rag.get_processed_documents()
+    return rag.processed_files
 
+async def upload_documents(files: List[UploadFile] = File(...)):
+    responses = []
 
+    for file in files:
+        if file.content_type != "application/pdf":
+            raise HTTPException(status_code=400, detail=f"El archivo '{file.filename}' no es un PDF.")
+
+        file_location = os.path.join(DOCUMENTS_DIR, file.filename)
+
+        try:
+            with open(file_location, "wb+") as file_object:
+                shutil.copyfileobj(file.file, file_object)
+            responses.append({"filename": file.filename, "message": "Archivo subido con éxito"})
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error al guardar '{file.filename}': {e}")
+
+    return JSONResponse(content={"files": responses})
+def delete_document(files_name: List[str]):
+    for file_name in files_name:
+        file_path = os.path.join(DOCUMENTS_DIR, file_name)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    rag._delete_processed_file(files_name)
 
 
 

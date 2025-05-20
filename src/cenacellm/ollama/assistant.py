@@ -26,8 +26,8 @@ class OllamaAssistant(Assistant):
         self.db_name = db_name
         self.collection_name = "user_histories"
 
-        client = MongoClient(self.mongo_uri)
-        self.db = client[self.db_name]
+        self.client = MongoClient(self.mongo_uri)
+        self.db = self.client[self.db_name]
         self.collection = self.db[self.collection_name]
 
 
@@ -41,6 +41,11 @@ class OllamaAssistant(Assistant):
             {"$set": {"history": history}},
             upsert=True
         )
+
+    def clear_user_history(self, user_id: str):
+        self.collection.delete_one({"user_id": user_id})
+        self.save_history(user_id, [])
+
 
     def make_metadata(self, res: GenerateResponse, duration: float) -> CallMetadata:
         input_tokens = res.prompt_eval_count

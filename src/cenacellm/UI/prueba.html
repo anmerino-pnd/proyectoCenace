@@ -43,7 +43,7 @@
                 <div class="textarea-container">
                     <textarea id="userQuery" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
                     <button id="sendBtn" class="send-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="5" height="5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
                             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                         </svg>
@@ -57,21 +57,33 @@
                 <h3>Gestor de Documentos</h3>
 
                 <div class="upload-area">
-                    <h4>Subir nuevo documento PDF</h4>
-                    <input type="file" id="documentUploadInput" accept=".pdf">
-                    <label for="documentUploadInput">Choose File</label>
-                    <button id="uploadDocumentBtn" class="minimal-primary-button">Subir Documento en Carpeta</button>
+                    <h4>Subir nuevos documentos PDF</h4>
+                    <input type="file" id="documentUploadInput" accept=".pdf" multiple>
+                    <label for="documentUploadInput">Choose Files</label>
+                    <div id="selectedFilesPreview" class="selected-files-preview"></div>
+                    <button id="uploadDocumentBtn" class="minimal-primary-button">Subir a la carpeta</button>
                     <div id="uploadStatus" class="status-message"></div>
                 </div>
 
                 <div class="document-list-area">
                     <h4>Documentos disponibles</h4>
-                    <button id="refreshDocumentsBtn">Actualizar Lista</button>
-                    <ul id="documentList">
-                        <li>Cargando documentos...</li>
-                    </ul>
-                    <button id="processDocumentsBtn" class="minimal-primary-button" style="margin-top: 15px;">Procesar Documentos (Cargar en RAG)</button>
-                     <div id="processStatus" class="status-message"></div>
+                    <button id="processDocumentsBtn" class="minimal-primary-button" style="margin-bottom: 15px;">Procesar Documentos (Cargar en RAG)</button>
+                    <div id="processStatus" class="status-message"></div>
+
+                    <div class="document-actions">
+                        <button id="refreshDocumentsBtn">Actualizar Lista</button>
+                        <button id="toggleSelectionModeBtn" class="minimal-secondary-button">Eliminar Documentos</button>
+                         <button id="deleteSelectedDocumentsBtn" class="minimal-secondary-button hidden">Eliminar Documentos Seleccionados</button>
+                    </div>
+
+                    <div id="documentListContainer">
+                        <ul id="documentList">
+                            <li>Cargando documentos...</li>
+                        </ul>
+                    </div>
+
+
+                     <div id="deleteStatus" class="status-message"></div>
                 </div>
             </div>
         </div>
@@ -115,9 +127,7 @@
         </div>
     </div>
 
-<!-- Tus scripts al final del documento -->
 <script src="app.js"></script>
 <script src="documentos.js"></script>
-<script src="tabs.js"></script> <!-- Añadir esta línea -->
-</body>
+<script src="tabs.js"></script> </body>
 </html>

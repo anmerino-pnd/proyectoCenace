@@ -1,6 +1,6 @@
 :root {
     --primary-color: #ee964d;
-    --primary-hover: #f5750c;
+    --primary-hover: #eb8b3ce1;
     --secondary-color: #f2f2f2;
     --text-color: #333;
     --border-color: #ddd;
@@ -673,20 +673,45 @@ textarea {
 /* Estilo para el label asociado al input de archivo (actúa como botón) */
 .upload-area label[for="documentUploadInput"] {
     display: inline-block; /* Permite aplicar padding y margin */
-    padding: 8px 16px; /* Padding similar a un botón pequeño */
+    width: auto; /* Ancho automático */
+    text-align: center; /* Centrar texto */
+    padding: 5px 16px; /* Padding similar a un botón pequeño */
     background-color: transparent; /* Fondo transparente */
     color: var(--primary-color); /* Color del texto */
     border: 1px solid var(--primary-color); /* Borde del color primario */
     border-radius: var(--radius-sm);
-    font-size: 14px;
+    font-size: 15px;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-    margin-bottom: 15px; /* Espacio debajo del "botón" */
 }
 
 .upload-area label[for="documentUploadInput"]:hover {
     background-color: var(--primary-color);
     color: white;
+}
+
+/* Estilo para la previsualización de archivos seleccionados */
+.selected-files-preview {
+    margin-top: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: var(--light-bg);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: #555;
+    word-break: break-all; /* Romper palabras largas si es necesario */
+    display: none; /* Oculto por defecto */
+}
+
+
+/* Contenedor para los botones de acción de la lista */
+.document-actions {
+    display: flex; /* Usar flexbox para alinear los botones */
+    gap: 10px; /* Espacio entre los botones */
+    margin-bottom: 15px; /* Espacio debajo del contenedor de botones */
+    flex-wrap: wrap; /* Permitir que los botones se envuelvan en pantallas pequeñas */
+    align-items: center; /* Alinear verticalmente los botones */
 }
 
 /* Estilo para el botón "Actualizar Lista" (minimalista) */
@@ -695,12 +720,14 @@ textarea {
     background-color: transparent; /* Fondo transparente */
     color: #555; /* Color de texto sutil */
     border: 1px solid var(--border-color); /* Borde ligero */
-    padding: 8px 16px;
+    /* Ajustar padding y font-size para que coincida con .minimal-secondary-button */
+    padding: 10px 20px;
+    font-size: 15px;
     border-radius: var(--radius-sm);
-    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
-    margin-bottom: 15px; /* Espacio debajo del botón */
+    /* margin-bottom: 15px;  Espacio debajo del botón - ahora manejado por el gap del flexbox */
+    height: fit-content; /* Ajustar altura al contenido */
 }
 
 #refreshDocumentsBtn:hover {
@@ -724,11 +751,42 @@ textarea {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s;
-    margin-top: 10px; /* Espacio arriba */
+    /* margin-top: 10px;  Espacio arriba - Ajustado en HTML para el orden */
 }
 
 .minimal-primary-button:hover {
     background-color: var(--primary-hover);
+}
+
+/* Nuevo estilo para el botón de eliminar y seleccionar (minimalista secundario) */
+.minimal-secondary-button {
+    display: inline-block;
+    width: auto;
+    padding: 10px 20px; /* Padding que coincide con #refreshDocumentsBtn */
+    background-color: transparent; /* Fondo transparente */
+    color: var(--error-color); /* Color de texto de error */
+    border: 1px solid var(--error-color); /* Borde de color de error */
+    border-radius: var(--radius-sm);
+    font-size: 15px; /* Tamaño de fuente que coincide con #refreshDocumentsBtn */
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    /* margin-top: 10px;  Espacio arriba - ahora manejado por el gap del flexbox */
+     height: fit-content; /* Ajustar altura al contenido */
+}
+
+.minimal-secondary-button:hover {
+    background-color: var(--error-color);
+    color: white;
+}
+
+/* Estilo para el botón de eliminar cuando está habilitado (fondo rojo) */
+#deleteSelectedDocumentsBtn:not([disabled]) {
+    background-color: var(--error-color);
+    color: white;
+}
+#deleteSelectedDocumentsBtn:not([disabled]):hover {
+    background-color: #c62828; /* Rojo más oscuro al pasar el mouse */
 }
 
 
@@ -749,11 +807,33 @@ textarea {
     color: #444;
     cursor: pointer; /* Indica que es clickeable */
     transition: background-color 0.2s;
+    display: flex; /* Usar flexbox para alinear checkbox y texto */
+    align-items: center; /* Alinear verticalmente */
 }
 
 .document-item:hover {
     background-color: #eef2f7; /* Un color ligeramente más oscuro al pasar el mouse */
 }
+
+/* Estilo para el checkbox dentro del item de la lista */
+.document-item .document-checkbox {
+    margin-right: 10px; /* Espacio entre el checkbox y el nombre del archivo */
+    cursor: pointer;
+    /* Ocultar por defecto */
+    display: none;
+}
+
+/* Mostrar checkboxes solo cuando el contenedor principal tiene la clase 'selection-active' */
+#documentListContainer.selection-active .document-item .document-checkbox {
+    display: block;
+}
+
+
+/* Estilo para el nombre del archivo dentro del item de la lista */
+.document-item .document-filename {
+    flex-grow: 1; /* Permitir que el nombre del archivo ocupe el espacio restante */
+}
+
 
 /* Estilo para el contenedor de detalles del documento (inicialmente oculto) */
 .document-details {

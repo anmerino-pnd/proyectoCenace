@@ -69,3 +69,11 @@ class FAISSVectorStore(VectorStore):
         v1 = np.array([v1]).astype("float32")
         v2 = np.array([v2]).astype("float32")
         return np.linalg.norm(v1 - v2)
+    
+    def delete(self, idx: int):
+        if idx in self.text_dict:
+            del self.text_dict[idx]
+            self.index.remove_ids(np.array([idx]))
+            print(f"Elemento con índice {idx} eliminado.")
+        else:
+            print(f"Índice {idx} no encontrado en el diccionario.")

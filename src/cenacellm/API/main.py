@@ -1,8 +1,7 @@
-import os
-import shutil
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse 
+from typing import  List
 from cenacellm.API.chat import (
     async_chat_stream,
     metadata_generator,
@@ -11,7 +10,8 @@ from cenacellm.API.chat import (
     QueryRequest,
     get_chat_history,
     get_preprocessed_files,
-    DOCUMENTS_DIR
+    upload_documents,
+    delete_document
 )
 
 app = FastAPI()
@@ -52,27 +52,16 @@ async def delete_history(user_id: str):
 async def load_docs(collection_name: str, force_reload: bool = False):
     return load_documents(collection_name, force_reload)
     
-
 @app.get("/documents")
 async def documents():
     return get_preprocessed_files()
 
-@app.post("/upload_document")
-async def upload_document(file: UploadFile = File(...)):
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF.")
+@app.post("/upload_documents")
+async def upload_doc(files: List[UploadFile] = File(...)):
+    return await upload_documents(files)
 
-    file_location = os.path.join(DOCUMENTS_DIR, file.filename)
-
-    try:
-        with open(file_location, "wb+") as file_object:
-            shutil.copyfileobj(file.file, file_object)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al guardar el archivo: {e}")
-
-    return JSONResponse(content={"filename": file.filename, "message": "Archivo subido con éxito"})
-
-
-
+@app.post("/delete_document")
+def delete_doc(file_key: List[str]):
+    return delete_document(file_key)
 # uvicorn cenacellm.API.main:app --host 0.0.0.0 --port 80 --workers 4 --reload           // windows 
 # gunicorn -w 9 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:80 cenacellm.API.main:app   // linux
