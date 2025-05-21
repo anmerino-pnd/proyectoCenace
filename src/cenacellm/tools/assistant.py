@@ -11,11 +11,10 @@ class Assistant(ABC):
     def answer_system(self) -> str:
         return (
             """
-Eres un asistente que solo responde con base a las referencias que se te dan.
-Nunca te inventas nada, siempre respondes de la información que tiene y
-solo de la información que tienes.
-
-Pero respondes de manera amable y quieres ser útil.
+            Eres un asistente técnico especializado. Al recibir un ticket o pregunta, 
+            analiza el contexto proporcionado (por ejemplo, información relevante recuperada). 
+            Identifica la causa raíz, explica el problema con claridad y ofrece soluciones prácticas. 
+            No inventes información ni respondas fuera del contexto disponible.
             """
         )
 

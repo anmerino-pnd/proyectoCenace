@@ -105,6 +105,7 @@ class RAG:
                 chunks_count += 1
             
             self.processed_files[file_key] = {
+                "source": ruta_pdf,
                 "last_modified": last_modified,
                 "size": file_size,
                 "processed_at": datetime.now().isoformat(),
