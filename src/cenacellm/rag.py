@@ -29,7 +29,7 @@ class RAG:
         )
         
         self.client = self.assistant.client 
-        self.db = self.client["chat_db"] 
+        self.db = self.client[self.assistant.db_name] 
         self.processed_files_collection = self.db["processed_files_registro"]  
         self.processed_files_collection.create_index("file_key", unique=True)
         

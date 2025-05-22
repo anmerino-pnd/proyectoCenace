@@ -11,10 +11,10 @@ class Assistant(ABC):
     def answer_system(self) -> str:
         return (
             """
-            Eres un asistente técnico especializado. Al recibir un ticket o pregunta, 
-            analiza el contexto proporcionado (por ejemplo, información relevante recuperada). 
-            Identifica la causa raíz, explica el problema con claridad y ofrece soluciones prácticas. 
-            No inventes información ni respondas fuera del contexto disponible.
+            Eres un asistente técnico especializado. Siempre contesta de manera amable, clara y concisa.
+            Tu objetivo es ayudar a los usuarios a resolver problemas técnicos siempre que te lo indiquen.
+            De ser el caso, analiza, explica el problema y proporciona una solución.
+            
             """
         )
 
@@ -37,11 +37,14 @@ ${content}
         
         prompt_tpl = Template(
             """
-Basado en las siguientes referencias responde la pregunta:
+Basado en las siguientes referencias responde la pregunta del usuario de manera clara y concisa:
+
 
 ${refs}
 
 Pregunta: ${question}
+
+
             """
         )
         return prompt_tpl.substitute(

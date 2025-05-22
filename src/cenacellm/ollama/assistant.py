@@ -7,7 +7,6 @@ from bson.objectid import ObjectId
 from ollama import GenerateResponse
 from cenacellm.clients import ollama as api, mongo_uri, db_name
 
-from cenacellm.config import HISTORY_FILE
 from cenacellm.tools.assistant import Assistant
 from cenacellm.types import (
     LLMError,
@@ -25,10 +24,12 @@ class OllamaAssistant(Assistant):
         self.mongo_uri = mongo_uri
         self.db_name = db_name
         self.collection_name = "user_histories"
+        self.collection_backup_name = "user_histories_backup"
 
         self.client = MongoClient(self.mongo_uri)
         self.db = self.client[self.db_name]
         self.collection = self.db[self.collection_name]
+        self.collection_backup = self.db[self.collection_backup_name]
 
 
     def load_history(self, user_id: str) -> list:
@@ -42,6 +43,13 @@ class OllamaAssistant(Assistant):
             upsert=True
         )
 
+    def save_backup(self, user_id: str, history: list):
+        self.collection_backup.update_one(
+            {"user_id": user_id},
+            {"$set": {"history": history}},
+            upsert=True
+        )
+        
     def clear_user_history(self, user_id: str):
         self.collection.delete_one({"user_id": user_id})
         self.save_history(user_id, [])
@@ -97,3 +105,4 @@ class OllamaAssistant(Assistant):
         history.append({"role": "assistant", "content": response, "metadata": metadata.model_dump()})
 
         self.save_history(user_id, history)
+        self.save_backup(user_id, history)
