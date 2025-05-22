@@ -11,7 +11,8 @@ from cenacellm.API.chat import (
     get_chat_history,
     get_preprocessed_files,
     upload_documents,
-    delete_document
+    delete_document, 
+    view_document
 )
 import os # Importa os para manejar rutas de archivos
 
@@ -67,17 +68,8 @@ def delete_doc(file_key: List[str]):
 
 # Nuevo endpoint para ver documentos PDF en el navegador
 @app.get("/view_document/{filename}")
-async def view_document(filename: str):
-    # Asegúrate de que esta 'base_directory' apunte a la carpeta donde se guardan tus PDFs
-    # Es crucial que esta ruta sea accesible por tu servidor FastAPI
-    base_directory = "C:\\Users\\panda\\OneDrive\\Documents\\mcd\\proyectoCenace\\datos\\documentos" # Ajusta esta ruta según tu configuración
-    file_path = os.path.join(base_directory, filename)
-
-    if os.path.exists(file_path):
-        # Retorna el archivo con Content-Disposition: inline para que el navegador lo muestre
-        return FileResponse(file_path, media_type="application/pdf", headers={"Content-Disposition": "inline"})
-    else:
-        raise HTTPException(status_code=404, detail="Documento no encontrado en el servidor.")
+async def view_doc(filename: str):
+    return await view_document(filename)
 
 # uvicorn cenacellm.API.main:app --host 0.0.0.0 --port 80 --workers 4 --reload           // windows
 # gunicorn -w 9 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:80 cenacellm.API.main:app   // linux

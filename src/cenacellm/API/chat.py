@@ -3,8 +3,7 @@ import shutil
 from cenacellm.rag import RAG
 from pydantic import BaseModel
 from typing import AsyncGenerator, List
-from fastapi.responses import JSONResponse 
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from cenacellm.config import VECTORS_DIR, DOCUMENTS_DIR
 from fastapi import FastAPI, UploadFile, File, HTTPException
 
@@ -38,7 +37,7 @@ async def chat_stream(request: QueryRequest) -> AsyncGenerator[str, None]:
     user_id = request.user_id
     question = request.query
     k = request.k
-    filter_metadata = request.filter_metadata
+    filter_metadata = request.filter_metadata if request.filter_metadata == "None" else None
 
     for token in rag.answer(
         user_id=user_id,
@@ -88,12 +87,25 @@ async def upload_documents(files: List[UploadFile] = File(...)):
             raise HTTPException(status_code=500, detail=f"Error al guardar '{file.filename}': {e}")
 
     return JSONResponse(content={"files": responses})
+
 def delete_document(files_name: List[str]):
     for file_name in files_name:
         file_path = os.path.join(DOCUMENTS_DIR, file_name)
         if os.path.exists(file_path):
             os.remove(file_path)
     rag._delete_processed_file(files_name)
+
+async def view_document(filename: str):
+    # Asegúrate de que esta 'base_directory' apunte a la carpeta donde se guardan tus PDFs
+    # Es crucial que esta ruta sea accesible por tu servidor FastAPI
+    base_directory = DOCUMENTS_DIR # Ajusta esta ruta según tu configuración
+    file_path = os.path.join(base_directory, filename)
+
+    if os.path.exists(file_path):
+        # Retorna el archivo con Content-Disposition: inline para que el navegador lo muestre
+        return FileResponse(file_path, media_type="application/pdf", headers={"Content-Disposition": "inline"})
+    else:
+        raise HTTPException(status_code=404, detail="Documento no encontrado en el servidor.")
 
 
 

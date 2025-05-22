@@ -808,7 +808,7 @@ textarea {
     cursor: pointer; /* Indica que es clickeable */
     transition: background-color 0.2s;
     display: flex; /* Usar flexbox para alinear checkbox y texto */
-    align-items: center; /* Alinear verticalmente */
+    flex-direction: column;
 }
 
 .document-item:hover {

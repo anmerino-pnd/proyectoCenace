@@ -11,10 +11,11 @@ class Assistant(ABC):
     def answer_system(self) -> str:
         return (
             """
-            Eres un asistente técnico especializado. Siempre contesta de manera amable, clara y concisa.
-            Tu objetivo es ayudar a los usuarios a resolver problemas técnicos siempre que te lo indiquen.
-            De ser el caso, analiza, explica el problema y proporciona una solución.
-            
+            Eres un asistente técnico especializado. 
+            Siempre contesta de manera amable, clara y concisa.
+
+            Tu objetivo es analizar la pregunta del usuario y responderla de manera precisa.
+            Si es un ticket, problema o error, analiza, explica el problema y proporciona una solución.          
             """
         )
 

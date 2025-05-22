@@ -71,7 +71,6 @@ class RAG:
         new_docs_count = 0
         chunks_count = 0
         
-        print(f"Comprobando documentos en {folder_path}...")
         
         for archivo in os.listdir(folder_path):
             if not archivo.endswith(".pdf"):
@@ -88,12 +87,9 @@ class RAG:
             if (not force_reload and file_key in self.processed_files and 
                 file_info.get("last_modified") == last_modified and 
                 file_info.get("size") == file_size):
-                print(f"Omitiendo archivo sin cambios: {archivo}")
                 docs_count += 1
                 continue
-            
-            print(f"Procesando nuevo archivo o archivo modificado: {archivo}")
-            
+                        
             textos = self.collection.load_pdf(ruta_pdf, collection=collection_name)
             chunks = self.collection.get_chunks(textos)
             
@@ -118,9 +114,7 @@ class RAG:
         if new_docs_count > 0:
             self.vectorstore.save_index()
             self._save_processed_files()
-            print(f"Índice vectorial actualizado con {new_docs_count} nuevos documentos.")
         
-        print(f"Procesamiento completado. Total: {docs_count} documentos ({new_docs_count} nuevos/modificados), generando {chunks_count} chunks")
         return [docs_count, new_docs_count, chunks_count]
     
     
@@ -133,6 +127,7 @@ class RAG:
         
         query_vector = self.embedder.vectorize(question)
         
+        # Falta agregar la logica de si es None, agarrar 4 docs y 3 tickets
         relevant_chunks = self.vectorstore.get_similar(
             query_vector, 
             k=k,

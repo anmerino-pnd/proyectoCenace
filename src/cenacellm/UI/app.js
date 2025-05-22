@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Iterar sobre el array de objetos de metadatos
                 metadataArray.forEach((item, index) => {
-                    if (item.metadata) { // Verificar si el objeto tiene la clave 'metadata'
+                    if (item.metadata.collection === 'documentos') { // Verificar si el objeto tiene la clave 'metadata'
                         const metadataItemDiv = document.createElement('div');
                         metadataItemDiv.classList.add('metadata-item');
 
