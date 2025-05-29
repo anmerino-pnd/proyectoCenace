@@ -85,7 +85,6 @@ class RAG:
             file_info = self.processed_files.get(file_key, {})
             
             if (not force_reload and file_key in self.processed_files and 
-                file_info.get("last_modified") == last_modified and 
                 file_info.get("size") == file_size):
                 docs_count += 1
                 continue
