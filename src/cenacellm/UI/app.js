@@ -283,7 +283,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         const detailsList = document.createElement('ul');
                         // Mostrar solo algunos campos relevantes, ajusta según necesites
-                        const fieldsToShow = ['source', 'filename', 'page_number', 'author', 'subject'];
+                        const fieldsToShow = [
+                            //'source',
+                            //'filename',
+                            'page_number', 'author', 'subject'];
+                        if (item.metadata["filename"]) {
+                            const sourceItem = document.createElement('a');
+                            sourceItem.href = "/view_document/" + item.metadata.filename;
+                            sourceItem.textContent = 'Picale aqui';
+                            sourceItem.target = "_blank"; // Abrir en nueva pestaña
+                            detailsList.appendChild(sourceItem);
+                        }
                         fieldsToShow.forEach(field => {
                             if (item.metadata[field]) {
                                 const listItem = document.createElement('li');
