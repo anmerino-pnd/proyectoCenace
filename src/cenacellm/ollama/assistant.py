@@ -55,9 +55,9 @@ class OllamaAssistant(Assistant):
         self.save_history(user_id, [])
 
 
-    def make_metadata(self, res: GenerateResponse, duration: float) -> CallMetadata:
-        input_tokens = res.prompt_eval_count
-        output_tokens = res.eval_count
+    def make_metadata(self, response: GenerateResponse, duration: float, references) -> CallMetadata:
+        input_tokens = response.prompt_eval_count
+        output_tokens = response.eval_count
         return call_metadata(
             provider="ollama",
             model=self.model,
@@ -65,10 +65,11 @@ class OllamaAssistant(Assistant):
             duration=duration,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
+            references=references
         )
 
-    def answer(self, q: Question, cs: Chunks, user_id: str) -> Generator[str, None, None]:
-        user_msg = self.answer_user(q, cs)
+    def answer(self, question: Question, chunks: Chunks, user_id: str) -> Generator[str, None, None]:
+        user_msg = self.answer_user(question, chunks)
         system = self.answer_system()
 
         history: list = self.load_history(user_id)
@@ -99,9 +100,9 @@ class OllamaAssistant(Assistant):
             raise LLMError("ollama assistant", e)
 
         duration = end_time - start_time
-        metadata = self.make_metadata(chunk, duration)
+        metadata = self.make_metadata(chunk, duration, chunks)
 
-        history.append({"role": "user", "content": q})
+        history.append({"role": "user", "content": question})
         history.append({"role": "assistant", "content": response, "metadata": metadata.model_dump()})
 
         self.save_history(user_id, history)

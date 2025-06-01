@@ -445,9 +445,19 @@ textarea {
     background-color: var(--primary-hover);
 }
 
+/* Nuevo estilo para el botón cuando está en estado de pausa (ya no se usará pero se mantiene por si acaso) */
+.send-button.pause-state {
+    background-color: #f44336; /* Un rojo para indicar pausa/detener */
+}
+
+.send-button.pause-state:hover {
+    background-color: #d32f2f; /* Un rojo más oscuro al pasar el ratón */
+}
+
 .send-button svg {
     width: 18px;
     height: 18px;
+    transform: translateY(2px); /* Ajustar la posición vertical del icono */
 }
 
 /* Indicador de escritura */
@@ -887,3 +897,19 @@ textarea {
 
 /* Asegurar que los botones de subir y procesar usen la nueva clase */
 /* Esto se hará modificando el HTML */
+
+/* Estilos para el botón de enviar deshabilitado */
+.send-button.disabled-btn {
+    opacity: 0.5; /* Lo hace semitransparente */
+    cursor: not-allowed; /* Cambia el cursor a "no permitido" */
+    background-color: #cccccc; /* Un color gris para indicar que está inactivo */
+    /* pointer-events: none; */ /* Se maneja con el atributo disabled del HTML */
+}
+
+/* Estilos para el área de texto deshabilitada */
+.chat-input-area textarea.disabled-input {
+    background-color: #f0f0f0; /* Un fondo más claro */
+    cursor: not-allowed; /* Cambia el cursor a "no permitido" */
+    color: #888; /* Color de texto más tenue */
+    /* pointer-events: none; */ /* Se maneja con el atributo disabled del HTML */
+}

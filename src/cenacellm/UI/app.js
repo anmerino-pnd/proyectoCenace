@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatbox = document.getElementById('messages-container');
     const userQueryTextarea = document.getElementById('userQuery');
     const sendBtn = document.getElementById('sendBtn');
+    const sendBtnIconContainer = document.getElementById('sendBtnIcon'); // Obtener el span dentro del botón
     const deleteHistoryBtn = document.getElementById('deleteHistoryBtn');
     const deleteConfirmationModalOverlay = document.getElementById('delete-confirmation-modal-overlay');
     const cancelButton = deleteConfirmationModalOverlay ? deleteConfirmationModalOverlay.querySelector('.cancel-button') : null;
@@ -18,6 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let userName = '';
     let currentBotMessageElement = null;
 
+    // Variable de estado para gestionar la generación
+    let isGeneratingResponse = false;
+
+    // SVG para el icono de enviar (solo necesitamos este ahora)
+    const sendIconSVG = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+    `;
 
     function requestUsername() {
         if (chatArea) chatArea.classList.add('hidden');
@@ -125,6 +136,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!chatbox) return;
         const spinner = chatbox.querySelector('.typing-indicator');
         if (spinner) spinner.remove();
+    }
+
+    // Función para habilitar/deshabilitar el input y el botón de enviar
+    function toggleInputAndButtonState(enabled) {
+        userQueryTextarea.disabled = !enabled;
+        sendBtn.disabled = !enabled;
+
+        if (enabled) {
+            sendBtn.classList.remove('disabled-btn');
+            userQueryTextarea.classList.remove('disabled-input');
+            sendBtnIconContainer.innerHTML = sendIconSVG; // Asegurarse de que el icono sea el de enviar
+        } else {
+            sendBtn.classList.add('disabled-btn');
+            userQueryTextarea.classList.add('disabled-input');
+            sendBtnIconContainer.innerHTML = sendIconSVG; // El icono se mantiene, pero se ve deshabilitado por el CSS
+        }
     }
 
     async function loadHistory() {
@@ -288,9 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             //'filename',
                             'page_number', 'author', 'subject'];
                         if (item.metadata["filename"]) {
+                            const viewDocumentUrl = `${apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`;;
                             const sourceItem = document.createElement('a');
-                            sourceItem.href = "/view_document/" + item.metadata.filename;
-                            sourceItem.textContent = 'Picale aqui';
+                            sourceItem.href = viewDocumentUrl;
+                            sourceItem.textContent = 'Abrir documento';
                             sourceItem.target = "_blank"; // Abrir en nueva pestaña
                             detailsList.appendChild(sourceItem);
                         }
@@ -301,17 +329,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 detailsList.appendChild(listItem);
                             }
                         });
-
-                        // Opcional: Añadir un enlace si hay una URL o forma de acceder a la fuente
-                        // if (item.metadata.url) {
-                        //     const listItem = document('li');
-                        //     const link = document.createElement('a');
-                        //     link.href = item.metadata.url;
-                        //     link.textContent = 'Ver fuente';
-                        //     link.target = "_blank";
-                        //     listItem.appendChild(link);
-                        //     detailsList.appendChild(listItem);
-                        // }
 
 
                         metadataItemDiv.appendChild(detailsList);
@@ -348,12 +365,23 @@ document.addEventListener('DOMContentLoaded', () => {
              if (!userName) console.warn("Intento de enviar mensaje sin nombre de usuario."); // O muestra un mensaje en la UI
              return;
         }
+
+        // Si ya se está generando una respuesta, no permitir enviar un nuevo mensaje
+        if (isGeneratingResponse) {
+            console.warn("Ya se está generando una respuesta. Por favor, espera.");
+            return;
+        }
+
+        isGeneratingResponse = true; // Iniciar generación
+        toggleInputAndButtonState(false); // Deshabilitar input y botón
+
         const userQuery = userQueryTextarea.value.trim();
         appendMessage("user", userQuery);
         userQueryTextarea.value = "";
         resizeTextarea();
-        userQueryTextarea.focus();
-        showSpinner();
+        userQueryTextarea.focus(); // Mantener el foco en el textarea
+
+        showSpinner(); // Mostrar spinner
         currentBotMessageElement = null; // Reset antes de la nueva respuesta
 
         const kValue = getKValue();
@@ -397,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const chunkValue = decoder.decode(value, { stream: true });
                 if (firstChunk) {
-                    hideSpinner();
+                    hideSpinner(); // Ocultar spinner después del primer chunk
                     // Capturar el elemento del mensaje del bot la primera vez
                     const msgElement = appendMessage("bot", chunkValue, false);
                     if (msgElement) {
@@ -413,12 +441,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Fetch or streaming error:", error);
             appendMessage("bot", "Hubo un problema al enviar el mensaje. Intenta nuevamente.");
         } finally {
-            hideSpinner();
+            isGeneratingResponse = false; // Finalizar generación
+            toggleInputAndButtonState(true); // Re-habilitar input y botón
+
              // Asegurarse de que el contenido Markdown se renderice después de que termine el streaming
              if (currentBotMessageElement && typeof marked !== "undefined" && currentBotMessageElement.dataset.rawContent) {
                  currentBotMessageElement.innerHTML = marked.parse(currentBotMessageElement.dataset.rawContent);
              }
-
 
             chatbox.scrollTop = chatbox.scrollHeight;
 
@@ -435,12 +464,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Modificar el listener de eventos del botón de enviar
     if (sendBtn && userQueryTextarea) {
         sendBtn.addEventListener('click', sendMessage);
         userQueryTextarea.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+                e.preventDefault(); // Prevenir el comportamiento por defecto de Enter (nueva línea)
+                if (!isGeneratingResponse) { // Solo enviar mensaje si no se está generando una respuesta
+                    sendMessage();
+                } else {
+                    // Opcional: Proporcionar retroalimentación de que la generación está en curso
+                    console.log("No se puede enviar un nuevo mensaje mientras se genera una respuesta.");
+                }
             }
         });
         userQueryTextarea.addEventListener('input', resizeTextarea);
