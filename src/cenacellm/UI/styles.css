@@ -895,10 +895,7 @@ textarea {
     border: 1px solid #ef9a9a;
 }
 
-/* Asegurar que los botones de subir y procesar usen la nueva clase */
-/* Esto se hará modificando el HTML */
 
-/* Estilos para el botón de enviar deshabilitado */
 .send-button.disabled-btn {
     opacity: 0.5; /* Lo hace semitransparente */
     cursor: not-allowed; /* Cambia el cursor a "no permitido" */
