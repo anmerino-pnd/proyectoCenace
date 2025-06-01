@@ -38,6 +38,7 @@
                             <option value="None" selected>Todos</option>
                             <option value="documentos">Documentos</option>
                             <option value="tickets">Tickets</option>
+                            <option value="soluciones">Soluciones</option>
                         </select>
                     </div>
                 </div>
@@ -93,10 +94,12 @@
         </div>
 
         <div id="soluciones-tab-content" class="tab-content hidden">
-             <div style="padding: 20px;">
-                <h3>Sección de Soluciones</h3>
-                <p>Aquí se mostrará la información de soluciones.</p>
+             <div class="solutions-container">
+                <h3>Soluciones Guardadas</h3>
+                <div id="likedSolutionsList" class="liked-solutions-list">
+                    <p>No hay soluciones guardadas aún.</p>
                 </div>
+            </div>
         </div>
 
         <div id="tickets-tab-content" class="tab-content hidden">
@@ -131,7 +134,9 @@
         </div>
     </div>
 
+<script src="documentos.js"></script> 
+<script src="soluciones.js"></script> 
 <script src="app.js"></script>
-<script src="documentos.js"></script>
-<script src="tabs.js"></script> </body>
+<script src="tabs.js"></script>
+</body>
 </html>

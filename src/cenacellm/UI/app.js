@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatbox = document.getElementById('messages-container');
     const userQueryTextarea = document.getElementById('userQuery');
     const sendBtn = document.getElementById('sendBtn');
-    const sendBtnIconContainer = document.getElementById('sendBtnIcon'); // Obtener el span dentro del botón
+    const sendBtnIconContainer = document.getElementById('sendBtnIcon');
     const deleteHistoryBtn = document.getElementById('deleteHistoryBtn');
     const deleteConfirmationModalOverlay = document.getElementById('delete-confirmation-modal-overlay');
     const cancelButton = deleteConfirmationModalOverlay ? deleteConfirmationModalOverlay.querySelector('.cancel-button') : null;
@@ -19,14 +19,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let userName = '';
     let currentBotMessageElement = null;
 
-    // Variable de estado para gestionar la generación
     let isGeneratingResponse = false;
 
-    // SVG para el icono de enviar (solo necesitamos este ahora)
     const sendIconSVG = `
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+    `;
+
+    const likeIconSVG = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-heart">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
         </svg>
     `;
 
@@ -47,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadHistory();
             if (userQueryTextarea) userQueryTextarea.focus();
         } else {
-            console.warn("Nombre de usuario vacío."); // O muestra un mensaje en la UI
+            console.warn("Nombre de usuario vacío.");
             if (usernameInput) usernameInput.focus();
         }
     }
@@ -62,42 +66,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
     requestUsername();
 
-    // Modificada para asignar un ID único a los mensajes del bot
-    function appendMessage(sender, message, isStreaming = false) {
+    /**
+     * Añade un mensaje al contenedor de chat.
+     * @param {string} sender - El remitente del mensaje ('user' o 'bot').
+     * @param {string} message - El contenido del mensaje.
+     * @param {boolean} isStreaming - Si el mensaje está siendo transmitido (streaming).
+     * @param {string|null} messageId - El ID único del mensaje (solo para mensajes del bot).
+     * @param {object} metadata - Los metadatos asociados al mensaje (solo para mensajes del bot).
+     * @returns {HTMLElement|null} El elemento del mensaje HTML creado.
+     */
+    function appendMessage(sender, message, isStreaming = false, messageId = null, metadata = {}) {
         if (!chatbox) return null;
 
+        // Si es un mensaje de bot en streaming y ya tenemos un elemento actual, actualízalo
         if (sender === "bot" && isStreaming && currentBotMessageElement) {
             let rawContent = currentBotMessageElement.dataset.rawContent || '';
             rawContent += message;
             currentBotMessageElement.dataset.rawContent = rawContent;
+            // Renderiza el contenido Markdown si 'marked' está disponible
             if (typeof marked !== "undefined") {
                  currentBotMessageElement.innerHTML = marked.parse(rawContent);
             } else {
+                // Fallback para texto plano si 'marked' no está disponible
                 const tempDiv = document.createElement('div');
                 tempDiv.textContent = rawContent;
                 currentBotMessageElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
             }
+            // Asegúrate de que el icono de "like" permanezca al final
+            const likeIcon = currentBotMessageElement.querySelector('.like-icon');
+            if (likeIcon) {
+                currentBotMessageElement.appendChild(likeIcon);
+            }
             chatbox.scrollTop = chatbox.scrollHeight;
             return currentBotMessageElement;
         } else {
+            // Crea un nuevo elemento de mensaje
             const msgDiv = document.createElement("div");
-            // Asignar un ID único a los mensajes del bot
             if (sender === "bot") {
-                msgDiv.id = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                // Asigna un ID único al mensaje del bot si no se proporciona uno
+                msgDiv.id = messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                msgDiv.dataset.messageId = msgDiv.id; // Almacena el ID para fácil acceso
             }
             msgDiv.classList.add("message", sender);
+
             if (sender === "bot") {
                 currentBotMessageElement = msgDiv;
-                msgDiv.dataset.rawContent = message;
+                msgDiv.dataset.rawContent = message; // Almacena el contenido crudo para streaming
                 if (typeof marked !== "undefined" && !isStreaming) {
+                     // Renderiza el contenido Markdown si no está en streaming
                      msgDiv.innerHTML = marked.parse(message);
                 } else {
+                     // Fallback para texto plano
                      const tempDiv = document.createElement('div');
                      tempDiv.textContent = message;
                      msgDiv.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
                 }
+
+                // Añade el icono de "like" a los mensajes del bot
+                const likeIcon = document.createElement('span');
+                likeIcon.classList.add('like-icon');
+                likeIcon.innerHTML = likeIconSVG;
+                likeIcon.dataset.messageId = msgDiv.id; // Enlaza el icono con el ID del mensaje
+                // Si el mensaje ya está "likeado" en los metadatos, añade la clase 'liked'
+                if (metadata && metadata.disable === true) {
+                    likeIcon.classList.add('liked');
+                }
+                msgDiv.appendChild(likeIcon);
+
             } else {
-                currentBotMessageElement = null;
+                currentBotMessageElement = null; // Resetea para mensajes de usuario
                 const tempDiv = document.createElement('div');
                 tempDiv.textContent = message;
                 msgDiv.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
@@ -138,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (spinner) spinner.remove();
     }
 
-    // Función para habilitar/deshabilitar el input y el botón de enviar
     function toggleInputAndButtonState(enabled) {
         userQueryTextarea.disabled = !enabled;
         sendBtn.disabled = !enabled;
@@ -146,11 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (enabled) {
             sendBtn.classList.remove('disabled-btn');
             userQueryTextarea.classList.remove('disabled-input');
-            sendBtnIconContainer.innerHTML = sendIconSVG; // Asegurarse de que el icono sea el de enviar
+            sendBtnIconContainer.innerHTML = sendIconSVG;
         } else {
             sendBtn.classList.add('disabled-btn');
             userQueryTextarea.classList.add('disabled-input');
-            sendBtnIconContainer.innerHTML = sendIconSVG; // El icono se mantiene, pero se ve deshabilitado por el CSS
+            sendBtnIconContainer.innerHTML = sendIconSVG;
         }
     }
 
@@ -181,15 +217,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 appendMessage("bot", `¡Hola ${userName}! ¿En qué puedo ayudarte hoy?`);
                 return;
             }
-            // Cargar historial y luego intentar cargar metadatos para cada mensaje del bot
             for (const msg of history) {
                 if (msg && typeof msg.role === 'string' && typeof msg.content === 'string') {
                     const sender = msg.role === "user" ? "user" : "bot";
-                    const msgElement = appendMessage(sender, msg.content);
-                    if (sender === "bot" && msgElement) {
-                         // Nota: Cargar metadatos para mensajes históricos puede ser costoso/lento
-                         // Considera si realmente necesitas hacer esto o solo para mensajes nuevos
-                         // fetchAndDisplayMetadata(msgElement.id);
+                    // Pasa el ID del mensaje y los metadatos para los mensajes del bot al cargar el historial
+                    appendMessage(sender, msg.content, false, msg.id, msg.metadata);
+                    // Después de cargar el mensaje, si es un bot y tiene metadatos, mostrarlos
+                    if (sender === "bot" && msg.metadata && msg.metadata.references) {
+                        const msgElement = document.getElementById(msg.id);
+                        if (msgElement) {
+                            fetchAndDisplayMetadata(msgElement, msg.metadata.references);
+                        }
                     }
                 }
             }
@@ -268,126 +306,169 @@ document.addEventListener('DOMContentLoaded', () => {
             "documentos": {"collection": "documentos"},
             "articulos": {"collection": "articulos"},
             "noticias": {"collection": "noticias"},
-            "todos": {}
+            "None": {}
         };
 
         return filterOptions[selectedValue] || {};
     }
 
-    // Nueva función para obtener y mostrar metadatos de forma colapsable
-    async function fetchAndDisplayMetadata(messageElementId) {
+    /**
+     * Muestra la sección de metadatos/referencias para un mensaje del bot.
+     * @param {HTMLElement} messageElement - El elemento div del mensaje del bot.
+     * @param {Array<Object>} metadataArray - El array de objetos de metadatos/referencias.
+     */
+    function fetchAndDisplayMetadata(messageElement, metadataArray) {
+        if (!messageElement || !Array.isArray(metadataArray) || metadataArray.length === 0) {
+            return;
+        }
+
+        // Eliminar cualquier sección de metadatos existente para evitar duplicados
+        const existingMetadataSection = messageElement.querySelector('.metadata-section');
+        if (existingMetadataSection) {
+            existingMetadataSection.remove();
+        }
+
+        const metadataSection = document.createElement('div');
+        metadataSection.classList.add('metadata-section');
+
+        const metadataHeader = document.createElement('div');
+        metadataHeader.classList.add('metadata-header');
+        metadataHeader.innerHTML = '<h5>Referencias <span class="toggle-icon">+</span></h5>';
+
+        const metadataDetails = document.createElement('div');
+        metadataDetails.classList.add('metadata-details', 'hidden');
+
+        metadataArray.forEach((item, index) => {
+            if (item.metadata.collection === 'documentos') {
+                const metadataItemDiv = document.createElement('div');
+                metadataItemDiv.classList.add('metadata-item');
+
+                const itemTitle = document.createElement('h6');
+                itemTitle.textContent = `Referencia ${index + 1}${item.metadata.title ? ': ' + item.metadata.title : ''}`;
+                metadataItemDiv.appendChild(itemTitle);
+
+                const detailsList = document.createElement('ul');
+                const fieldsToShow = [
+                    'page_number', 'author', 'subject'];
+                if (item.metadata["filename"]) {
+                    const viewDocumentUrl = `${apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`;;
+                    const sourceItem = document.createElement('a');
+                    sourceItem.href = viewDocumentUrl;
+                    sourceItem.textContent = 'Abrir documento';
+                    sourceItem.target = "_blank";
+                    detailsList.appendChild(sourceItem);
+                }
+                fieldsToShow.forEach(field => {
+                    if (item.metadata[field]) {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${field.replace('_', ' ')}: ${item.metadata[field]}`;
+                        detailsList.appendChild(listItem);
+                    }
+                });
+
+
+                metadataItemDiv.appendChild(detailsList);
+                metadataDetails.appendChild(metadataItemDiv);
+            }
+        });
+
+        metadataSection.appendChild(metadataHeader);
+        metadataSection.appendChild(metadataDetails);
+        messageElement.appendChild(metadataSection);
+        chatbox.scrollTop = chatbox.scrollHeight;
+
+        metadataHeader.addEventListener('click', () => {
+            metadataDetails.classList.toggle('hidden');
+            const icon = metadataHeader.querySelector('.toggle-icon');
+            if (metadataDetails.classList.contains('hidden')) {
+                icon.textContent = '+';
+            } else {
+                icon.textContent = '-';
+            }
+        });
+    }
+
+    /**
+     * Alterna el estado de "me gusta" de un mensaje y actualiza el backend.
+     * @param {string} messageId - El ID del mensaje a actualizar.
+     * @param {boolean} isLiked - El nuevo estado de "me gusta" (true para "likeado", false para "no likeado).
+     * @param {function} callback - Función a ejecutar después de la actualización exitosa.
+     */
+    async function toggleLike(messageId, isLiked, callback) {
+        if (!userName) {
+            console.warn("No hay nombre de usuario disponible para dar/quitar 'me gusta' al mensaje.");
+            return;
+        }
         try {
-            const response = await fetch(`${apiEndpoint}/metadata`);
+            const response = await fetch(`${apiEndpoint}/history/${userName}/messages/${messageId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_metadata: { disable: isLiked } })
+            });
+
             if (!response.ok) {
-                console.error(`Error fetching metadata: ${response.status}`);
-                return;
+                const errorText = await response.text();
+                console.error(`Error al actualizar los metadatos del mensaje: ${response.status}`, errorText);
+            } else {
+                if (callback && typeof callback === 'function') {
+                    callback(); 
+                }
             }
-            const metadataArray = await response.json(); // Esperamos un array
-
-            const messageElement = document.getElementById(messageElementId);
-
-            if (messageElement && Array.isArray(metadataArray) && metadataArray.length > 0) {
-                const metadataSection = document.createElement('div');
-                metadataSection.classList.add('metadata-section');
-
-                const metadataHeader = document.createElement('div');
-                metadataHeader.classList.add('metadata-header');
-                metadataHeader.innerHTML = '<h5>Referencias <span class="toggle-icon">+</span></h5>'; // Título y icono
-
-                const metadataDetails = document.createElement('div');
-                metadataDetails.classList.add('metadata-details', 'hidden'); // Inicialmente oculto
-
-                // Iterar sobre el array de objetos de metadatos
-                metadataArray.forEach((item, index) => {
-                    if (item.metadata.collection === 'documentos') { // Verificar si el objeto tiene la clave 'metadata'
-                        const metadataItemDiv = document.createElement('div');
-                        metadataItemDiv.classList.add('metadata-item');
-
-                        const itemTitle = document.createElement('h6');
-                        // Usar el título si existe, o un identificador genérico
-                        itemTitle.textContent = `Referencia ${index + 1}${item.metadata.title ? ': ' + item.metadata.title : ''}`;
-                        metadataItemDiv.appendChild(itemTitle);
-
-                        const detailsList = document.createElement('ul');
-                        // Mostrar solo algunos campos relevantes, ajusta según necesites
-                        const fieldsToShow = [
-                            //'source',
-                            //'filename',
-                            'page_number', 'author', 'subject'];
-                        if (item.metadata["filename"]) {
-                            const viewDocumentUrl = `${apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`;;
-                            const sourceItem = document.createElement('a');
-                            sourceItem.href = viewDocumentUrl;
-                            sourceItem.textContent = 'Abrir documento';
-                            sourceItem.target = "_blank"; // Abrir en nueva pestaña
-                            detailsList.appendChild(sourceItem);
-                        }
-                        fieldsToShow.forEach(field => {
-                            if (item.metadata[field]) {
-                                const listItem = document.createElement('li');
-                                listItem.textContent = `${field.replace('_', ' ')}: ${item.metadata[field]}`;
-                                detailsList.appendChild(listItem);
-                            }
-                        });
-
-
-                        metadataItemDiv.appendChild(detailsList);
-                        metadataDetails.appendChild(metadataItemDiv);
-                    }
-                });
-
-                metadataSection.appendChild(metadataHeader);
-                metadataSection.appendChild(metadataDetails);
-                messageElement.appendChild(metadataSection);
-                chatbox.scrollTop = chatbox.scrollHeight; // Desplazar para ver la nueva sección
-
-                // Añadir evento para colapsar/expandir
-                metadataHeader.addEventListener('click', () => {
-                    metadataDetails.classList.toggle('hidden');
-                    const icon = metadataHeader.querySelector('.toggle-icon');
-                    if (metadataDetails.classList.contains('hidden')) {
-                        icon.textContent = '+';
-                    } else {
-                        icon.textContent = '-';
-                    }
-                });
-            }
-
         } catch (error) {
-            console.error("Error fetching or displaying metadata:", error);
-             // Opcional: Mostrar un mensaje de error en la UI si falla la carga de metadatos
+            console.error("Error al alternar el estado de 'me gusta':", error);
         }
     }
 
+    // Delegación de eventos para los iconos de "like"
+    if (chatbox) {
+        chatbox.addEventListener('click', (event) => {
+            const likeIcon = event.target.closest('.like-icon');
+            if (likeIcon) {
+                const messageId = likeIcon.dataset.messageId;
+                const isCurrentlyLiked = likeIcon.classList.contains('liked');
+                likeIcon.classList.toggle('liked', !isCurrentlyLiked); // Actualización optimista de la UI
+                // Pasa una función de callback para recargar soluciones si la pestaña está activa
+                toggleLike(messageId, !isCurrentlyLiked, () => {
+                    const solutionsTabButton = document.querySelector('.tab-button[data-tab="soluciones"]');
+                    if (solutionsTabButton && solutionsTabButton.classList.contains('active')) {
+                        // Llama a la función global para cargar soluciones definida en soluciones.js
+                        if (typeof window.loadLikedSolutions === 'function') {
+                            window.loadLikedSolutions(userName, apiEndpoint);
+                        }
+                    }
+                });
+            }
+        });
+    }
 
     async function sendMessage() {
         if (!userQueryTextarea || !userQueryTextarea.value.trim() || !userName) {
-             if (!userName) console.warn("Intento de enviar mensaje sin nombre de usuario."); // O muestra un mensaje en la UI
+             if (!userName) console.warn("Intento de enviar mensaje sin nombre de usuario.");
              return;
         }
 
-        // Si ya se está generando una respuesta, no permitir enviar un nuevo mensaje
         if (isGeneratingResponse) {
             console.warn("Ya se está generando una respuesta. Por favor, espera.");
             return;
         }
 
-        isGeneratingResponse = true; // Iniciar generación
-        toggleInputAndButtonState(false); // Deshabilitar input y botón
+        isGeneratingResponse = true;
+        toggleInputAndButtonState(false);
 
         const userQuery = userQueryTextarea.value.trim();
         appendMessage("user", userQuery);
         userQueryTextarea.value = "";
         resizeTextarea();
-        userQueryTextarea.focus(); // Mantener el foco en el textarea
+        userQueryTextarea.focus();
 
-        showSpinner(); // Mostrar spinner
-        currentBotMessageElement = null; // Reset antes de la nueva respuesta
+        showSpinner();
+        currentBotMessageElement = null; // Reset currentBotMessageElement before new message
 
         const kValue = getKValue();
         const filterMetadata = getFilterMetadata();
 
-        let latestBotMessageId = null; // Variable para guardar el ID del último mensaje del bot
+        let latestBotMessageId = null;
+        let finalMetadata = {}; // To store the metadata received at the end of the stream
 
         try {
             const response = await fetch(`${apiEndpoint}/chat`, {
@@ -418,62 +499,105 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
             let firstChunk = true;
+            let botMessageElement = null; // Reference to the bot message element
+            let accumulatedText = ""; // To accumulate text content
 
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
 
                 const chunkValue = decoder.decode(value, { stream: true });
-                if (firstChunk) {
-                    hideSpinner(); // Ocultar spinner después del primer chunk
-                    // Capturar el elemento del mensaje del bot la primera vez
-                    const msgElement = appendMessage("bot", chunkValue, false);
-                    if (msgElement) {
-                         latestBotMessageId = msgElement.id; // Guardar su ID
+
+                try {
+                    // Attempt to parse the entire chunk as JSON.
+                    // This is for the final metadata object that comes as a complete JSON string.
+                    const parsedChunk = JSON.parse(chunkValue);
+                    if (parsedChunk.message_id && parsedChunk.metadata) {
+                        latestBotMessageId = parsedChunk.message_id;
+                        finalMetadata = parsedChunk.metadata;
+                        // If it's the final metadata, we don't append it as text.
+                        // We break the loop here because the text streaming is done.
+                        break;
                     }
-                    firstChunk = false;
-                } else {
-                    appendMessage("bot", chunkValue, true);
-                    // currentBotMessageElement ya apunta al último, no necesitamos su ID aquí
+                } catch (e) {
+                    // If parsing fails, it's a text chunk.
+                    accumulatedText += chunkValue;
+                    if (firstChunk) {
+                        hideSpinner();
+                        // Create the message element with a temporary ID if no real ID yet
+                        botMessageElement = appendMessage("bot", accumulatedText, false, latestBotMessageId, finalMetadata);
+                        if (botMessageElement && latestBotMessageId) {
+                            botMessageElement.id = latestBotMessageId;
+                            botMessageElement.dataset.messageId = latestBotMessageId;
+                        }
+                        firstChunk = false;
+                    } else {
+                        // Update the existing message element with new text
+                        appendMessage("bot", chunkValue, true);
+                    }
                 }
             }
-        } catch (error) {
-            console.error("Fetch or streaming error:", error);
-            appendMessage("bot", "Hubo un problema al enviar el mensaje. Intenta nuevamente.");
-        } finally {
-            isGeneratingResponse = false; // Finalizar generación
-            toggleInputAndButtonState(true); // Re-habilitar input y botón
 
-             // Asegurarse de que el contenido Markdown se renderice después de que termine el streaming
-             if (currentBotMessageElement && typeof marked !== "undefined" && currentBotMessageElement.dataset.rawContent) {
-                 currentBotMessageElement.innerHTML = marked.parse(currentBotMessageElement.dataset.rawContent);
-             }
+            // After streaming, ensure the final message ID is set and metadata is displayed
+            if (botMessageElement) {
+                // Update the element's ID with the real ID from the backend
+                if (latestBotMessageId && botMessageElement.id !== latestBotMessageId) {
+                    botMessageElement.id = latestBotMessageId;
+                    botMessageElement.dataset.messageId = latestBotMessageId;
 
-            chatbox.scrollTop = chatbox.scrollHeight;
+                    // Update the like icon's dataset.messageId as well
+                    const likeIcon = botMessageElement.querySelector('.like-icon');
+                    if (likeIcon) {
+                        likeIcon.dataset.messageId = latestBotMessageId;
+                    }
+                }
 
-            // Llamar a la función para obtener y mostrar metadatos después de la respuesta principal
-            if (latestBotMessageId) {
-                 fetchAndDisplayMetadata(latestBotMessageId);
-            } else if (currentBotMessageElement && currentBotMessageElement.id) {
-                 // En caso de que no se haya capturado el ID en el primer chunk (aunque appendMessage lo asigna)
-                 fetchAndDisplayMetadata(currentBotMessageElement.id);
+                // Re-render the final Markdown content to ensure it's correct
+                if (typeof marked !== "undefined" && botMessageElement.dataset.rawContent) {
+                    botMessageElement.innerHTML = marked.parse(botMessageElement.dataset.rawContent);
+                }
+
+                // Re-append the like icon to ensure it's at the end
+                const existingLikeIcon = botMessageElement.querySelector('.like-icon');
+                if (existingLikeIcon) {
+                    botMessageElement.appendChild(existingLikeIcon);
+                } else {
+                    // If for some reason it was not appended or removed, re-add it
+                    const likeIcon = document.createElement('span');
+                    likeIcon.classList.add('like-icon');
+                    likeIcon.innerHTML = likeIconSVG;
+                    likeIcon.dataset.messageId = latestBotMessageId;
+                    if (finalMetadata.disable === true) { // Check if it was liked
+                        likeIcon.classList.add('liked');
+                    }
+                    botMessageElement.appendChild(likeIcon);
+                }
+
+                // Display metadata using the received finalMetadata
+                fetchAndDisplayMetadata(botMessageElement, finalMetadata.references || []);
             }
 
-             // Ahora sí, resetear currentBotMessageElement para el próximo mensaje
-             currentBotMessageElement = null;
+        } catch (error) {
+            console.error("Error de fetch o streaming:", error);
+            appendMessage("bot", "Hubo un problema al enviar el mensaje. Intenta nuevamente.");
+        } finally {
+            isGeneratingResponse = false;
+            toggleInputAndButtonState(true);
+            chatbox.scrollTop = chatbox.scrollHeight;
+            currentBotMessageElement = null; // Reset currentBotMessageElement
         }
     }
 
-    // Modificar el listener de eventos del botón de enviar
+
+    // Event listeners existentes
     if (sendBtn && userQueryTextarea) {
         sendBtn.addEventListener('click', sendMessage);
         userQueryTextarea.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); // Prevenir el comportamiento por defecto de Enter (nueva línea)
-                if (!isGeneratingResponse) { // Solo enviar mensaje si no se está generando una respuesta
+                e.preventDefault();
+                if (!isGeneratingResponse) {
                     sendMessage();
                 } else {
-                    // Opcional: Proporcionar retroalimentación de que la generación está en curso
                     console.log("No se puede enviar un nuevo mensaje mientras se genera una respuesta.");
                 }
             }
@@ -485,4 +609,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cancelButton) cancelButton.addEventListener('click', hideDeleteConfirmation);
     if (confirmButton) confirmButton.addEventListener('click', deleteHistory);
     if (userQueryTextarea) userQueryTextarea.focus();
+
+    // Event listener para los cambios de pestaña para cargar las soluciones "likeadas"
+    // Este listener se mantiene en app.js porque es parte de la lógica global de navegación
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.getAttribute('data-tab');
+            if (tabId === 'soluciones') {
+                // Llama a la función global para cargar soluciones definida en soluciones.js
+                // Asegúrate de que soluciones.js se cargue antes que este script
+                if (typeof window.loadLikedSolutions === 'function') {
+                    window.loadLikedSolutions(userName, apiEndpoint);
+                } else {
+                    console.error("loadLikedSolutions no está definida. Asegúrate de que soluciones.js se cargue correctamente.");
+                }
+            }
+        });
+    });
+
+    // Exportar `toggleLike` y `apiEndpoint` para que `soluciones.js` pueda usarlos.
+    // Esto se hace adjuntándolos al objeto `window` para que sean accesibles globalmente.
+    window.toggleLike = toggleLike;
+    window.apiEndpoint = apiEndpoint;
+    window.userName = userName; // También exportar userName para soluciones.js
+    window.fetchAndDisplayMetadata = fetchAndDisplayMetadata; // Exportar para soluciones.js
 });

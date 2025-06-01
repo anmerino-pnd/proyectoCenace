@@ -38,6 +38,8 @@ class CallMetadata(BaseModel):
     input_tokens : Optional[int]    # Number of tokens in the input prompt
     output_tokens : Optional[int]   # Number of tokens in the generated response
     references :  Chunks # List of references used in the response
+
+    disable : bool = False  # New field to disable the response, default is False
     timestamp : str   # Response timestamp in UTC
 
 def call_metadata(
@@ -47,7 +49,8 @@ def call_metadata(
         duration : float,
         input_tokens : Optional[int],
         output_tokens : Optional[int],
-        references : Chunks
+        references : Chunks,
+        disable: bool = False
 ) -> CallMetadata:
     return CallMetadata(
         provider=provider,
@@ -57,6 +60,7 @@ def call_metadata(
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         references=references,
+        disable=disable,
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
 

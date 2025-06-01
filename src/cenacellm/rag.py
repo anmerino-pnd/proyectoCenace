@@ -122,11 +122,10 @@ class RAG:
               question: str, 
               k: int = 10,
               filter_metadata: Optional[Dict[str, Any]] = None
-             ) ->  Tuple[Generator[str, None, None], List]:
-        
+             ) -> Tuple[Generator[str, None, None], List, str, Dict[str, Any]]: # Updated return type hint
+
         query_vector = self.embedder.vectorize(question)
-        
-        # Falta agregar la logica de si es None, agarrar 4 docs y 3 tickets
+
         relevant_chunks = self.vectorstore.get_similar(
             query_vector, 
             k=k,
@@ -134,25 +133,30 @@ class RAG:
         )
         
         text_chunks = [chunk[1] for chunk in relevant_chunks]
-        
-        return self.assistant.answer(question, text_chunks, user_id=user_id), text_chunks
+
+        # Call assistant.answer and unpack the new return values
+        token_generator, bot_message_id, full_metadata = self.assistant.answer(question, text_chunks, user_id=user_id)
+
+        return token_generator, text_chunks, bot_message_id, full_metadata
 
     def answer(self, 
             user_id: str,
             question: str, 
             k: int = 10,
             filter_metadata: Optional[Dict[str, Any]] = None
-            ) -> Generator[str, None, None]:
-        
+            ) -> Generator[Union[str, Dict[str, Any]], None, None]: # Updated return type hint
 
-        token_generator, text_chunks = self.query(
+        token_generator, text_chunks, bot_message_id, full_metadata = self.query(
             user_id, question, k=k, filter_metadata=filter_metadata
         )
 
-        self.last_chunks = text_chunks
+        self.last_chunks = text_chunks # This will now contain the chunks used for the answer
         
         for token in token_generator:
             yield token
+
+        # After all tokens are yielded, send the final message ID and metadata
+        yield {"message_id": bot_message_id, "metadata": full_metadata}
 
         
     def get_user_history(self, user_id : str) -> List[Dict[str, Any]]:
