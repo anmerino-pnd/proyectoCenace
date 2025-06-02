@@ -17,9 +17,9 @@ from cenacellm.types import (
 )
 
 class OllamaAssistant(Assistant):
-    def __init__(self, memory_window_size: int = 1):
+    def __init__(self):
         self.model = "phi4:latest"
-        self.memory_window_size = memory_window_size
+        self.memory_window_size = 3
 
         self.mongo_uri = mongo_uri
         self.db_name = db_name
@@ -54,9 +54,11 @@ class OllamaAssistant(Assistant):
         )
 
     def clear_user_history(self, user_id: str):
-        """Borra el historial de chat de un usuario."""
-        self.collection.delete_one({"user_id": user_id})
-        self.save_history(user_id, [])
+        """Borra el historial de chat de un usuario SIN eliminar el documento ni cambiar el _id."""
+        self.collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"history": []}}
+        )
 
 
     def make_metadata(self, response: GenerateResponse, duration: float, references) -> CallMetadata:

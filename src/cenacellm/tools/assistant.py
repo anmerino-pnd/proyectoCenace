@@ -15,7 +15,7 @@ class Assistant(ABC):
             Siempre contesta de manera amable, clara y concisa.
 
             Tu objetivo es analizar la pregunta del usuario y responderla de manera precisa.
-            Si es un ticket, problema o error, analiza, explica el problema y proporciona una solución.          
+            Si se te pregunta por un problema o error, analiza, explica el problema y proporciona una solución.          
             """
         )
 

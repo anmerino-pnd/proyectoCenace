@@ -957,6 +957,10 @@ textarea {
     background-color: var(--light-bg);
 }
 
+.solution-item:last-child {
+    margin-bottom: 0;
+}
+
 .solution-question {
     padding: 10px 15px;
     background-color: var(--primary-color);
@@ -1071,3 +1075,23 @@ textarea {
     margin-bottom: 5px; /* Espacio debajo del enlace */
     font-weight: 500;
 }
+
+/* Estilos para el nuevo botón de procesar soluciones */
+.solution-actions {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#processLikedSolutionsBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#processLikedSolutionsBtn i {
+    font-size: 1em;
+}
+

@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 import os
 from typing import Dict, List, Tuple
-from cenacellm.types import Text
+from cenacellm.types import Text, TextMetadata
 from cenacellm.tools.embedder import Embedder
 from cenacellm.tools.vectorstore import VectorStore
 from cenacellm.config import VECTORS_DIR
@@ -77,3 +77,20 @@ class FAISSVectorStore(VectorStore):
             print(f"Elemento con índice {idx} eliminado.")
         else:
             print(f"Índice {idx} no encontrado en el diccionario.")
+
+    def update_metadata(self, idx: int, new_metadata: Dict[str, str]):
+        if idx in self.text_dict:
+            vector, text_obj = self.text_dict[idx]
+            if hasattr(text_obj, 'metadata') and isinstance(text_obj.metadata, TextMetadata):
+                # Creamos una copia actualizada del TextMetadata usando model_copy
+                updated_metadata = text_obj.metadata.model_copy(update=new_metadata)
+                # Creamos una copia actualizada del Text con la nueva metadata
+                updated_text = text_obj.model_copy(update={'metadata': updated_metadata})
+                # Guardamos de vuelta en el diccionario
+                self.text_dict[idx] = (vector, updated_text)
+                print(f"Metadata actualizada para índice {idx}")
+            else:
+                print(f"El objeto en índice {idx} no tiene metadata válida.")
+        else:
+            print(f"Índice {idx} no encontrado en el diccionario.")
+

@@ -153,3 +153,13 @@ def get_liked_solutions(user_id: str) -> List[Dict[str, Any]]:
     Obtiene una lista de soluciones (mensajes del bot) que han sido marcadas como 'liked'.
     """
     return rag.assistant.get_liked_solutions(user_id)
+
+# Nueva función para procesar soluciones "likeadas" al vectorstore
+def process_liked_solutions_to_vectorstore(user_id: str) -> Dict[str, Any]:
+    """
+    Procesa las soluciones "likeadas" de un usuario y las añade al vectorstore.
+    Retorna el número de soluciones nuevas añadidas.
+    """
+    solutions_added_count = rag.add_liked_solutions_to_vectorstore(user_id)
+    return {"status": "success", "message": f"Se han procesado {solutions_added_count} nuevas soluciones 'likeadas'.", "count": solutions_added_count}
+

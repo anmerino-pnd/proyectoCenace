@@ -1,6 +1,24 @@
 // soluciones.js
 document.addEventListener('DOMContentLoaded', () => {
     const likedSolutionsList = document.getElementById('likedSolutionsList');
+    const processLikedSolutionsBtn = document.getElementById('processLikedSolutionsBtn');
+    const processSolutionsStatusDiv = document.getElementById('processSolutionsStatus');
+
+    /**
+     * Muestra un mensaje de estado en el elemento especificado.
+     * @param {HTMLElement} element - El elemento HTML donde se mostrará el mensaje.
+     * @param {string} message - El mensaje a mostrar.
+     * @param {string} type - El tipo de mensaje ('success', 'error', o vacío para neutral).
+     */
+    function showStatus(element, message, type) {
+        if (element) {
+            element.textContent = message;
+            element.className = 'status-message'; // Reinicia las clases
+            if (type) {
+                element.classList.add(type);
+            }
+        }
+    }
 
     /**
      * Carga y muestra las soluciones "likeadas" en la pestaña de soluciones.
@@ -46,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const answerDiv = document.createElement('div');
                 answerDiv.classList.add('solution-answer', 'hidden');
                 // Asegúrate de que 'marked' esté disponible globalmente o impórtalo si es necesario
+                // Renderizar Markdown aquí, ya que el contenido debe estar completo al cargar
                 answerDiv.innerHTML = typeof marked !== "undefined" ? marked.parse(solution.answer) : solution.answer.replace(/\n/g, '<br>');
 
                 // Crea el contenedor para las referencias
@@ -138,6 +157,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Procesa las soluciones "likeadas" y las añade al vectorstore.
+     * Muestra un estado de carga y el resultado del procesamiento.
+     * @param {string} userName - El nombre de usuario actual.
+     * @param {string} apiEndpoint - La URL base del endpoint de la API.
+     */
+    async function processLikedSolutions(userName, apiEndpoint) {
+        if (!userName || !apiEndpoint) {
+            showStatus(processSolutionsStatusDiv, "Error: Nombre de usuario o endpoint de API no disponible.", 'error');
+            return;
+        }
+
+        showStatus(processSolutionsStatusDiv, '<i class="fas fa-spinner fa-spin"></i> Procesando soluciones...', '');
+        processLikedSolutionsBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${apiEndpoint}/process_liked_solutions/${userName}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showStatus(processSolutionsStatusDiv, `Procesamiento completado. Se añadieron ${result.count} nuevas soluciones.`, 'success');
+                // Opcional: recargar la lista de soluciones si se desea ver el efecto inmediatamente
+                // loadLikedSolutions(userName, apiEndpoint); 
+            } else {
+                showStatus(processSolutionsStatusDiv, `Error al procesar soluciones: ${result.detail || response.statusText}`, 'error');
+            }
+        } catch (error) {
+            console.error("Error al procesar soluciones 'likeadas':", error);
+            showStatus(processSolutionsStatusDiv, `Error de red al procesar soluciones: ${error.message}`, 'error');
+        } finally {
+            processLikedSolutionsBtn.disabled = false;
+        }
+    }
+
+    // Añadir el event listener al nuevo botón
+    if (processLikedSolutionsBtn) {
+        processLikedSolutionsBtn.addEventListener('click', () => {
+            // Pasa userName y apiEndpoint al hacer clic en el botón
+            processLikedSolutions(window.userName, window.apiEndpoint);
+        });
+    }
+
     // Exporta la función para que sea accesible globalmente desde app.js
     window.loadLikedSolutions = loadLikedSolutions;
+    window.processLikedSolutions = processLikedSolutions; // Exportar también esta función
 });
+

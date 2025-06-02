@@ -15,7 +15,8 @@ from cenacellm.API.chat import (
     delete_document,
     view_document,
     update_message_metadata, # Importa la nueva función
-    get_liked_solutions # Importa la nueva función
+    get_liked_solutions, # Importa la nueva función
+    process_liked_solutions_to_vectorstore # Importa la nueva función
 )
 import os
 
@@ -92,3 +93,12 @@ async def solutions(user_id: str):
     Endpoint para obtener una lista de soluciones (mensajes del bot) que han sido marcadas como 'liked'.
     """
     return get_liked_solutions(user_id)
+
+# Nuevo endpoint para procesar soluciones "likeadas" al vectorstore
+@app.post("/process_liked_solutions/{user_id}")
+async def process_liked_solutions(user_id: str):
+    """
+    Endpoint para procesar las soluciones "likeadas" de un usuario y añadirlas al vectorstore.
+    """
+    return process_liked_solutions_to_vectorstore(user_id)
+

@@ -83,15 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
             let rawContent = currentBotMessageElement.dataset.rawContent || '';
             rawContent += message;
             currentBotMessageElement.dataset.rawContent = rawContent;
-            // Renderiza el contenido Markdown si 'marked' está disponible
-            if (typeof marked !== "undefined") {
-                 currentBotMessageElement.innerHTML = marked.parse(rawContent);
-            } else {
-                // Fallback para texto plano si 'marked' no está disponible
-                const tempDiv = document.createElement('div');
-                tempDiv.textContent = rawContent;
-                currentBotMessageElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
-            }
+            // Durante el streaming, solo actualizamos el texto plano para evitar parseos incompletos
+            currentBotMessageElement.textContent = rawContent; // Usar textContent para evitar problemas de HTML/Markdown parcial
+            
             // Asegúrate de que el icono de "like" permanezca al final
             const likeIcon = currentBotMessageElement.querySelector('.like-icon');
             if (likeIcon) {
@@ -112,15 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sender === "bot") {
                 currentBotMessageElement = msgDiv;
                 msgDiv.dataset.rawContent = message; // Almacena el contenido crudo para streaming
-                if (typeof marked !== "undefined" && !isStreaming) {
-                     // Renderiza el contenido Markdown si no está en streaming
-                     msgDiv.innerHTML = marked.parse(message);
-                } else {
-                     // Fallback para texto plano
-                     const tempDiv = document.createElement('div');
-                     tempDiv.textContent = message;
-                     msgDiv.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
-                }
+                // Inicialmente, solo muestra el texto plano
+                msgDiv.textContent = message;
 
                 // Añade el icono de "like" a los mensajes del bot
                 const likeIcon = document.createElement('span');
@@ -221,11 +208,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (msg && typeof msg.role === 'string' && typeof msg.content === 'string') {
                     const sender = msg.role === "user" ? "user" : "bot";
                     // Pasa el ID del mensaje y los metadatos para los mensajes del bot al cargar el historial
-                    appendMessage(sender, msg.content, false, msg.id, msg.metadata);
+                    const msgElement = appendMessage(sender, msg.content, false, msg.id, msg.metadata);
                     // Después de cargar el mensaje, si es un bot y tiene metadatos, mostrarlos
-                    if (sender === "bot" && msg.metadata && msg.metadata.references) {
-                        const msgElement = document.getElementById(msg.id);
-                        if (msgElement) {
+                    if (sender === "bot" && msgElement) {
+                        // Renderizar Markdown después de que el mensaje esté en el DOM
+                        if (typeof marked !== "undefined") {
+                            msgElement.innerHTML = marked.parse(msg.content);
+                        } else {
+                            // Fallback para texto plano si 'marked' no está disponible
+                            const tempDiv = document.createElement('div');
+                            tempDiv.textContent = msg.content;
+                            msgElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
+                        }
+                        // Re-añadir el icono de like después de parsear Markdown
+                        const likeIcon = document.createElement('span');
+                        likeIcon.classList.add('like-icon');
+                        likeIcon.innerHTML = likeIconSVG;
+                        likeIcon.dataset.messageId = msg.id;
+                        if (msg.metadata && msg.metadata.disable === true) {
+                            likeIcon.classList.add('liked');
+                        }
+                        msgElement.appendChild(likeIcon);
+
+                        if (msg.metadata && msg.metadata.references) {
                             fetchAndDisplayMetadata(msgElement, msg.metadata.references);
                         }
                     }
@@ -469,6 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let latestBotMessageId = null;
         let finalMetadata = {}; // To store the metadata received at the end of the stream
+        let accumulatedText = ""; // To accumulate text content for Markdown parsing
 
         try {
             const response = await fetch(`${apiEndpoint}/chat`, {
@@ -500,7 +506,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const decoder = new TextDecoder("utf-8");
             let firstChunk = true;
             let botMessageElement = null; // Reference to the bot message element
-            let accumulatedText = ""; // To accumulate text content
 
             while (true) {
                 const { value, done } = await reader.read();
@@ -526,10 +531,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         hideSpinner();
                         // Create the message element with a temporary ID if no real ID yet
                         botMessageElement = appendMessage("bot", accumulatedText, false, latestBotMessageId, finalMetadata);
-                        if (botMessageElement && latestBotMessageId) {
-                            botMessageElement.id = latestBotMessageId;
-                            botMessageElement.dataset.messageId = latestBotMessageId;
-                        }
                         firstChunk = false;
                     } else {
                         // Update the existing message element with new text
@@ -552,9 +553,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Re-render the final Markdown content to ensure it's correct
-                if (typeof marked !== "undefined" && botMessageElement.dataset.rawContent) {
-                    botMessageElement.innerHTML = marked.parse(botMessageElement.dataset.rawContent);
+                // Render the final Markdown content
+                if (typeof marked !== "undefined" && accumulatedText) {
+                    botMessageElement.innerHTML = marked.parse(accumulatedText);
+                } else {
+                    // Fallback for plain text
+                    const tempDiv = document.createElement('div');
+                    tempDiv.textContent = accumulatedText;
+                    botMessageElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
                 }
 
                 // Re-append the like icon to ensure it's at the end
@@ -623,6 +629,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.loadLikedSolutions(userName, apiEndpoint);
                 } else {
                     console.error("loadLikedSolutions no está definida. Asegúrate de que soluciones.js se cargue correctamente.");
+                }
+                // También llama a la función para procesar soluciones cuando se abre la pestaña
+                if (typeof window.processLikedSolutions === 'function') {
+                    window.processLikedSolutions(userName, apiEndpoint);
+                } else {
+                    console.error("processLikedSolutions no está definida. Asegúrate de que soluciones.js se cargue correctamente.");
                 }
             }
         });
