@@ -48,10 +48,10 @@ class OllamaAssistant(Assistant):
     def save_backup(self, user_id: str, history: list):
         """Guarda una copia de seguridad del historial de chat."""
         self.collection_backup.update_one(
-            {"user_id": user_id},
-            {"$set": {"history": history}},
-            upsert=True
-        )
+        {"user_id": user_id},
+        {"$push": {"history": {"$each": history}}},
+        upsert=True
+    )
 
     def clear_user_history(self, user_id: str):
         """Borra el historial de chat de un usuario SIN eliminar el documento ni cambiar el _id."""
@@ -121,7 +121,7 @@ class OllamaAssistant(Assistant):
                 history.append({"role": "assistant", "content": "".join(response_tokens), "metadata": final_metadata, "id": bot_message_id})
 
                 self.save_history(user_id, history)
-                self.save_backup(user_id, history)
+                self.save_backup(user_id, [history[-2], history[-1]])
 
             except Exception as e:
                 raise LLMError("ollama assistant", e)
