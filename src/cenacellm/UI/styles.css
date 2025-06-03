@@ -76,7 +76,7 @@ body {
 }
 
 .input-group {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .input-group label {
@@ -254,7 +254,7 @@ body {
 
 /* Estilos para mejorar el espaciado de Markdown */
 .message.bot p {
-    margin-bottom: 0.5em; /* Reducido de 1em */
+    margin-bottom: 0.4em; /* Reducido de 1em */
 }
 .message.bot p:last-child {
     margin-bottom: 0; /* Eliminar margen inferior del último párrafo */
@@ -268,7 +268,7 @@ body {
 }
 
 .message.bot li {
-    margin-bottom: 0.2em; /* Reducido de 0.5em para un espaciado más compacto */
+    margin-bottom: 0.4em; /* Reducido de 0.5em para un espaciado más compacto */
 }
 .message.bot li:last-child {
     margin-bottom: 0; /* Eliminar margen inferior del último elemento de la lista */
@@ -1013,7 +1013,8 @@ textarea {
 .solution-answer ul,
 .solution-answer ol {
     /* Reiniciar márgenes y padding por defecto */
-    margin: 0;
+    margin-top: 0.2em; 
+    margin-bottom: 0.2em; 
     padding-left: 25px; /* Mantener padding para las viñetas/números */
 }
 
@@ -1025,7 +1026,7 @@ textarea {
 }
 
 .solution-answer p {
-    margin-bottom: 0.5em; /* Reducido para un espaciado más compacto */
+    margin-bottom: 0.1em; /* Reducido para un espaciado más compacto */
 }
 .solution-answer p:last-child {
     margin-bottom: 0; /* Eliminar margen inferior del último párrafo */
