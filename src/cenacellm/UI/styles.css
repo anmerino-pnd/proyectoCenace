@@ -254,18 +254,26 @@ body {
 
 /* Estilos para mejorar el espaciado de Markdown */
 .message.bot p {
-    margin-bottom: 1em;
+    margin-bottom: 0.5em; /* Reducido de 1em */
+}
+.message.bot p:last-child {
+    margin-bottom: 0; /* Eliminar margen inferior del último párrafo */
 }
 
 .message.bot ul,
 .message.bot ol {
-    margin-bottom: 1em;
+    margin-top: 0.5em; /* Añadido para controlar el espacio superior */
+    margin-bottom: 0.5em; /* Reducido de 1em */
     padding-left: 20px;
 }
 
 .message.bot li {
-    margin-bottom: 0.5em;
+    margin-bottom: 0.2em; /* Reducido de 0.5em para un espaciado más compacto */
 }
+.message.bot li:last-child {
+    margin-bottom: 0; /* Eliminar margen inferior del último elemento de la lista */
+}
+
 
 /* Estilos para la sección de metadatos/referencias */
 .message.bot .metadata-section {
@@ -1001,6 +1009,40 @@ textarea {
     display: block;
 }
 
+/* Nuevos estilos para las listas dentro de .solution-answer */
+.solution-answer ul,
+.solution-answer ol {
+    /* Reiniciar márgenes y padding por defecto */
+    margin: 0;
+    padding-left: 25px; /* Mantener padding para las viñetas/números */
+}
+
+.solution-answer li {
+    margin-bottom: 0.2em; /* Espacio entre elementos de la lista */
+}
+.solution-answer li:last-child {
+    margin-bottom: 0; /* Eliminar margen inferior del último elemento de la lista */
+}
+
+.solution-answer p {
+    margin-bottom: 0.5em; /* Reducido para un espaciado más compacto */
+}
+.solution-answer p:last-child {
+    margin-bottom: 0; /* Eliminar margen inferior del último párrafo */
+}
+
+/* Asegurarse de que los encabezados dentro de .solution-answer no tengan márgenes excesivos */
+.solution-answer h1,
+.solution-answer h2,
+.solution-answer h3,
+.solution-answer h4,
+.solution-answer h5,
+.solution-answer h6 {
+    margin-top: 0.8em; /* Un poco de espacio arriba */
+    margin-bottom: 0.4em; /* Un poco de espacio abajo */
+}
+
+
 /* Nuevos estilos para la sección de referencias en soluciones */
 .solution-references-container {
     margin-top: 15px;
@@ -1094,4 +1136,3 @@ textarea {
 #processLikedSolutionsBtn i {
     font-size: 1em;
 }
-
