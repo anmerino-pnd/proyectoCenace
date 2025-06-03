@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatbox = document.getElementById('messages-container');
     const userQueryTextarea = document.getElementById('userQuery');
     const sendBtn = document.getElementById('sendBtn');
-    const sendBtnIconContainer = document.getElementById('sendBtnIcon'); // Asegúrate de que este elemento exista en tu HTML
+    const sendBtnIconContainer = document.getElementById('sendBtnIcon'); 
     const deleteHistoryBtn = document.getElementById('deleteHistoryBtn');
     const deleteConfirmationModalOverlay = document.getElementById('delete-confirmation-modal-overlay');
     const cancelButton = deleteConfirmationModalOverlay ? deleteConfirmationModalOverlay.querySelector('.cancel-button') : null;
@@ -15,11 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const kValueInput = document.getElementById('k-value');
     const filterMetadataSelect = document.getElementById('filter-metadata');
 
-    // const apiEndpoint = "http://localhost:8000"; // Ya es global a través de window.apiEndpoint
     let userName = '';
     let currentBotMessageElement = null;
 
-    let isGeneratingResponse = false; // Nuevo: Flag para controlar si se está generando una respuesta
+    let isGeneratingResponse = false; 
 
     const sendIconSVG = `
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -35,8 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     function requestUsername() {
-        // if (chatArea) chatArea.classList.add('hidden'); // chatArea no está definido aquí, es el contenedor principal de la app
-        const mainAppContainer = document.querySelector('.app-container'); // Asumiendo que app-container es el principal
+        const mainAppContainer = document.querySelector('.app-container'); 
         if (mainAppContainer) mainAppContainer.classList.add('hidden');
 
 
@@ -50,12 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const enteredUsername = usernameInput.value.trim();
         if (enteredUsername) {
             userName = enteredUsername;
-            window.userName = userName; // <-- CORRECCIÓN: Actualizar window.userName aquí
+            window.userName = userName; 
             if (usernameModal) {
                 usernameModal.classList.add('hidden');
                 usernameModal.classList.remove('visible');
             }
-            // if (chatArea) chatArea.classList.remove('hidden'); // chatArea no está definido aquí
             const mainAppContainer = document.querySelector('.app-container');
             if (mainAppContainer) mainAppContainer.classList.remove('hidden');
 
@@ -76,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Inicializar apiEndpoint globalmente
     window.apiEndpoint = "http://localhost:8000";
 
     requestUsername();
@@ -101,11 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Durante el streaming, solo actualiza el textContent para evitar problemas de parseo parcial de Markdown
             currentBotMessageElement.textContent = rawContent;
 
-            // Asegurarse de que el icono de "me gusta" NO se añada repetidamente durante el streaming
-            const existingLikeIcon = currentBotMessageElement.querySelector('.like-icon');
-            if (existingLikeIcon) {
-                existingLikeIcon.remove(); // Eliminar temporalmente para volver a añadir al final
-            }
+            // No se añade ni se elimina el icono de "me gusta" durante el streaming.
+            // Se añadirá al final cuando la respuesta completa y los metadatos estén disponibles.
 
             chatbox.scrollTop = chatbox.scrollHeight;
             return currentBotMessageElement;
@@ -114,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const msgDiv = document.createElement("div");
             if (sender === "bot") {
                 // Asignar un ID único al mensaje del bot si no se proporciona
-                msgDiv.id = messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                msgDiv.id = messageId;
                 msgDiv.dataset.messageId = msgDiv.id; // Almacenar el ID para un acceso fácil
             }
             msgDiv.classList.add("message", sender);
@@ -551,6 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         accumulatedText += chunkValue;
                          if (firstChunk) {
                             hideSpinner();
+                            // Crear el elemento del mensaje con el ID real si está disponible, o temporalmente nulo
                             botMessageElement = appendMessage("bot", accumulatedText, false, latestBotMessageId);
                             firstChunk = false;
                         } else if (botMessageElement) { // Asegurarse que botMessageElement existe
