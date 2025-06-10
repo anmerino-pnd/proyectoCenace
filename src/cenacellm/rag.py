@@ -32,10 +32,6 @@ class RAG:
         self.db = self.client[self.assistant.db_name] 
         self.processed_files_collection = self.db["processed_files_registro"]  
         self.processed_files_collection.create_index("file_key", unique=True)
-        
-        # Nueva colección para registrar soluciones "likeadas" procesadas
-        self.processed_solutions_collection = self.db["processed_solutions_registro"]
-        self.processed_solutions_collection.create_index("reference", unique=True)
 
         self.processed_files : dict = self._load_processed_files()
         self.processed_solutions_ids : set = self._load_processed_solutions_ids()
@@ -70,11 +66,11 @@ class RAG:
     
     def _load_processed_solutions_ids(self) -> set:
         """Carga los IDs de las soluciones "likeadas" ya procesadas desde la base de datos."""
-        return {doc["reference"] for doc in self.processed_solutions_collection.find({}, {"reference": 1})}
+        return {doc["reference"] for doc in self.processed_files_collection.find({}, {"reference": 1})}
 
     def _add_processed_solution_id(self, message_id: str) -> None:
         """Añade el ID de una solución procesada al registro."""
-        self.processed_solutions_collection.update_one(
+        self.processed_files_collection.update_one(
             {"reference": message_id},
             {"$set": {"reference": message_id, "processed_at": datetime.now().isoformat()}},
             upsert=True

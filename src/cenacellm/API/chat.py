@@ -110,15 +110,13 @@ async def upload_documents(files: List[UploadFile] = File(...)):
 
     return JSONResponse(content={"files": responses})
 
-def delete_document(files_name: List[str]):
+def delete_document(references_id: Union[str, List[str]]):
     """Elimina documentos del servidor y del registro de archivos procesados."""
-    for file_name in files_name:
-        file_path = os.path.join(DOCUMENTS_DIR, file_name)
+    for reference_id in references_id:
 
-        rag.delete_from_vectorstore(file_name)
+        rag.delete_from_vectorstore(reference_id)
 
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        rag.processed_files_collection.delete_one({"reference": reference_id})
     
 
 async def view_document(filename: str):
