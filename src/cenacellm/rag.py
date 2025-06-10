@@ -35,7 +35,7 @@ class RAG:
         
         # Nueva colección para registrar soluciones "likeadas" procesadas
         self.processed_solutions_collection = self.db["processed_solutions_registro"]
-        self.processed_solutions_collection.create_index("message_id", unique=True)
+        self.processed_solutions_collection.create_index("reference", unique=True)
 
         self.processed_files : dict = self._load_processed_files()
         self.processed_solutions_ids : set = self._load_processed_solutions_ids()
@@ -70,13 +70,13 @@ class RAG:
     
     def _load_processed_solutions_ids(self) -> set:
         """Carga los IDs de las soluciones "likeadas" ya procesadas desde la base de datos."""
-        return {doc["message_id"] for doc in self.processed_solutions_collection.find({}, {"message_id": 1})}
+        return {doc["reference"] for doc in self.processed_solutions_collection.find({}, {"reference": 1})}
 
     def _add_processed_solution_id(self, message_id: str) -> None:
         """Añade el ID de una solución procesada al registro."""
         self.processed_solutions_collection.update_one(
-            {"message_id": message_id},
-            {"$set": {"message_id": message_id, "processed_at": datetime.now().isoformat()}},
+            {"reference": message_id},
+            {"$set": {"reference": message_id, "processed_at": datetime.now().isoformat()}},
             upsert=True
         )
         self.processed_solutions_ids.add(message_id) # Actualiza el conjunto en memoria
@@ -126,7 +126,8 @@ class RAG:
                 "last_modified": last_modified,
                 "size": file_size,
                 "processed_at": datetime.now().isoformat(),
-                "chunks": doc_chunks_count
+                "chunks": doc_chunks_count,
+                "reference": textos[0].metadata.reference if textos else None,
             }
             
             new_docs_count += 1
@@ -178,7 +179,7 @@ class RAG:
             yield token
 
         # After all tokens are yielded, send the final message ID and metadata
-        yield {"message_id": bot_message_id, "metadata": full_metadata}
+        yield {"reference": bot_message_id, "metadata": full_metadata}
 
         
     def get_user_history(self, user_id : str) -> List[Dict[str, Any]]:
@@ -213,9 +214,8 @@ class RAG:
             # Construir los metadatos para el objeto Text a almacenar en el vectorstore
             new_text_metadata_dict = {
                 "source": "liked_solution",
-                "reference": None, # Añadir explícitamente como None para evitar el error de Pydantic
-                "collection": "soluciones", # Nueva colección para soluciones
-                "message_id": message_id,
+                "reference": message_id, 
+                "collection": "soluciones", 
                 "user_id": user_id,
                 "disable": original_call_metadata.get("disable", False), # Debería ser True para liked solutions
                 "timestamp": original_call_metadata.get("timestamp"),
@@ -234,7 +234,7 @@ class RAG:
                     extracted_references_metadata.append(extracted_ref)
             
             if extracted_references_metadata:
-                new_text_metadata_dict["original_references_metadata"] = extracted_references_metadata
+                new_text_metadata_dict["metadata"] = extracted_references_metadata
 
             # Crear el objeto Text con el contenido y los metadatos construidos
             text_obj = Text(content=content, metadata=TextMetadata(**new_text_metadata_dict))
@@ -247,9 +247,14 @@ class RAG:
         
         if solutions_added_count > 0:
             self.vectorstore.save_index()
-            print(f"Se han añadido {solutions_added_count} nuevas soluciones 'liked' al vectorstore.")
         else:
-            print("No se encontraron nuevas soluciones 'liked' para añadir al vectorstore.")
-
+            pass
         return solutions_added_count
+
+    def delete_from_vectorstore(self, reference_id):
+        """
+        Elimina un documento del vectorstore basado en su referencia.
+        """
+        self.vectorstore.delete_by_reference(reference_id)
+
 

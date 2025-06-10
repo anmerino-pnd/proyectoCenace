@@ -94,3 +94,21 @@ class FAISSVectorStore(VectorStore):
         else:
             print(f"Índice {idx} no encontrado en el diccionario.")
 
+
+    def delete_by_reference(self, reference_id: str):
+        """
+        Elimina todos los vectores asociados a un mismo documento (por metadata.reference).
+        """
+        to_delete = [
+            idx for idx, (_, text_obj) in self.text_dict.items()
+            if hasattr(text_obj, "metadata") and getattr(text_obj.metadata, "reference", None) == reference_id
+        ]
+
+        for idx in to_delete:
+            del self.text_dict[idx]
+            self.index.remove_ids(np.array([idx]))
+            print(f"Chunk del documento con reference='{reference_id}' (índice {idx}) eliminado.")
+
+        if not to_delete:
+            print(f"No se encontró ningún chunk con reference='{reference_id}'.")
+

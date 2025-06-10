@@ -54,7 +54,7 @@ class DisjointCollection(DocCollection):
                 "filename": filename,
                 "collection": collection,
                 "total_pages": total_pages,
-                "page_number": i + 1,  # páginas inician en 1
+                "page_number": i + 1, 
                 **extra_metadata
             }
 

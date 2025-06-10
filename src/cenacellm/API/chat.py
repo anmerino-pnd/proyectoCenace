@@ -30,13 +30,12 @@ def get_chat_history(user_id: str) -> str:
     for message in histories:
         role = "user" if message.get('role') == "user" else "bot"
         content = message.get('content', '')
-        # Pasa el ID del mensaje y los metadatos para los mensajes del bot
         if role == "bot":
             formatted_history.append({
                 "role": role,
                 "content": content,
-                "id": message.get("id"), # Incluye el ID del mensaje
-                "metadata": message.get("metadata", {}) # Incluye metadatos
+                "id": message.get("id"), 
+                "metadata": message.get("metadata", {}) 
             })
         else:
             formatted_history.append({
@@ -53,7 +52,6 @@ async def chat_stream(request: QueryRequest) -> AsyncGenerator[str, None]:
     k = request.k
     filter_metadata = request.filter_metadata if request.filter_metadata == "None" else None
 
-    # Iterate over the generator from rag.answer
     for item in rag.answer(
         user_id=user_id,
         question=question,
@@ -61,10 +59,8 @@ async def chat_stream(request: QueryRequest) -> AsyncGenerator[str, None]:
         filter_metadata=filter_metadata
     ):
         if isinstance(item, dict):
-            # If it's a dictionary, it's the final metadata and message_id
-            yield json.dumps(item) # Serialize to JSON
+            yield json.dumps(item) 
         else:
-            # Otherwise, it's a regular token
             yield item
 
 async def async_chat_stream(request: QueryRequest) -> StreamingResponse:
@@ -76,11 +72,6 @@ async def async_chat_stream(request: QueryRequest) -> StreamingResponse:
 
 def metadata_generator():
     """Retorna los últimos chunks de metadatos procesados por RAG."""
-    # This function might become redundant if metadata is always streamed at the end of chat.
-    # However, keeping it for now as it's part of the existing API.
-    # It currently returns rag.last_chunks, which are the text chunks.
-    # If we want to return the full metadata (including message_id), we need to adjust this.
-    # For now, let's assume it still returns the text chunks for compatibility.
     return rag.last_chunks
 
 def clear_user_history(user_id: str) -> None:
@@ -123,9 +114,12 @@ def delete_document(files_name: List[str]):
     """Elimina documentos del servidor y del registro de archivos procesados."""
     for file_name in files_name:
         file_path = os.path.join(DOCUMENTS_DIR, file_name)
+
+        rag.delete_from_vectorstore(file_name)
+
         if os.path.exists(file_path):
             os.remove(file_path)
-    rag._delete_processed_file(files_name)
+    
 
 async def view_document(filename: str):
     """Permite ver un documento PDF en el navegador."""
@@ -137,7 +131,6 @@ async def view_document(filename: str):
     else:
         raise HTTPException(status_code=404, detail="Documento no encontrado en el servidor.")
 
-# Nueva función para actualizar los metadatos de un mensaje
 def update_message_metadata(user_id: str, message_id: str, new_metadata: Dict[str, Any]):
     """
     Actualiza los metadatos de un mensaje específico en el historial del usuario.
@@ -147,14 +140,12 @@ def update_message_metadata(user_id: str, message_id: str, new_metadata: Dict[st
         raise HTTPException(status_code=404, detail="Mensaje no encontrado o no es un mensaje del bot.")
     return {"status": "success", "message": "Metadatos del mensaje actualizados."}
 
-# Nueva función para obtener soluciones "likeadas"
 def get_liked_solutions(user_id: str) -> List[Dict[str, Any]]:
     """
     Obtiene una lista de soluciones (mensajes del bot) que han sido marcadas como 'liked'.
     """
     return rag.assistant.get_liked_solutions(user_id)
 
-# Nueva función para procesar soluciones "likeadas" al vectorstore
 def process_liked_solutions_to_vectorstore(user_id: str) -> Dict[str, Any]:
     """
     Procesa las soluciones "likeadas" de un usuario y las añade al vectorstore.

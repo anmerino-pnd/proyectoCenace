@@ -1001,7 +1001,6 @@ textarea {
     border-top: 1px solid var(--border-color);
     display: none; /* Oculto por defecto */
     animation: fadeIn 0.3s ease-out;
-    white-space: pre-wrap; /* Para respetar saltos de línea del Markdown */
     word-wrap: break-word; /* Para romper palabras largas */
 }
 

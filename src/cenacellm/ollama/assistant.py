@@ -167,6 +167,6 @@ class OllamaAssistant(Assistant):
                     "question": user_question,
                     "answer": message.get("content"),
                     "metadata": message.get("metadata"),
-                    "id": message.get("id") # Incluye el ID del mensaje para un posible uso futuro (ej. quitar "me gusta")
+                    "id": message.get("id") 
                 })
         return liked_solutions

@@ -77,7 +77,6 @@ async def view_doc(filename: str):
     """Endpoint para ver documentos PDF en el navegador."""
     return await view_document(filename)
 
-# Nuevo endpoint para actualizar los metadatos de un mensaje específico
 @app.patch("/history/{user_id}/messages/{message_id}")
 async def patch_message_metadata(user_id: str, message_id: str, request: UpdateMetadataRequest):
     """
@@ -86,7 +85,6 @@ async def patch_message_metadata(user_id: str, message_id: str, request: UpdateM
     """
     return update_message_metadata(user_id, message_id, request.new_metadata)
 
-# Nuevo endpoint para obtener soluciones "likeadas"
 @app.get("/solutions/{user_id}")
 async def solutions(user_id: str):
     """
@@ -94,7 +92,6 @@ async def solutions(user_id: str):
     """
     return get_liked_solutions(user_id)
 
-# Nuevo endpoint para procesar soluciones "likeadas" al vectorstore
 @app.post("/process_liked_solutions/{user_id}")
 async def process_liked_solutions(user_id: str):
     """

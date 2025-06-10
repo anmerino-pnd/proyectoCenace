@@ -461,15 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function sendMessage() {
-        if (!userQueryTextarea || !userQueryTextarea.value.trim() || !userName) {
-             if (!userName) console.warn("Intento de enviar mensaje sin nombre de usuario.");
-             return;
-        }
-
-        if (isGeneratingResponse) {
-            console.warn("Ya se está generando una respuesta. Por favor, espera.");
-            return;
-        }
 
         isGeneratingResponse = true;
         toggleInputAndButtonState(false); // Deshabilitar input y botón
