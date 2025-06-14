@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteStatusDiv = document.getElementById('deleteStatus');
     const documentListContainer = document.getElementById('documentListContainer');
 
-    let allDocumentsData = {};
-    let selectedDocumentsToDelete = [];
+    let allDocumentsData = {}; // Stores document data keyed by filename, including the 'reference' (UUID)
+    let selectedDocumentsToDelete = []; // This will now store reference_ids (UUIDs)
     let isSelectionMode = false;
 
     function showStatus(element, message, type) {
@@ -93,10 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!documentListUl) return;
 
         documentListUl.innerHTML = '<li>Cargando documentos...</li>';
-        allDocumentsData = {};
-        selectedDocumentsToDelete = [];
-        isSelectionMode = false;
-        updateSelectionModeUI();
+        allDocumentsData = {}; // Clear previous data
+        selectedDocumentsToDelete = []; // Clear selected items
+        isSelectionMode = false; // Reset selection mode
+        updateSelectionModeUI(); // Update UI accordingly
 
         try {
             const response = await fetch(`${apiEndpoint}/documents`);
@@ -115,18 +115,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const documents = await response.json();
             documentListUl.innerHTML = '';
-            allDocumentsData = documents;
+            allDocumentsData = documents; // Store all document data
 
             if (typeof documents === 'object' && documents !== null && Object.keys(documents).length > 0) {
                 const filenames = Object.keys(documents);
                 filenames.forEach(filename => {
+                    const documentData = documents[filename]; // Get the full document data
                     const li = document.createElement('li');
                     li.classList.add('document-item');
 
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.classList.add('document-checkbox');
-                    checkbox.dataset.filename = filename;
+                    checkbox.dataset.referenceId = documentData.reference; // Store the actual reference ID (UUID)
+                    checkbox.dataset.filename = filename; // Keep filename for display
 
                     const filenameSpan = document.createElement('span');
                     filenameSpan.textContent = filename;
@@ -135,7 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     li.appendChild(checkbox);
                     li.appendChild(filenameSpan);
 
-                    li.dataset.filename = filename;
+                    li.dataset.filename = filename; // Store filename on li
+                    li.dataset.referenceId = documentData.reference; // Store reference ID on li for detail display
 
                     documentListUl.appendChild(li);
                 });
@@ -185,17 +188,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isSelectionMode) {
             documentListContainer.classList.add('selection-active');
             toggleSelectionModeBtn.textContent = "Cancelar Selección";
-            deleteSelectedDocumentsBtn.classList.add('hidden');
+            deleteSelectedDocumentsBtn.classList.remove('hidden'); // Show delete button
             deleteSelectedDocumentsBtn.textContent = "Eliminar Documentos Seleccionados";
-            deleteSelectedDocumentsBtn.disabled = true;
+            deleteSelectedDocumentsBtn.disabled = true; // Disable delete button initially
         } else {
             documentListContainer.classList.remove('selection-active');
-            toggleSelectionModeBtn.textContent = "Seleccionar Documentos";
-            deleteSelectedDocumentsBtn.classList.add('hidden');
-            selectedDocumentsToDelete = [];
+            toggleSelectionModeBtn.textContent = "Eliminar Documentos";
+            deleteSelectedDocumentsBtn.classList.add('hidden'); // Hide delete button
+            selectedDocumentsToDelete = []; // Clear selected items
             document.querySelectorAll('.document-checkbox').forEach(checkbox => checkbox.checked = false);
         }
-         showStatus(deleteStatusDiv, '', '');
+         showStatus(deleteStatusDiv, '', ''); // Clear status message
     }
 
     async function deleteSelectedDocuments() {
@@ -214,16 +217,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(selectedDocumentsToDelete)
+                // CORRECTED LINE: Send an object with 'reference_ids' key
+                body: JSON.stringify({ reference_ids: selectedDocumentsToDelete })
             });
 
             const result = await response.json();
 
             if (response.ok) {
                  showStatus(deleteStatusDiv, `Documentos eliminados exitosamente.`, 'success');
-                 isSelectionMode = false;
-                 fetchAndDisplayDocuments();
+                 isSelectionMode = false; // Exit selection mode
+                 fetchAndDisplayDocuments(); // Reload the list
             } else {
+                console.error("Delete response:", result); // Log the full error response from server
                 showStatus(deleteStatusDiv, `Error al eliminar documentos: ${result.detail || response.statusText}`, 'error');
             }
 
@@ -234,8 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteSelectedDocumentsBtn.disabled = false;
             toggleSelectionModeBtn.disabled = false;
              if (deleteStatusDiv && deleteStatusDiv.classList.contains('success')) {
+                // If deletion was successful, the UI will be reset by fetchAndDisplayDocuments
              } else {
-                 updateDeleteButtonState();
+                 updateDeleteButtonState(); // Otherwise, update button state
              }
         }
     }
@@ -270,14 +276,14 @@ document.addEventListener('DOMContentLoaded', () => {
         documentListUl.addEventListener('change', (event) => {
             if (isSelectionMode && event.target.classList.contains('document-checkbox')) {
                 const checkbox = event.target;
-                const filename = checkbox.dataset.filename;
+                const referenceId = checkbox.dataset.referenceId; // Get the reference ID
 
                 if (checkbox.checked) {
-                    if (!selectedDocumentsToDelete.includes(filename)) {
-                        selectedDocumentsToDelete.push(filename);
+                    if (!selectedDocumentsToDelete.includes(referenceId)) {
+                        selectedDocumentsToDelete.push(referenceId);
                     }
                 } else {
-                    selectedDocumentsToDelete = selectedDocumentsToDelete.filter(name => name !== filename);
+                    selectedDocumentsToDelete = selectedDocumentsToDelete.filter(id => id !== referenceId);
                 }
                 updateDeleteButtonState();
             }
@@ -340,3 +346,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fetchAndDisplayDocuments();
 });
+    

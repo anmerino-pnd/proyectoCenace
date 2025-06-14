@@ -9,14 +9,17 @@ from cenacellm.API.chat import (
     load_documents,
     QueryRequest,
     UpdateMetadataRequest, # Importa el nuevo modelo de solicitud
+    DeleteSolutionsRequest, # Import the new model for deleting solutions
+    DeleteDocumentsRequest, # NUEVO: Importa el modelo para eliminar documentos
     get_chat_history,
     get_preprocessed_files,
     upload_documents,
-    delete_document,
+    delete_document, # Esta función ahora espera DeleteDocumentsRequest
     view_document,
     update_message_metadata, # Importa la nueva función
     get_liked_solutions, # Importa la nueva función
-    process_liked_solutions_to_vectorstore # Importa la nueva función
+    process_liked_solutions_to_vectorstore, # Importa la nueva función
+    delete_solution_by_reference # Import the new deletion function
 )
 import os
 
@@ -67,10 +70,11 @@ async def upload_doc(files: List[UploadFile] = File(...)):
     """Endpoint para subir documentos PDF al servidor."""
     return await upload_documents(files)
 
+# MODIFICADO: Ahora espera el modelo DeleteDocumentsRequest
 @app.post("/delete_document")
-def delete_doc(file_key: List[str]):
+def delete_doc(request: DeleteDocumentsRequest):
     """Endpoint para eliminar documentos del servidor."""
-    return delete_document(file_key)
+    return delete_document(request)
 
 @app.get("/view_document/{filename}")
 async def view_doc(filename: str):
@@ -99,3 +103,9 @@ async def process_liked_solutions(user_id: str):
     """
     return process_liked_solutions_to_vectorstore(user_id)
 
+@app.post("/delete_solution")
+def delete_solution(request: DeleteSolutionsRequest): # New endpoint for deleting solutions
+    """
+    Endpoint para eliminar soluciones del vectorstore basado en sus reference_ids.
+    """
+    return delete_solution_by_reference(request.reference_ids)

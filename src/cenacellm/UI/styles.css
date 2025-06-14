@@ -963,13 +963,29 @@ textarea {
     border-radius: var(--radius-sm);
     overflow: hidden;
     background-color: var(--light-bg);
+    display: flex; /* Use flexbox for item layout */
+    align-items: flex-start; /* Align items to the top */
 }
 
 .solution-item:last-child {
     margin-bottom: 0;
 }
 
+/* Checkbox for solution items */
+.solution-item .solution-checkbox {
+    margin: 15px 10px 0 15px; /* Adjust margin for positioning */
+    cursor: pointer;
+    display: none; /* Hidden by default */
+}
+
+/* Show checkboxes when selection mode is active */
+.liked-solutions-list.selection-active .solution-item .solution-checkbox {
+    display: block;
+}
+
+
 .solution-question {
+    flex-grow: 1; /* Allow question to take available space */
     padding: 10px 15px;
     background-color: var(--primary-color);
     color: white;
@@ -1012,8 +1028,8 @@ textarea {
 .solution-answer ul,
 .solution-answer ol {
     /* Reiniciar márgenes y padding por defecto */
-    margin-top: 0.2em; 
-    margin-bottom: 0.2em; 
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
     padding-left: 25px; /* Mantener padding para las viñetas/números */
 }
 
@@ -1135,4 +1151,10 @@ textarea {
 
 #processLikedSolutionsBtn i {
     font-size: 1em;
+}
+
+/* --- New styles for solution deletion --- */
+/* Style for solution items in selection mode */
+.liked-solutions-list.selection-active .solution-item {
+    padding-left: 0; /* Remove padding if checkbox is present */
 }

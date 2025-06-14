@@ -101,8 +101,12 @@
                     <button id="processLikedSolutionsBtn" class="minimal-primary-button">
                         <i class="fas fa-sync-alt"></i> Procesar Soluciones
                     </button>
-                    <div id="processSolutionsStatus" class="status-message"></div>
+                    <!-- New buttons for solution deletion -->
+                    <button id="toggleSolutionSelectionModeBtn" class="minimal-secondary-button">Eliminar Soluciones</button>
+                    <button id="deleteSelectedSolutionsBtn" class="minimal-secondary-button hidden">Eliminar Soluciones Seleccionadas</button>
                 </div>
+                <div id="processSolutionsStatus" class="status-message"></div>
+                 <div id="deleteSolutionsStatus" class="status-message"></div>
                 <div id="likedSolutionsList" class="liked-solutions-list">
                     <p>No hay soluciones guardadas aún.</p>
                 </div>
@@ -141,8 +145,8 @@
         </div>
     </div>
 
-<script src="documentos.js"></script> 
-<script src="soluciones.js"></script> 
+<script src="documentos.js"></script>
+<script src="soluciones.js"></script>
 <script src="app.js"></script>
 <script src="tabs.js"></script>
 </body>

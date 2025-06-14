@@ -20,6 +20,14 @@ class QueryRequest(BaseModel):
 class UpdateMetadataRequest(BaseModel):
     new_metadata: Dict[str, Any]
 
+class DeleteSolutionsRequest(BaseModel): # New Pydantic model for deleting solutions
+    reference_ids: List[str]
+
+# NUEVO: Modelo Pydantic para eliminar documentos por reference_id
+class DeleteDocumentsRequest(BaseModel):
+    reference_ids: List[str]
+
+
 def get_chat_history(user_id: str) -> str:
     """Obtiene el historial de chat formateado para un usuario."""
     histories = rag.get_user_history(user_id)
@@ -34,8 +42,8 @@ def get_chat_history(user_id: str) -> str:
             formatted_history.append({
                 "role": role,
                 "content": content,
-                "id": message.get("id"), 
-                "metadata": message.get("metadata", {}) 
+                "id": message.get("id"),
+                "metadata": message.get("metadata", {})
             })
         else:
             formatted_history.append({
@@ -46,7 +54,7 @@ def get_chat_history(user_id: str) -> str:
     return formatted_history
 
 async def chat_stream(request: QueryRequest) -> AsyncGenerator[str, None]:
-    """Genera un stream de tokens de respuesta del chat."""
+    """Generates a stream of chat response tokens."""
     user_id = request.user_id
     question = request.query
     k = request.k
@@ -59,7 +67,7 @@ async def chat_stream(request: QueryRequest) -> AsyncGenerator[str, None]:
         filter_metadata=filter_metadata
     ):
         if isinstance(item, dict):
-            yield json.dumps(item) 
+            yield json.dumps(item)
         else:
             yield item
 
@@ -89,6 +97,7 @@ def load_documents(collection_name : str, force_reload : bool = False) -> list:
 
 def get_preprocessed_files() -> dict:
     """Obtiene la lista de archivos preprocesados."""
+    print(rag.processed_files)
     return rag.processed_files
 
 async def upload_documents(files: List[UploadFile] = File(...)):
@@ -110,14 +119,24 @@ async def upload_documents(files: List[UploadFile] = File(...)):
 
     return JSONResponse(content={"files": responses})
 
-def delete_document(references_id: Union[str, List[str]]):
-    """Elimina documentos del servidor y del registro de archivos procesados."""
-    for reference_id in references_id:
+# MODIFICADO: Ahora acepta DeleteDocumentsRequest
+def delete_document(request: DeleteDocumentsRequest):
+    """Elimina documentos del vectorstore y del registro de archivos procesados
+       basado en sus reference_ids.
+    """
+    for reference_id in request.reference_ids:
+        try:
+            rag.delete_from_vectorstore(reference_id)
+            rag.processed_files_collection.delete_one({"reference": reference_id})
+            # Opcional: Si quieres eliminar también el archivo físico, añade la lógica aquí
+            # filepath = os.path.join(DOCUMENTS_DIR, "nombre_del_archivo_asociado_al_reference_id")
+            # if os.path.exists(filepath):
+            #     os.remove(filepath)
+        except Exception as e:
+            print(f"Error al eliminar el documento con reference_id {reference_id}: {e}")
+            raise HTTPException(status_code=500, detail=f"Error al eliminar el documento con ID {reference_id}: {e}")
+    return {"status": "success", "message": f"Se eliminaron {len(request.reference_ids)} documentos."}
 
-        rag.delete_from_vectorstore(reference_id)
-
-        rag.processed_files_collection.delete_one({"reference": reference_id})
-    
 
 async def view_document(filename: str):
     """Permite ver un documento PDF en el navegador."""
@@ -151,4 +170,23 @@ def process_liked_solutions_to_vectorstore(user_id: str) -> Dict[str, Any]:
     """
     solutions_added_count = rag.add_liked_solutions_to_vectorstore(user_id)
     return {"status": "success", "message": f"Se han procesado {solutions_added_count} nuevas soluciones 'likeadas'.", "count": solutions_added_count}
+
+def delete_solution_by_reference(reference_ids: List[str]):
+    """
+    Elimina soluciones del vectorstore y del registro de archivos procesados
+    basado en sus reference_ids.
+    """
+    for ref_id in reference_ids:
+        try:
+            # Eliminar del vectorstore
+            rag.delete_from_vectorstore(ref_id)
+            # Eliminar del registro de soluciones procesadas
+            rag.processed_files_collection.delete_one({"reference": ref_id})
+            # Actualizar el conjunto en memoria de soluciones procesadas
+            if ref_id in rag.processed_solutions_ids:
+                rag.processed_solutions_ids.remove(ref_id)
+        except Exception as e:
+            print(f"Error al eliminar la solución con reference_id {ref_id}: {e}")
+            raise HTTPException(status_code=500, detail=f"Error al eliminar la solución con ID {ref_id}: {e}")
+    return {"status": "success", "message": f"Se eliminaron {len(reference_ids)} soluciones."}
 

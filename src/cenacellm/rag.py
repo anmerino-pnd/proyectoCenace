@@ -57,6 +57,7 @@ class RAG:
                 upsert=True 
             )
     
+    
     def _delete_processed_file(self, file_key: List[str]) -> None:
         """Elimina archivos procesados de la base de datos."""
         for file_name in file_key:
@@ -252,5 +253,6 @@ class RAG:
         Elimina un documento del vectorstore basado en su referencia.
         """
         self.vectorstore.delete_by_reference(reference_id)
+        self.processed_files
 
 

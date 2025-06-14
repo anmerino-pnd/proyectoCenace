@@ -4,6 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const processLikedSolutionsBtn = document.getElementById('processLikedSolutionsBtn');
     const processSolutionsStatusDiv = document.getElementById('processSolutionsStatus');
 
+    // New elements for deletion functionality
+    const toggleSolutionSelectionModeBtn = document.getElementById('toggleSolutionSelectionModeBtn');
+    const deleteSelectedSolutionsBtn = document.getElementById('deleteSelectedSolutionsBtn');
+    const deleteSolutionsStatusDiv = document.getElementById('deleteSolutionsStatus');
+
+    let selectedSolutionsToDelete = [];
+    let isSolutionSelectionMode = false;
+
     /**
      * Muestra un mensaje de estado en el elemento especificado.
      * @param {HTMLElement} element - El elemento HTML donde se mostrará el mensaje.
@@ -32,7 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        likedSolutionsList.innerHTML = '<p>Cargando soluciones...</p>'; // Mensaje de carga
+        likedSolutionsList.innerHTML = '<p>Cargando soluciones...</p>'; // Loading message
+        selectedSolutionsToDelete = []; // Clear selected solutions
+        isSolutionSelectionMode = false; // Reset selection mode
+        updateSolutionSelectionModeUI(); // Update UI for selection mode
 
         try {
             const response = await fetch(`${apiEndpoint}/solutions/${userName}`);
@@ -44,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const solutions = await response.json();
-            likedSolutionsList.innerHTML = ''; // Limpia el mensaje de carga
+            likedSolutionsList.innerHTML = ''; // Clear loading message
 
             if (!Array.isArray(solutions) || solutions.length === 0) {
                 likedSolutionsList.innerHTML = '<p>No hay soluciones guardadas aún.</p>';
@@ -55,37 +66,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 const solutionItem = document.createElement('div');
                 solutionItem.classList.add('solution-item');
 
+                // Checkbox for selection
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.classList.add('solution-checkbox');
+                checkbox.dataset.solutionReferenceId = solution.id; // Store the solution's reference ID
+
                 const questionDiv = document.createElement('div');
                 questionDiv.classList.add('solution-question');
-                // Muestra la pregunta del usuario y un icono para colapsar/expandir
+                // Display user question and a toggle icon
                 questionDiv.innerHTML = `<span>${solution.question}</span> <span class="toggle-icon">+</span>`;
-                questionDiv.dataset.solutionId = solution.id; // Almacena el ID de la solución
+                questionDiv.dataset.solutionId = solution.id; // Store solution ID
 
                 const answerDiv = document.createElement('div');
                 answerDiv.classList.add('solution-answer', 'hidden');
-                // Asegúrate de que 'marked' esté disponible globalmente o impórtalo si es necesario
-                // Renderizar Markdown aquí, ya que el contenido debe estar completo al cargar
+                // Ensure 'marked' is globally available or import it
                 answerDiv.innerHTML = typeof marked !== "undefined" ? marked.parse(solution.answer) : solution.answer.replace(/\n/g, '<br>');
 
-                // Crea el contenedor para las referencias
+                // Create container for references
                 const referencesContainer = document.createElement('div');
-                referencesContainer.classList.add('solution-references-container'); 
+                referencesContainer.classList.add('solution-references-container');
 
                 const referencesHeader = document.createElement('div');
-                // CAMBIO: Inicializa el icono de toggle de referencias como '+' para indicar que está contraído
                 referencesHeader.innerHTML = '<h5>Referencias <span class="toggle-icon">+</span></h5>';
                 referencesHeader.classList.add('references-header');
 
                 const referencesList = document.createElement('div');
-                // CAMBIO: Añade la clase 'hidden' para que las referencias estén contraídas por defecto.
-                referencesList.classList.add('references-list', 'hidden'); 
+                referencesList.classList.add('references-list', 'hidden');
 
-                // Si hay metadatos de referencias, añádelos
+                // If reference metadata exists, add it
                 if (solution.metadata && solution.metadata.references && Array.isArray(solution.metadata.references) && solution.metadata.references.length > 0) {
                     solution.metadata.references.forEach((ref, index) => {
                         if (ref.metadata.collection === 'documentos') {
                             const refItemDiv = document.createElement('div');
-                            refItemDiv.classList.add('metadata-item'); // Reutiliza el estilo
+                            refItemDiv.classList.add('metadata-item');
 
                             const refTitle = document.createElement('h6');
                             refTitle.textContent = `Referencia ${index + 1}${ref.metadata.title ? ': ' + ref.metadata.title : ''}`;
@@ -119,12 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 referencesContainer.appendChild(referencesHeader);
                 referencesContainer.appendChild(referencesList);
-                answerDiv.appendChild(referencesContainer); // Añade las referencias dentro del answerDiv
+                answerDiv.appendChild(referencesContainer);
 
-                // Añade un evento de clic para colapsar/expandir la respuesta
+                // Click event to collapse/expand the answer
                 questionDiv.addEventListener('click', () => {
                     answerDiv.classList.toggle('hidden');
-                    answerDiv.classList.toggle('visible'); // Para la animación
+                    answerDiv.classList.toggle('visible');
                     const icon = questionDiv.querySelector('.toggle-icon');
                     if (answerDiv.classList.contains('hidden')) {
                         icon.textContent = '+';
@@ -133,9 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                // Evento para colapsar/expandir las referencias
+                // Event to collapse/expand references
                 referencesHeader.addEventListener('click', (event) => {
-                    event.stopPropagation(); // Evita que el clic en el encabezado de referencias propague al questionDiv
+                    event.stopPropagation();
                     referencesList.classList.toggle('hidden');
                     const icon = referencesHeader.querySelector('.toggle-icon');
                     if (referencesList.classList.contains('hidden')) {
@@ -145,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-
+                solutionItem.appendChild(checkbox); // Add checkbox first
                 solutionItem.appendChild(questionDiv);
                 solutionItem.appendChild(answerDiv);
                 likedSolutionsList.appendChild(solutionItem);
@@ -182,8 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 showStatus(processSolutionsStatusDiv, `Procesamiento completado. Se añadieron ${result.count} nuevas soluciones.`, 'success');
-                // Opcional: recargar la lista de soluciones si se desea ver el efecto inmediatamente
-                // loadLikedSolutions(userName, apiEndpoint); 
+                loadLikedSolutions(userName, apiEndpoint); // Reload to show updated list
             } else {
                 showStatus(processSolutionsStatusDiv, `Error al procesar soluciones: ${result.detail || response.statusText}`, 'error');
             }
@@ -195,16 +208,132 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Añadir el event listener al nuevo botón
+    // Function to update the UI based on selection mode
+    function updateSolutionSelectionModeUI() {
+        if (isSolutionSelectionMode) {
+            likedSolutionsList.classList.add('selection-active');
+            toggleSolutionSelectionModeBtn.textContent = "Cancelar Selección";
+            deleteSelectedSolutionsBtn.classList.remove('hidden'); // Show delete button
+            deleteSelectedSolutionsBtn.textContent = "Eliminar Soluciones Seleccionadas";
+            deleteSelectedSolutionsBtn.disabled = true; // Disable delete button initially
+        } else {
+            likedSolutionsList.classList.remove('selection-active');
+            toggleSolutionSelectionModeBtn.textContent = "Eliminar Soluciones";
+            deleteSelectedSolutionsBtn.classList.add('hidden'); // Hide delete button
+            selectedSolutionsToDelete = []; // Clear selected solutions
+            document.querySelectorAll('.solution-checkbox').forEach(checkbox => checkbox.checked = false);
+        }
+        showStatus(deleteSolutionsStatusDiv, '', ''); // Clear status message
+    }
+
+    // Function to handle deletion of selected solutions
+    async function deleteSelectedSolutions() {
+        if (selectedSolutionsToDelete.length === 0) {
+            showStatus(deleteSolutionsStatusDiv, "Por favor, selecciona las soluciones a eliminar.", 'error');
+            return;
+        }
+
+        showStatus(deleteSolutionsStatusDiv, "Eliminando soluciones...", '');
+        deleteSelectedSolutionsBtn.disabled = true;
+        toggleSolutionSelectionModeBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${window.apiEndpoint}/delete_solution`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                // CORRECTED LINE: Wrap the array in an object with 'reference_ids' key
+                body: JSON.stringify({ reference_ids: selectedSolutionsToDelete })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showStatus(deleteSolutionsStatusDiv, `Soluciones eliminadas exitosamente.`, 'success');
+                isSolutionSelectionMode = false; // Exit selection mode
+                loadLikedSolutions(window.userName, window.apiEndpoint); // Reload the list
+            } else {
+                console.error("Delete response:", result); // Log the full error response from server
+                showStatus(deleteSolutionsStatusDiv, `Error al eliminar soluciones: ${result.detail || response.statusText}`, 'error');
+            }
+
+        } catch (error) {
+            console.error("Error deleting solutions:", error);
+            showStatus(deleteSolutionsStatusDiv, `Error de red al eliminar soluciones: ${error.message}`, 'error');
+        } finally {
+            deleteSelectedSolutionsBtn.disabled = false;
+            toggleSolutionSelectionModeBtn.disabled = false;
+            if (deleteSolutionsStatusDiv && deleteSolutionsStatusDiv.classList.contains('success')) {
+                // If deletion was successful, the UI will be reset by loadLikedSolutions
+            } else {
+                updateDeleteSolutionsButtonState(); // Otherwise, update button state
+            }
+        }
+    }
+
+    // Function to update the delete button's state
+    function updateDeleteSolutionsButtonState() {
+        if (isSolutionSelectionMode && deleteSelectedSolutionsBtn) {
+            if (selectedSolutionsToDelete.length > 0) {
+                deleteSelectedSolutionsBtn.textContent = `Eliminar Soluciones Seleccionadas (${selectedSolutionsToDelete.length})`;
+                deleteSelectedSolutionsBtn.disabled = false;
+                deleteSelectedSolutionsBtn.classList.remove('hidden');
+            } else {
+                deleteSelectedSolutionsBtn.textContent = "Eliminar Soluciones Seleccionadas";
+                deleteSelectedSolutionsBtn.disabled = true;
+                deleteSelectedSolutionsBtn.classList.add('hidden');
+            }
+        } else {
+            deleteSelectedSolutionsBtn.classList.add('hidden');
+        }
+    }
+
+
+    // Event listener for processing liked solutions
     if (processLikedSolutionsBtn) {
         processLikedSolutionsBtn.addEventListener('click', () => {
-            // Pasa userName y apiEndpoint al hacer clic en el botón
             processLikedSolutions(window.userName, window.apiEndpoint);
         });
     }
 
-    // Exporta la función para que sea accesible globalmente desde app.js
-    window.loadLikedSolutions = loadLikedSolutions;
-    window.processLikedSolutions = processLikedSolutions; // Exportar también esta función
-});
+    // Event listener for toggling solution selection mode
+    if (toggleSolutionSelectionModeBtn) {
+        toggleSolutionSelectionModeBtn.addEventListener('click', () => {
+            isSolutionSelectionMode = !isSolutionSelectionMode;
+            updateSolutionSelectionModeUI();
+            if (isSolutionSelectionMode) {
+                showStatus(deleteSolutionsStatusDiv, '', ''); // Clear status when entering selection mode
+            }
+        });
+    }
 
+    // Event listener for deleting selected solutions
+    if (deleteSelectedSolutionsBtn) {
+        deleteSelectedSolutionsBtn.addEventListener('click', deleteSelectedSolutions);
+    }
+
+
+    // Event listener for checkbox changes within the solutions list
+    if (likedSolutionsList) {
+        likedSolutionsList.addEventListener('change', (event) => {
+            if (isSolutionSelectionMode && event.target.classList.contains('solution-checkbox')) {
+                const checkbox = event.target;
+                const solutionReferenceId = checkbox.dataset.solutionReferenceId;
+
+                if (checkbox.checked) {
+                    if (!selectedSolutionsToDelete.includes(solutionReferenceId)) {
+                        selectedSolutionsToDelete.push(solutionReferenceId);
+                    }
+                } else {
+                    selectedSolutionsToDelete = selectedSolutionsToDelete.filter(id => id !== solutionReferenceId);
+                }
+                updateDeleteSolutionsButtonState();
+            }
+        });
+    }
+
+    // Export functions to be accessible globally from app.js
+    window.loadLikedSolutions = loadLikedSolutions;
+    window.processLikedSolutions = processLikedSolutions;
+});

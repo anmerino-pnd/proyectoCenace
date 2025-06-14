@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterMetadataSelect = document.getElementById('filter-metadata');
 
     let userName = '';
-    let currentBotMessageElement = null;
-
+    // currentBotMessageElement ya no se usa para el streaming, sino para operaciones post-streaming
+    let currentBotMessageElement = null; 
     let isGeneratingResponse = false; 
 
     const sendIconSVG = `
@@ -33,17 +33,23 @@ document.addEventListener('DOMContentLoaded', () => {
         </svg>
     `;
 
+    /**
+     * Muestra el modal para solicitar el nombre de usuario.
+     */
     function requestUsername() {
         const mainAppContainer = document.querySelector('.app-container'); 
         if (mainAppContainer) mainAppContainer.classList.add('hidden');
 
-
         if (usernameModal) {
-                usernameModal.classList.add('visible');
-                usernameModal.classList.remove('hidden');}
+            usernameModal.classList.add('visible');
+            usernameModal.classList.remove('hidden');
+        }
         if (usernameInput) usernameInput.focus();
     }
 
+    /**
+     * Maneja el envío del nombre de usuario desde el modal.
+     */
     function handleSubmitUsername() {
         const enteredUsername = usernameInput.value.trim();
         if (enteredUsername) {
@@ -75,62 +81,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.apiEndpoint = "http://localhost:8000";
 
+    // Solicitar nombre de usuario al cargar la página
     requestUsername();
 
     /**
-     * Añade un mensaje al contenedor de chat.
+     * Añade un mensaje al contenedor de chat. Esta función ahora solo crea
+     * y añade el elemento inicial. El contenido y el Markdown se manejan
+     * directamente en la función sendMessage para el streaming.
      * @param {string} sender - El remitente del mensaje ('user' o 'bot').
-     * @param {string} message - El contenido del mensaje.
-     * @param {boolean} isStreaming - Si el mensaje está siendo transmitido (streaming).
+     * @param {string} initialMessageText - El contenido inicial del mensaje (texto plano).
      * @param {string|null} messageId - El ID único del mensaje (solo para mensajes del bot).
      * @returns {HTMLElement|null} El elemento del mensaje HTML creado.
      */
-    function appendMessage(sender, message, isStreaming = false, messageId = null) {
+    function appendMessage(sender, initialMessageText, messageId = null) {
         if (!chatbox) return null;
 
-        // Si es un mensaje de bot en streaming y ya tenemos un elemento actual, lo actualizamos
-        if (sender === "bot" && isStreaming && currentBotMessageElement) {
-            let rawContent = currentBotMessageElement.dataset.rawContent || '';
-            rawContent += message;
-            currentBotMessageElement.dataset.rawContent = rawContent;
+        const msgDiv = document.createElement("div");
+        msgDiv.classList.add("message", sender);
 
-            // Durante el streaming, solo actualiza el textContent para evitar problemas de parseo parcial de Markdown
-            currentBotMessageElement.textContent = rawContent;
-
-            // No se añade ni se elimina el icono de "me gusta" durante el streaming.
-            // Se añadirá al final cuando la respuesta completa y los metadatos estén disponibles.
-
-            chatbox.scrollTop = chatbox.scrollHeight;
-            return currentBotMessageElement;
-        } else {
-            // Crear un nuevo elemento de mensaje
-            const msgDiv = document.createElement("div");
-            if (sender === "bot") {
-                // Asignar un ID único al mensaje del bot si no se proporciona
-                msgDiv.id = messageId;
-                msgDiv.dataset.messageId = msgDiv.id; // Almacenar el ID para un acceso fácil
-            }
-            msgDiv.classList.add("message", sender);
-
-            if (sender === "bot") {
-                currentBotMessageElement = msgDiv;
-                msgDiv.dataset.rawContent = message; // Almacenar el contenido sin procesar para streaming
-                // Inicialmente, solo mostrar texto plano
-                msgDiv.textContent = message;
-
-                // El icono de "me gusta" se añadirá DESPUÉS de que se reciba la respuesta completa y los metadatos
-            } else {
-                currentBotMessageElement = null; // Reiniciar para mensajes de usuario
-                const tempDiv = document.createElement('div');
-                tempDiv.textContent = message;
-                msgDiv.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
-            }
-            chatbox.appendChild(msgDiv);
-            chatbox.scrollTop = chatbox.scrollHeight;
-            return msgDiv;
+        if (sender === "bot") {
+            msgDiv.id = messageId || `bot-message-${Date.now()}`; 
+            msgDiv.dataset.messageId = msgDiv.id; 
+            // Para el bot, el texto inicial puede ser un placeholder o el primer chunk
+            msgDiv.textContent = initialMessageText; 
+        } else { // Mensaje de usuario
+            // Para mensajes de usuario, renderizar directamente con saltos de línea
+            const tempDiv = document.createElement('div');
+            tempDiv.textContent = initialMessageText;
+            msgDiv.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
         }
+        
+        chatbox.appendChild(msgDiv);
+        chatbox.scrollTop = chatbox.scrollHeight;
+        return msgDiv;
     }
 
+    /**
+     * Ajusta la altura del textarea de entrada de usuario.
+     */
     function resizeTextarea() {
         if (!userQueryTextarea) return;
         userQueryTextarea.style.height = 'auto';
@@ -144,6 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Muestra el indicador de escritura (spinner).
+     */
     function showSpinner() {
         if (!chatbox) return;
         const existingSpinner = chatbox.querySelector('.typing-indicator');
@@ -155,13 +146,19 @@ document.addEventListener('DOMContentLoaded', () => {
         chatbox.scrollTop = chatbox.scrollHeight;
     }
 
+    /**
+     * Oculta el indicador de escritura (spinner).
+     */
     function hideSpinner() {
         if (!chatbox) return;
         const spinner = chatbox.querySelector('.typing-indicator');
         if (spinner) spinner.remove();
     }
 
-    // Nuevo: Función para habilitar/deshabilitar el input y el botón de enviar
+    /**
+     * Habilita o deshabilita el input de usuario y el botón de enviar.
+     * @param {boolean} enabled - True para habilitar, false para deshabilitar.
+     */
     function toggleInputAndButtonState(enabled) {
         if (userQueryTextarea) userQueryTextarea.disabled = !enabled;
         if (sendBtn) sendBtn.disabled = !enabled;
@@ -177,13 +174,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Carga el historial de chat desde el backend y lo muestra.
+     * Esta función maneja mensajes completos, no streaming.
+     */
     async function loadHistory() {
         if (!chatbox || !userName) return;
         chatbox.innerHTML = "";
         const loadingMsg = appendMessage("bot", "Cargando conversación...");
         try {
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}`); // Usar window.apiEndpoint
-             if (loadingMsg && loadingMsg.parentNode === chatbox) {
+            const response = await fetch(`${window.apiEndpoint}/history/${userName}`); 
+            if (loadingMsg && loadingMsg.parentNode === chatbox) {
                 loadingMsg.remove();
             }
             if (!response.ok) {
@@ -207,28 +208,25 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const msg of history) {
                 if (msg && typeof msg.role === 'string' && typeof msg.content === 'string') {
                     const sender = msg.role === "user" ? "user" : "bot";
-                    // Pasar el ID del mensaje para los mensajes del bot al cargar el historial
-                    const msgElement = appendMessage(sender, msg.content, false, msg.id);
+                    // Para mensajes del bot, el ID ya está disponible
+                    const msgElement = appendMessage(sender, msg.content, msg.id);
 
-                    // Después de cargar el mensaje, si es un bot y tiene metadatos, mostrarlos
                     if (sender === "bot" && msgElement) {
-                        // Renderizar Markdown después de que el mensaje esté en el DOM
+                        // Renderizar Markdown directamente al cargar historial (mensajes completos)
                         if (typeof marked !== "undefined") {
                             msgElement.innerHTML = marked.parse(msg.content);
                         } else {
-                            // Fallback para texto plano si 'marked' no está disponible
                             const tempDiv = document.createElement('div');
                             tempDiv.textContent = msg.content;
                             msgElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
                         }
 
-                        // Mostrar metadatos primero
+                        // Mostrar metadatos
                         if (msg.metadata && msg.metadata.references) {
-                            // Usar window.fetchAndDisplayMetadata que se exporta globalmente
                             window.fetchAndDisplayMetadata(msgElement, msg.metadata.references);
                         }
 
-                        // Luego, añadir el icono de "me gusta"
+                        // Añadir el icono de "me gusta"
                         const likeIcon = document.createElement('span');
                         likeIcon.classList.add('like-icon');
                         likeIcon.innerHTML = likeIconSVG;
@@ -243,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chatbox.scrollTop = chatbox.scrollHeight;
         } catch (error) {
             console.error('Error fetching history:', error);
-             if (loadingMsg && loadingMsg.parentNode === chatbox) {
+            if (loadingMsg && loadingMsg.parentNode === chatbox) {
                 loadingMsg.remove();
             }
             chatbox.innerHTML = "";
@@ -251,40 +249,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Muestra el modal de confirmación para eliminar el historial.
+     */
     function showDeleteConfirmation() {
         if (deleteConfirmationModalOverlay) {
-             deleteConfirmationModalOverlay.classList.remove('hidden');
-             deleteConfirmationModalOverlay.classList.add('visible');
+            deleteConfirmationModalOverlay.classList.remove('hidden');
+            deleteConfirmationModalOverlay.classList.add('visible');
         } else {
-             console.error('showDeleteConfirmation: Elemento modal overlay no encontrado.');
+            console.error('showDeleteConfirmation: Elemento modal overlay no encontrado.');
         }
     }
 
+    /**
+     * Oculta el modal de confirmación para eliminar el historial.
+     */
     function hideDeleteConfirmation() {
         if (deleteConfirmationModalOverlay) {
-             deleteConfirmationModalOverlay.classList.add('hidden');
-             deleteConfirmationModalOverlay.classList.remove('visible');
+            deleteConfirmationModalOverlay.classList.add('hidden');
+            deleteConfirmationModalOverlay.classList.remove('visible');
         } else {
-             console.error('hideDeleteConfirmation: Elemento modal overlay no encontrado.');
+            console.error('hideDeleteConfirmation: Elemento modal overlay no encontrado.');
         }
     }
 
+    /**
+     * Elimina el historial de chat del backend y del frontend.
+     */
     async function deleteHistory() {
-         if (!userName) {
-             hideDeleteConfirmation();
-             console.warn("Attempted to delete history without a username.");
-             return;
+        if (!userName) {
+            hideDeleteConfirmation();
+            console.warn("Attempted to delete history without a username.");
+            return;
         }
         try {
-
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}`, { // Usar window.apiEndpoint
+            const response = await fetch(`${window.apiEndpoint}/history/${userName}`, { 
                 method: 'DELETE'
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Error ${response.status}:`, errorText);
-                 appendMessage("bot", `Error al borrar historial: ${response.status} ${response.statusText}`);
+                appendMessage("bot", `Error al borrar historial: ${response.status} ${response.statusText}`);
                 return;
             }
 
@@ -294,18 +300,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Error al borrar historial:", error);
-             appendMessage("bot", `Error al borrar historial: ${error.message}`);
+            appendMessage("bot", `Error al borrar historial: ${error.message}`);
         } finally {
             hideDeleteConfirmation();
         }
     }
 
+    /**
+     * Obtiene el valor 'k' (número de referencias) del input.
+     * @returns {number} El valor de k.
+     */
     function getKValue() {
-        if (!kValueInput) return 10; // Default k value
+        if (!kValueInput) return 10; // Valor por defecto
         const kValue = parseInt(kValueInput.value);
-        return isNaN(kValue) || kValue < 1 ? 10 : kValue; // Ensure k is a positive integer
+        return isNaN(kValue) || kValue < 1 ? 10 : kValue; // Asegura que k sea un entero positivo
     }
 
+    /**
+     * Obtiene el filtro de metadatos seleccionado.
+     * @returns {Object} Un objeto con el filtro de colección o vacío.
+     */
     function getFilterMetadata() {
         if (!filterMetadataSelect) return {};
 
@@ -315,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "documentos": {"collection": "documentos"},
             "tickets": {"collection": "tickets"},
             "soluciones": {"collection": "soluciones"},
-            "None": {} // O null, dependiendo de cómo lo maneje tu backend
+            "None": {} 
         };
 
         return filterOptions[selectedValue] || {};
@@ -361,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fieldsToShow = [
                     'page_number', 'author', 'subject'];
                 if (item.metadata["filename"]) {
-                    const viewDocumentUrl = `${window.apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`; // Usar window.apiEndpoint
+                    const viewDocumentUrl = `${window.apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`; 
                     const sourceItem = document.createElement('a');
                     sourceItem.href = viewDocumentUrl;
                     sourceItem.textContent = 'Abrir documento';
@@ -375,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         detailsList.appendChild(listItem);
                     }
                 });
-
 
                 metadataItemDiv.appendChild(detailsList);
                 metadataDetails.appendChild(metadataItemDiv);
@@ -391,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
             metadataHeader.addEventListener('click', () => {
                 metadataDetails.classList.toggle('hidden');
                 const icon = metadataHeader.querySelector('.toggle-icon');
-                if (icon) { // Verificar que el icono exista
+                if (icon) { 
                     if (metadataDetails.classList.contains('hidden')) {
                         icon.textContent = '+';
                     } else {
@@ -415,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         try {
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}/messages/${messageId}`, { // Usar window.apiEndpoint
+            const response = await fetch(`${window.apiEndpoint}/history/${userName}/messages/${messageId}`, { 
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ new_metadata: { disable: isLiked } })
@@ -452,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (solutionsTabButton && solutionsTabButton.classList.contains('active')) {
                         // Llamar a la función global para cargar soluciones definida en soluciones.js
                         if (typeof window.loadLikedSolutions === 'function') {
-                            window.loadLikedSolutions(userName, window.apiEndpoint); // Usar window.apiEndpoint
+                            window.loadLikedSolutions(userName, window.apiEndpoint); 
                         }
                     }
                 });
@@ -460,36 +473,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    /**
+     * Envía un mensaje al chatbot y maneja la respuesta en streaming,
+     * incluyendo el parseo incremental de Markdown, la aparición de referencias
+     * y el icono de "me gusta" en el orden correcto.
+     */
     async function sendMessage() {
-
         isGeneratingResponse = true;
         toggleInputAndButtonState(false); // Deshabilitar input y botón
 
         const userQuery = userQueryTextarea.value.trim();
-        appendMessage("user", userQuery);
+        appendMessage("user", userQuery); // Añadir mensaje del usuario
         userQueryTextarea.value = "";
         resizeTextarea();
         if (userQueryTextarea) userQueryTextarea.focus();
 
-        showSpinner();
-        currentBotMessageElement = null; // Reiniciar currentBotMessageElement antes de un nuevo mensaje
-
-        const kValue = getKValue();
-        const filterMetadata = getFilterMetadata();
-
+        showSpinner(); // Mostrar spinner
+        
         let latestBotMessageId = null;
-        let finalMetadata = {}; // Para almacenar los metadatos recibidos al final del stream
-        let accumulatedText = ""; // Para acumular el contenido de texto para el parseo de Markdown
+        let finalMetadata = {}; 
+        let accumulatedText = ""; 
+        let botMessageElement = null; // Referencia al elemento DOM del mensaje del bot
 
         try {
-            const response = await fetch(`${window.apiEndpoint}/chat`, { // Usar window.apiEndpoint
+            const response = await fetch(`${window.apiEndpoint}/chat`, { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
                 body: JSON.stringify({
-                     user_id: userName,
-                     query: userQuery,
-                     k: kValue,
-                     filter_metadata: filterMetadata
+                    user_id: userName,
+                    query: userQuery,
+                    k: kValue,
+                    filter_metadata: filterMetadata
                 })
             });
 
@@ -497,23 +511,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideSpinner();
                 const errorText = await response.text();
                 let errorMessage = `Error: ${response.status}`;
-                 try {
+                try {
                     const errorJson = JSON.parse(errorText);
                     if (errorJson.detail) errorMessage += `: ${errorJson.detail}`;
                 } catch (e) {
-                     errorMessage += `: ${errorText.substring(0,100)}...`;
+                    errorMessage += `: ${errorText.substring(0,100)}...`;
                 }
                 appendMessage("bot", errorMessage);
-                isGeneratingResponse = false; // Asegurarse de resetear el flag
-                toggleInputAndButtonState(true); // Y rehabilitar
+                isGeneratingResponse = false; 
+                toggleInputAndButtonState(true); 
                 return;
             }
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
-            let firstChunk = true;
-            let botMessageElement = null; // Referencia al elemento del mensaje del bot
-
+            
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
@@ -521,80 +533,89 @@ document.addEventListener('DOMContentLoaded', () => {
                 const chunkValue = decoder.decode(value, { stream: true });
 
                 try {
-                    // Intentar parsear el chunk completo como JSON.
-                    // Esto es para el objeto de metadatos final que viene como una cadena JSON completa.
                     const parsedChunk = JSON.parse(chunkValue);
                     if (parsedChunk.message_id && parsedChunk.metadata) {
+                        // Este es el objeto final con el message_id y los metadatos
                         latestBotMessageId = parsedChunk.message_id;
                         finalMetadata = parsedChunk.metadata;
-                        // Si son los metadatos finales, no los añadimos como texto.
-                        // Rompemos el bucle aquí porque la transmisión de texto ha terminado.
+                        // Si recibimos los metadatos finales, la transmisión de texto ha terminado.
+                        // Salimos del bucle para procesar el texto acumulado y los metadatos.
                         break; 
                     } else {
-                        // Si es un JSON pero no el de metadata final, tratarlo como texto.
+                        // Si es un JSON pero no el de metadatos finales (ej. error en formato JSON intermedio),
+                        // lo tratamos como texto para que no rompa la visualización.
                         accumulatedText += chunkValue;
-                         if (firstChunk) {
+                        if (!botMessageElement) {
                             hideSpinner();
-                            // Crear el elemento del mensaje con el ID real si está disponible, o temporalmente nulo
-                            botMessageElement = appendMessage("bot", accumulatedText, false, latestBotMessageId);
-                            firstChunk = false;
-                        } else if (botMessageElement) { // Asegurarse que botMessageElement existe
-                            appendMessage("bot", chunkValue, true); // appendMessage maneja la actualización de currentBotMessageElement
+                            // Crear el elemento de mensaje la primera vez que llega texto
+                            botMessageElement = appendMessage("bot", "", latestBotMessageId); 
+                        }
+                        // Renderizar incrementalmente con Markdown
+                        if (typeof marked !== "undefined") {
+                            botMessageElement.innerHTML = marked.parse(accumulatedText);
+                        } else {
+                            botMessageElement.textContent = accumulatedText; // Fallback
                         }
                     }
                 } catch (e) {
-                    // Si el parseo falla, es un chunk de texto.
+                    // Si el parseo JSON falla, es un chunk de texto puro.
                     accumulatedText += chunkValue;
-                    if (firstChunk) {
+                    if (!botMessageElement) {
                         hideSpinner();
-                        // Crear el elemento del mensaje con un ID temporal si aún no hay un ID real
-                        botMessageElement = appendMessage("bot", accumulatedText, false, latestBotMessageId);
-                        firstChunk = false;
-                    } else if (botMessageElement) { // Asegurarse que botMessageElement existe
-                        // Actualizar el elemento de mensaje existente con el nuevo texto
-                        appendMessage("bot", chunkValue, true); // appendMessage maneja la actualización de currentBotMessageElement
+                        // Crear el elemento de mensaje la primera vez que llega texto
+                        botMessageElement = appendMessage("bot", "", latestBotMessageId); 
+                    }
+                    // Renderizar incrementalmente con Markdown
+                    if (typeof marked !== "undefined") {
+                        botMessageElement.innerHTML = marked.parse(accumulatedText);
+                    } else {
+                        botMessageElement.textContent = accumulatedText; // Fallback
                     }
                 }
+                chatbox.scrollTop = chatbox.scrollHeight; // Scroll en cada actualización
             }
 
-            // Después del streaming, asegurarse de que el ID final del mensaje esté establecido y los metadatos se muestren
-            if (botMessageElement) { // Usar botMessageElement que es la referencia al DIV del mensaje
-                // Actualizar el ID del elemento con el ID real del backend si es diferente
+            // --- Post-streaming processing ---
+            // Asegurarse de que el spinner se oculta al finalizar el streaming
+            hideSpinner();
+
+            // Si se creó un elemento de mensaje y hay contenido o metadatos finales
+            if (botMessageElement) { 
+                // Asegurarse de que el ID del elemento coincida con el ID real del mensaje
                 if (latestBotMessageId && botMessageElement.id !== latestBotMessageId) {
                     botMessageElement.id = latestBotMessageId;
                     botMessageElement.dataset.messageId = latestBotMessageId;
                 }
 
-                // Renderizar el contenido Markdown final
+                // Asegurar que el Markdown final esté renderizado (importante para el último chunk)
                 if (typeof marked !== "undefined" && accumulatedText) {
                     botMessageElement.innerHTML = marked.parse(accumulatedText);
                 } else {
-                    // Fallback para texto plano
                     const tempDiv = document.createElement('div');
                     tempDiv.textContent = accumulatedText;
                     botMessageElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
                 }
 
-                // Mostrar metadatos usando el finalMetadata recibido
+                // 1. Mostrar metadatos usando el finalMetadata recibido (aparecen después del texto)
                 if (finalMetadata && finalMetadata.references) {
-                     window.fetchAndDisplayMetadata(botMessageElement, finalMetadata.references);
+                    window.fetchAndDisplayMetadata(botMessageElement, finalMetadata.references);
                 }
 
-                // Finalmente, añadir el icono de "me gusta" después de que todo el contenido y los metadatos estén cargados
+                // 2. Añadir el icono de "me gusta" (aparece después del texto y referencias)
                 const likeIcon = document.createElement('span');
                 likeIcon.classList.add('like-icon');
                 likeIcon.innerHTML = likeIconSVG;
-                if (latestBotMessageId) { // Asegurarse que latestBotMessageId tiene valor
+                if (latestBotMessageId) {
                     likeIcon.dataset.messageId = latestBotMessageId;
                 }
-                if (finalMetadata && finalMetadata.disable === true) { // Comprobar si fue "likeado"
+                if (finalMetadata && finalMetadata.disable === true) {
                     likeIcon.classList.add('liked');
                 }
                 botMessageElement.appendChild(likeIcon);
-            } else if (!botMessageElement && accumulatedText) { // Caso donde solo hubo metadata y no texto, o error.
-                 hideSpinner(); // Asegurarse que el spinner se oculta
-                 // Si accumulatedText tiene algo (ej. un error en formato texto del stream), mostrarlo.
-                 appendMessage("bot", accumulatedText);
+            } else if (!botMessageElement && accumulatedText) { 
+                // En caso de que haya habido un error que no permitió crear el elemento
+                // pero sí acumuló texto (ej. error de servidor no JSON al inicio)
+                appendMessage("bot", accumulatedText);
             }
 
 
@@ -606,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isGeneratingResponse = false;
             toggleInputAndButtonState(true); // Habilitar input y botón
             if (chatbox) chatbox.scrollTop = chatbox.scrollHeight;
-            currentBotMessageElement = null; // Reiniciar currentBotMessageElement
+            currentBotMessageElement = null; // Reiniciar
         }
     }
 
@@ -617,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userQueryTextarea.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                if (!isGeneratingResponse) { // Solo enviar si no se está generando una respuesta
+                if (!isGeneratingResponse) { 
                     sendMessage();
                 } else {
                     console.log("No se puede enviar un nuevo mensaje mientras se genera una respuesta.");
@@ -630,8 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deleteHistoryBtn) deleteHistoryBtn.addEventListener('click', showDeleteConfirmation);
     if (cancelButton) cancelButton.addEventListener('click', hideDeleteConfirmation);
     if (confirmButton) confirmButton.addEventListener('click', deleteHistory);
-    // if (userQueryTextarea) userQueryTextarea.focus(); // Se mueve a después de cargar el historial
-
+    
     // Event listener for tab changes to load "liked" solutions
     const tabButtons = document.querySelectorAll('.tab-button');
     tabButtons.forEach(button => {
@@ -639,8 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const tabId = button.getAttribute('data-tab');
             if (tabId === 'soluciones') {
                 if (typeof window.loadLikedSolutions === 'function') {
-                    // Asegurarse que userName y apiEndpoint están disponibles y son correctos
-                    const currentUserName = window.userName || userName; // Priorizar window.userName si está más actualizado
+                    const currentUserName = window.userName || userName; 
                     const currentApiEndpoint = window.apiEndpoint;
                     if (currentUserName && currentApiEndpoint) {
                         window.loadLikedSolutions(currentUserName, currentApiEndpoint);
@@ -650,23 +669,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     console.error("loadLikedSolutions is not defined. Make sure soluciones.js is loaded correctly.");
                 }
-                // La llamada a processLikedSolutions al abrir la pestaña puede ser redundante si el usuario
-                // siempre tiene que hacer clic en el botón. Considera si este comportamiento es el deseado.
-                // Por ahora, lo mantendré como estaba.
-                if (typeof window.processLikedSolutions === 'function') {
-                     const currentUserName = window.userName || userName;
-                     const currentApiEndpoint = window.apiEndpoint;
-                     if (currentUserName && currentApiEndpoint) {
-                        // window.processLikedSolutions(currentUserName, currentApiEndpoint); // Comentado para evitar procesamiento automático
-                     }
-                }
             }
         });
     });
 
     // Exportar funciones y variables globales necesarias
     window.toggleLike = toggleLike;
-    // window.apiEndpoint = apiEndpoint; // Ya se establece globalmente antes
-    // window.userName = userName; // Se actualiza en handleSubmitUsername
     window.fetchAndDisplayMetadata = fetchAndDisplayMetadata;
 });
