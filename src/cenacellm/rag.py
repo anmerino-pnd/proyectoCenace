@@ -33,6 +33,7 @@ class RAG:
         self.processed_files_collection = self.db["processed_files_registro"]  
         self.processed_files_collection.create_index("file_key", unique=True)
 
+        # Cargar los datos procesados al iniciar
         self.processed_files : dict = self._load_processed_files()
         self.processed_solutions_ids : set = self._load_processed_solutions_ids()
 
@@ -59,7 +60,7 @@ class RAG:
     
     
     def _delete_processed_file(self, file_key: List[str]) -> None:
-        """Elimina archivos procesados de la base de datos."""
+        """Elimina archivos procesados de la base de datos (y la caché en memoria)."""
         for file_name in file_key:
             self.processed_files_collection.delete_one({"file_key": file_name})
             if file_name in self.processed_files:
@@ -67,13 +68,15 @@ class RAG:
     
     def _load_processed_solutions_ids(self) -> set:
         """Carga los IDs de las soluciones "likeadas" ya procesadas desde la base de datos."""
-        return {doc["reference"] for doc in self.processed_files_collection.find({}, {"reference": 1})}
+        # Buscamos documentos que tengan 'collection': 'soluciones' y un campo 'reference'
+        # Esto asegura que solo cargamos IDs de soluciones, no de otros documentos
+        return {doc["reference"] for doc in self.processed_files_collection.find({"collection": "soluciones"}, {"reference": 1})}
 
     def _add_processed_solution_id(self, message_id: str) -> None:
         """Añade el ID de una solución procesada al registro."""
         self.processed_files_collection.update_one(
             {"reference": message_id},
-            {"$set": {"reference": message_id, "processed_at": datetime.now().isoformat()}},
+            {"$set": {"reference": message_id, "processed_at": datetime.now().isoformat(), "collection": "soluciones"}}, # Añadir collection aquí
             upsert=True
         )
         self.processed_solutions_ids.add(message_id) # Actualiza el conjunto en memoria
@@ -125,6 +128,7 @@ class RAG:
                 "processed_at": datetime.now().isoformat(),
                 "chunks": doc_chunks_count,
                 "reference": textos[0].metadata.reference if textos else None,
+                "collection": collection_name 
             }
             
             new_docs_count += 1
@@ -134,11 +138,14 @@ class RAG:
             self.vectorstore.save_index()
             self._save_processed_files()
         
+        # Después de cargar o procesar, refrescar la caché
+        self.refresh_processed_data() 
         return [docs_count, new_docs_count, chunks_count]
     
     
     def query(self, 
               user_id: str,
+              conversation_id: str, # Added conversation_id
               question: str, 
               k: int = 10,
               filter_metadata: Optional[Dict[str, Any]] = None
@@ -155,19 +162,20 @@ class RAG:
         text_chunks = [chunk[1] for chunk in relevant_chunks]
 
         # Call assistant.answer and unpack the new return values
-        token_generator, bot_message_id, full_metadata = self.assistant.answer(question, text_chunks, user_id=user_id)
+        token_generator, bot_message_id, full_metadata = self.assistant.answer(question, text_chunks, user_id=user_id, conversation_id=conversation_id) # Pass conversation_id
 
         return token_generator, text_chunks, bot_message_id, full_metadata
 
     def answer(self, 
             user_id: str,
+            conversation_id: str, # Added conversation_id
             question: str, 
             k: int = 10,
             filter_metadata: Optional[Dict[str, Any]] = None
             ) -> Generator[Union[str, Dict[str, Any]], None, None]: # Updated return type hint
 
         token_generator, text_chunks, bot_message_id, full_metadata = self.query(
-            user_id, question, k=k, filter_metadata=filter_metadata
+            user_id, conversation_id, question, k=k, filter_metadata=filter_metadata # Pass conversation_id
         )
 
         self.last_chunks = text_chunks # This will now contain the chunks used for the answer
@@ -176,14 +184,18 @@ class RAG:
             yield token
 
         # After all tokens are yielded, send the final message ID and metadata
-        yield {"reference": bot_message_id, "metadata": full_metadata}
+        # MODIFICADO: Envía la metadata y el ID en un objeto con una clave específica.
+        yield json.dumps({"final_message_data": {"message_id": bot_message_id, "metadata": full_metadata}})
 
         
-    def get_user_history(self, user_id : str) -> List[Dict[str, Any]]:
-        return self.assistant.load_history(user_id)
+    def get_user_history(self, user_id : str, conversation_id: str) -> List[Dict[str, Any]]: # Added conversation_id
+        return self.assistant.load_history(user_id, conversation_id) # Pass conversation_id
     
-    def clear_user_history(self, user_id) -> None:
-        return self.assistant.clear_user_history(user_id)
+    def clear_user_history(self, user_id: str, conversation_id: str) -> None: # Added conversation_id
+        return self.assistant.clear_conversation_history(user_id, conversation_id) # Call new method
+    
+    def get_user_conversations(self, user_id: str) -> List[Dict[str, Any]]: # New method
+        return self.assistant.get_user_conversations(user_id)
 
     def add_liked_solutions_to_vectorstore(self, user_id: str) -> int:
         """
@@ -221,17 +233,21 @@ class RAG:
             # Procesar las referencias originales y extraer solo la metadata relevante
             extracted_references_metadata = []
             for ref in original_call_metadata.get("references", []):
-                ref_metadata = ref.get("metadata", {})
-                extracted_ref = {}
-                if "source" in ref_metadata: extracted_ref["source"] = ref_metadata["source"]
-                if "filename" in ref_metadata: extracted_ref["filename"] = ref_metadata["filename"]
-                if "page_number" in ref_metadata: extracted_ref["page_number"] = ref_metadata["page_number"]
-                if "title" in ref_metadata: extracted_ref["title"] = ref_metadata["title"]
-                if extracted_ref: # Solo añadir si tiene campos relevantes
-                    extracted_references_metadata.append(extracted_ref)
+                # Asegúrate de que 'ref' es un diccionario y tiene la clave 'metadata'
+                if isinstance(ref, dict) and "metadata" in ref:
+                    ref_metadata = ref["metadata"]
+                    extracted_ref = {}
+                    if "source" in ref_metadata: extracted_ref["source"] = ref_metadata["source"]
+                    if "filename" in ref_metadata: extracted_ref["filename"] = ref_metadata["filename"]
+                    if "page_number" in ref_metadata: extracted_ref["page_number"] = ref_metadata["page_number"]
+                    if "title" in ref_metadata: extracted_ref["title"] = ref_metadata["title"]
+                    # Es crucial agregar el 'reference' de la referencia individual aquí también si existe
+                    if "reference" in ref: extracted_ref["reference"] = ref["reference"] 
+                    if extracted_ref: # Solo añadir si tiene campos relevantes
+                        extracted_references_metadata.append(extracted_ref)
             
             if extracted_references_metadata:
-                new_text_metadata_dict["metadata"] = extracted_references_metadata
+                new_text_metadata_dict["references"] = extracted_references_metadata # Cambiado de "metadata" a "references" aquí
 
             # Crear el objeto Text con el contenido y los metadatos construidos
             text_obj = Text(content=content, metadata=TextMetadata(**new_text_metadata_dict))
@@ -244,6 +260,8 @@ class RAG:
         
         if solutions_added_count > 0:
             self.vectorstore.save_index()
+            # Después de añadir soluciones, refrescar la caché
+            self.refresh_processed_data()
         else:
             pass
         return solutions_added_count
@@ -253,6 +271,10 @@ class RAG:
         Elimina un documento del vectorstore basado en su referencia.
         """
         self.vectorstore.delete_by_reference(reference_id)
-        self.processed_files
-
+        # No necesitas self.processed_files aquí, ya que la colección se actualiza en chat.py
+    
+    def refresh_processed_data(self):
+        """Refresca la caché en memoria de processed_files y processed_solutions_ids desde la DB."""
+        self.processed_files = self._load_processed_files()
+        self.processed_solutions_ids = self._load_processed_solutions_ids()
 

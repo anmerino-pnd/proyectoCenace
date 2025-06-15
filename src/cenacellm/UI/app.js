@@ -15,8 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const kValueInput = document.getElementById('k-value');
     const filterMetadataSelect = document.getElementById('filter-metadata');
 
+    // New conversation elements
+    const newConversationBtn = document.getElementById('newConversationBtn');
+    const conversationListDiv = document.getElementById('conversationList');
+    const conversationsContainer = document.getElementById('conversationsContainer');
+    const deleteConversationModalOverlay = document.getElementById('delete-conversation-modal-overlay');
+    const deleteConversationCancelButton = deleteConversationModalOverlay ? deleteConversationModalOverlay.querySelector('.cancel-button') : null;
+    const deleteConversationConfirmButton = deleteConversationModalOverlay ? deleteConversationModalOverlay.querySelector('.confirm-button') : null;
+
+
     let userName = '';
-    // currentBotMessageElement ya no se usa para el streaming, sino para operaciones post-streaming
+    let currentConversationId = null; // New: To store the ID of the current conversation
     let currentBotMessageElement = null; 
     let isGeneratingResponse = false; 
 
@@ -50,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Maneja el envío del nombre de usuario desde el modal.
      */
-    function handleSubmitUsername() {
+    async function handleSubmitUsername() {
         const enteredUsername = usernameInput.value.trim();
         if (enteredUsername) {
             userName = enteredUsername;
@@ -62,7 +71,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const mainAppContainer = document.querySelector('.app-container');
             if (mainAppContainer) mainAppContainer.classList.remove('hidden');
 
-            loadHistory();
+            // Load conversations and then the first one, or create a new one
+            await loadConversations();
+            if (!currentConversationId && conversationListDiv.children.length > 0) {
+                // If no current conversation is set, select the first one in the list
+                const firstConversationButton = conversationListDiv.querySelector('.conversation-item-button');
+                if (firstConversationButton) {
+                    firstConversationButton.click(); // Simulate click to load history
+                }
+            } else if (!currentConversationId) {
+                // If no conversations exist, create a new one
+                await createNewConversation();
+            } else {
+                 loadHistory(currentConversationId); // Load the existing conversation if already set
+            }
+
             if (userQueryTextarea) userQueryTextarea.focus();
         } else {
             console.warn("Nombre de usuario vacío.");
@@ -100,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         msgDiv.classList.add("message", sender);
 
         if (sender === "bot") {
-            msgDiv.id = messageId; 
+            msgDiv.id = messageId || `bot-message-${Date.now()}`; 
             msgDiv.dataset.messageId = msgDiv.id; 
             // Para el bot, el texto inicial puede ser un placeholder o el primer chunk
             msgDiv.textContent = initialMessageText; 
@@ -177,13 +200,26 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Carga el historial de chat desde el backend y lo muestra.
      * Esta función maneja mensajes completos, no streaming.
+     * @param {string} convId - El ID de la conversación a cargar.
      */
-    async function loadHistory() {
-        if (!chatbox || !userName) return;
+    async function loadHistory(convId) {
+        if (!chatbox || !userName || !convId) return;
+        
+        currentConversationId = convId; // Set the current conversation ID
+
+        // Highlight the active conversation button
+        document.querySelectorAll('.conversation-item-button').forEach(btn => {
+            if (btn.dataset.conversationId === convId) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
         chatbox.innerHTML = "";
         const loadingMsg = appendMessage("bot", "Cargando conversación...");
         try {
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}`); 
+            const response = await fetch(`${window.apiEndpoint}/history/${userName}/${convId}`); 
             if (loadingMsg && loadingMsg.parentNode === chatbox) {
                 loadingMsg.remove();
             }
@@ -202,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const history = await response.json();
             chatbox.innerHTML = "";
             if (!Array.isArray(history) || history.length === 0) {
-                appendMessage("bot", `¡Hola ${userName}! ¿En qué puedo ayudarte hoy?`);
+                appendMessage("bot", `¡Hola ${userName}! ¿En qué puedo ayudarte hoy en esta conversación?`);
                 return;
             }
             for (const msg of history) {
@@ -274,16 +310,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Elimina el historial de chat del backend y del frontend.
+     * Elimina el historial de chat del backend y del frontend para la conversación actual.
      */
     async function deleteHistory() {
-        if (!userName) {
+        if (!userName || !currentConversationId) {
             hideDeleteConfirmation();
-            console.warn("Attempted to delete history without a username.");
+            console.warn("Attempted to delete history without a username or conversation ID.");
             return;
         }
         try {
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}`, { 
+            const response = await fetch(`${window.apiEndpoint}/history/${userName}/${currentConversationId}`, { 
                 method: 'DELETE'
             });
 
@@ -298,6 +334,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatbox.innerHTML = '';
                 appendMessage("bot", `¡Hola ${userName}! ¿En qué puedo ayudarte hoy?`);
             }
+            // After deleting history, refresh the conversation list to update titles if needed
+            await loadConversations(); 
         } catch (error) {
             console.error("Error al borrar historial:", error);
             appendMessage("bot", `Error al borrar historial: ${error.message}`);
@@ -341,7 +379,12 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {Array<Object>} metadataArray - El array de objetos de metadatos/referencias.
      */
     function fetchAndDisplayMetadata(messageElement, metadataArray) {
+        // Si no hay metadatos, limpia cualquier sección existente y retorna.
         if (!messageElement || !Array.isArray(metadataArray) || metadataArray.length === 0) {
+            const existingMetadataSection = messageElement.querySelector('.metadata-section');
+            if (existingMetadataSection) {
+                existingMetadataSection.remove();
+            }
             return;
         }
 
@@ -362,28 +405,54 @@ document.addEventListener('DOMContentLoaded', () => {
         metadataDetails.classList.add('metadata-details', 'hidden');
 
         metadataArray.forEach((item, index) => {
-            // Asegurarse de que item y item.metadata existan
-            if (item && item.metadata && item.metadata.collection === 'documentos') {
+            // Asegurarse de que item y item.reference existan
+            if (item && item.reference) {
                 const metadataItemDiv = document.createElement('div');
                 metadataItemDiv.classList.add('metadata-item');
 
+                // Determina el tipo de referencia para mostrar un título más descriptivo
+                const collectionType = item.metadata?.collection || 'unknown'; // Usa optional chaining
+                let referenceTitlePrefix = '';
+                let viewDocumentUrl = null;
+
+                if (collectionType === 'documentos') {
+                    referenceTitlePrefix = 'Documento';
+                    if (item.metadata?.filename) {
+                        viewDocumentUrl = `${window.apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`; 
+                    }
+                } else if (collectionType === 'soluciones') {
+                    referenceTitlePrefix = 'Solución';
+                    // Nota: Actualmente no hay una URL directa para ver soluciones individuales en este frontend.
+                    // Si existiera, la añadirías aquí.
+                } else {
+                    referenceTitlePrefix = 'Referencia'; // Tipo genérico
+                }
+
+                // Muestra el prefijo del título y un posible título si está disponible
                 const itemTitle = document.createElement('h6');
-                itemTitle.textContent = `Referencia ${index + 1}${item.metadata.title ? ': ' + item.metadata.title : ''}`;
+                itemTitle.textContent = `${referenceTitlePrefix} ${index + 1}${item.metadata?.title ? ': ' + item.metadata.title : ''}`;
                 metadataItemDiv.appendChild(itemTitle);
 
                 const detailsList = document.createElement('ul');
-                const fieldsToShow = [
-                    'page_number', 'author', 'subject'];
-                if (item.metadata["filename"]) {
-                    const viewDocumentUrl = `${window.apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`; 
+
+                // Siempre muestra el ID de la referencia
+                const referenceIdItem = document.createElement('li');
+                referenceIdItem.textContent = `ID: ${item.reference}`;
+                detailsList.appendChild(referenceIdItem);
+
+                // Añade el enlace "Abrir documento" solo para documentos
+                if (viewDocumentUrl) {
                     const sourceItem = document.createElement('a');
                     sourceItem.href = viewDocumentUrl;
                     sourceItem.textContent = 'Abrir documento';
                     sourceItem.target = "_blank";
                     detailsList.appendChild(sourceItem);
                 }
+
+                // Muestra condicionalmente otros campos de metadatos (si existen)
+                const fieldsToShow = ['page_number', 'author', 'subject', 'source']; 
                 fieldsToShow.forEach(field => {
-                    if (item.metadata[field]) {
+                    if (item.metadata?.[field]) { // Usa optional chaining para item.metadata
                         const listItem = document.createElement('li');
                         listItem.textContent = `${field.replace('_', ' ')}: ${item.metadata[field]}`;
                         detailsList.appendChild(listItem);
@@ -395,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Solo añadir la sección si tiene contenido
+        // Solo añade la sección de metadatos si hay elementos para mostrar
         if (metadataDetails.hasChildNodes()) {
             metadataSection.appendChild(metadataHeader);
             metadataSection.appendChild(metadataDetails);
@@ -412,6 +481,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             });
+        } else {
+            // Si después de procesar, no hay elementos de metadatos válidos para mostrar,
+            // elimina la sección si se había añadido previamente (por ejemplo, de una respuesta incompleta del backend).
+            const existingMetadataSection = messageElement.querySelector('.metadata-section');
+            if (existingMetadataSection) {
+                existingMetadataSection.remove();
+            }
         }
         if (chatbox) chatbox.scrollTop = chatbox.scrollHeight;
     }
@@ -479,10 +555,22 @@ document.addEventListener('DOMContentLoaded', () => {
      * y el icono de "me gusta" en el orden correcto.
      */
     async function sendMessage() {
+        if (!currentConversationId) {
+            console.warn("No hay conversación activa. Por favor, crea o selecciona una.");
+            // Optionally, prompt the user to create a new conversation
+            createNewConversation();
+            return;
+        }
+
         isGeneratingResponse = true;
         toggleInputAndButtonState(false); // Deshabilitar input y botón
 
         const userQuery = userQueryTextarea.value.trim();
+        if (!userQuery) {
+            isGeneratingResponse = false;
+            toggleInputAndButtonState(true);
+            return;
+        }
         appendMessage("user", userQuery); // Añadir mensaje del usuario
         userQueryTextarea.value = "";
         resizeTextarea();
@@ -505,9 +593,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
                 body: JSON.stringify({
                     user_id: userName,
+                    conversation_id: currentConversationId, // Pass current conversation ID
                     query: userQuery,
-                    k: kValue, // <-- Usar la variable kValue obtenida
-                    filter_metadata: filterMetadata // <-- Usar la variable filterMetadata obtenida
+                    k: kValue, 
+                    filter_metadata: filterMetadata 
                 })
             });
 
@@ -536,62 +625,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const chunkValue = decoder.decode(value, { stream: true });
 
-                try {
-                    const parsedChunk = JSON.parse(chunkValue);
-                    if (parsedChunk.message_id && parsedChunk.metadata) {
-                        // Este es el objeto final con el message_id y los metadatos
-                        latestBotMessageId = parsedChunk.message_id;
-                        finalMetadata = parsedChunk.metadata;
-                        // Si recibimos los metadatos finales, la transmisión de texto ha terminado.
-                        // Salimos del bucle para procesar el texto acumulado y los metadatos.
-                        break; 
-                    } else {
-                        // Si es un JSON pero no el de metadatos finales (ej. error en formato JSON intermedio),
-                        // lo tratamos como texto para que no rompa la visualización.
-                        accumulatedText += chunkValue;
-                        if (!botMessageElement) {
-                            hideSpinner();
-                            // Crear el elemento de mensaje la primera vez que llega texto
-                            botMessageElement = appendMessage("bot", "", latestBotMessageId); 
-                        }
-                        // Renderizar incrementalmente con Markdown
-                        if (typeof marked !== "undefined") {
-                            botMessageElement.innerHTML = marked.parse(accumulatedText);
-                        } else {
-                            botMessageElement.textContent = accumulatedText; // Fallback
-                        }
-                    }
-                } catch (e) {
-                    // Si el parseo JSON falla, es un chunk de texto puro.
-                    accumulatedText += chunkValue;
+                // MODIFICADO: Intentar extraer el JSON final del chunk.
+                // Esto maneja el caso donde el último token de texto y el JSON vienen juntos.
+                const finalDataRegex = /(.*?)({.*"final_message_data":.*})\s*$/s; // '\s*$' para capturar posibles espacios/saltos de línea al final
+                const match = chunkValue.match(finalDataRegex);
+
+                if (match) {
+                    // Si hay un match, el chunk contiene texto + JSON final
+                    const textPart = match[1];
+                    const jsonPart = match[2];
+
+                    // Añadir la parte de texto al acumulado
+                    accumulatedText += textPart;
+                    
+                    // Asegurar que el elemento del bot existe y actualizar su contenido con el texto
                     if (!botMessageElement) {
                         hideSpinner();
-                        // Crear el elemento de mensaje la primera vez que llega texto
                         botMessageElement = appendMessage("bot", "", latestBotMessageId); 
                     }
-                    // Renderizar incrementalmente con Markdown
                     if (typeof marked !== "undefined") {
                         botMessageElement.innerHTML = marked.parse(accumulatedText);
                     } else {
-                        botMessageElement.textContent = accumulatedText; // Fallback
+                        botMessageElement.textContent = accumulatedText;
                     }
+                    chatbox.scrollTop = chatbox.scrollHeight;
+
+                    // Intentar parsear la parte JSON
+                    try {
+                        const parsedFinalChunk = JSON.parse(jsonPart);
+                        if (parsedFinalChunk.final_message_data) {
+                            latestBotMessageId = parsedFinalChunk.final_message_data.message_id;
+                            finalMetadata = parsedFinalChunk.final_message_data.metadata;
+                            // ¡Hemos encontrado el JSON final! Salir del bucle de streaming.
+                            break; 
+                        }
+                    } catch (e) {
+                        console.error("Error al parsear la parte JSON final:", e);
+                        // Si el parseo de la parte JSON falla, añadirla al texto como fallback (no deseado, pero mejor que perderla)
+                        accumulatedText += jsonPart;
+                        if (typeof marked !== "undefined") {
+                            botMessageElement.innerHTML = marked.parse(accumulatedText);
+                        } else {
+                            botMessageElement.textContent = accumulatedText;
+                        }
+                    }
+                } else {
+                    // Si no hay match, el chunk es texto puro (o un JSON que no es el final_message_data)
+                    // En tu caso, los chunks intermedios no deberían ser JSONs válidos, así que se tratarán como texto.
+                    accumulatedText += chunkValue;
+                    if (!botMessageElement) {
+                        hideSpinner();
+                        botMessageElement = appendMessage("bot", "", latestBotMessageId); 
+                    }
+                    if (typeof marked !== "undefined") {
+                        botMessageElement.innerHTML = marked.parse(accumulatedText);
+                    } else {
+                        botMessageElement.textContent = accumulatedText;
+                    }
+                    chatbox.scrollTop = chatbox.scrollHeight;
                 }
-                chatbox.scrollTop = chatbox.scrollHeight; // Scroll en cada actualización
             }
 
-            // --- Post-streaming processing ---
-            // Asegurarse de que el spinner se oculta al finalizar el streaming
+            // --- Procesamiento Post-streaming (después de que el bucle de lectura haya terminado) ---
             hideSpinner();
 
-            // Si se creó un elemento de mensaje y hay contenido o metadatos finales
             if (botMessageElement) { 
-                // Asegurarse de que el ID del elemento coincida con el ID real del mensaje
                 if (latestBotMessageId && botMessageElement.id !== latestBotMessageId) {
                     botMessageElement.id = latestBotMessageId;
                     botMessageElement.dataset.messageId = latestBotMessageId;
                 }
 
-                // Asegurar que el Markdown final esté renderizado (importante para el último chunk)
+                // Asegurar que el Markdown final esté renderizado
                 if (typeof marked !== "undefined" && accumulatedText) {
                     botMessageElement.innerHTML = marked.parse(accumulatedText);
                 } else {
@@ -600,12 +704,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     botMessageElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
                 }
 
-                // 1. Mostrar metadatos usando el finalMetadata recibido (aparecen después del texto)
+                // 1. Mostrar metadatos usando el finalMetadata recibido
                 if (finalMetadata && finalMetadata.references) {
                     window.fetchAndDisplayMetadata(botMessageElement, finalMetadata.references);
                 }
 
-                // 2. Añadir el icono de "me gusta" (aparece después del texto y referencias)
+                // 2. Añadir el icono de "me gusta"
                 const likeIcon = document.createElement('span');
                 likeIcon.classList.add('like-icon');
                 likeIcon.innerHTML = likeIconSVG;
@@ -617,10 +721,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 botMessageElement.appendChild(likeIcon);
             } else if (!botMessageElement && accumulatedText) { 
-                // En caso de que haya habido un error que no permitió crear el elemento
-                // pero sí acumuló texto (ej. error de servidor no JSON al inicio)
                 appendMessage("bot", accumulatedText);
             }
+
+            // After sending a message, reload conversations to update the title of the current one
+            await loadConversations();
 
 
         } catch (error) {
@@ -629,9 +734,159 @@ document.addEventListener('DOMContentLoaded', () => {
             appendMessage("bot", "Hubo un problema al enviar el mensaje. Intenta nuevamente.");
         } finally {
             isGeneratingResponse = false;
-            toggleInputAndButtonState(true); // Habilitar input y botón
+            toggleInputAndButtonState(true); 
             if (chatbox) chatbox.scrollTop = chatbox.scrollHeight;
-            currentBotMessageElement = null; // Reiniciar
+            currentBotMessageElement = null; 
+        }
+    }
+
+
+    /**
+     * Carga y muestra la lista de conversaciones del usuario.
+     */
+    async function loadConversations() {
+        if (!userName || !conversationListDiv) return;
+
+        conversationListDiv.innerHTML = '<p class="loading-conversations-message">Cargando conversaciones...</p>';
+        try {
+            const response = await fetch(`${window.apiEndpoint}/conversations/${userName}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                conversationListDiv.innerHTML = `<p class="error-conversations-message">Error al cargar conversaciones: ${errorText}</p>`;
+                console.error("Error fetching conversations:", errorText);
+                return;
+            }
+
+            const conversations = await response.json();
+            conversationListDiv.innerHTML = ''; // Clear loading message
+
+            if (!Array.isArray(conversations) || conversations.length === 0) {
+                conversationListDiv.innerHTML = '<p class="no-conversations-message">No tienes conversaciones aún.</p>';
+                return;
+            }
+
+            conversations.forEach(conv => {
+                const convItem = document.createElement('div');
+                convItem.classList.add('conversation-item');
+                convItem.dataset.conversationId = conv.conversation_id;
+
+                const convButton = document.createElement('button');
+                convButton.classList.add('conversation-item-button');
+                convButton.dataset.conversationId = conv.conversation_id;
+                convButton.textContent = conv.title || "Conversación sin título";
+                
+                // Add active class if this is the current conversation
+                if (conv.conversation_id === currentConversationId) {
+                    convButton.classList.add('active');
+                }
+
+                // Delete button for each conversation
+                const deleteConvButton = document.createElement('button');
+                deleteConvButton.classList.add('delete-conversation-button');
+                deleteConvButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+                deleteConvButton.dataset.conversationId = conv.conversation_id;
+                deleteConvButton.title = "Eliminar conversación";
+
+
+                convButton.addEventListener('click', () => loadHistory(conv.conversation_id));
+                deleteConvButton.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent loading history when deleting
+                    showDeleteConversationConfirmation(conv.conversation_id);
+                });
+
+                convItem.appendChild(convButton);
+                convItem.appendChild(deleteConvButton);
+                conversationListDiv.appendChild(convItem);
+            });
+        } catch (error) {
+            console.error("Error loading conversations:", error);
+            conversationListDiv.innerHTML = '<p class="error-conversations-message">Error al cargar las conversaciones.</p>';
+        }
+    }
+
+    /**
+     * Crea una nueva conversación y la carga.
+     */
+    async function createNewConversation() {
+        if (!userName) {
+            console.warn("No se puede crear una nueva conversación sin nombre de usuario.");
+            return;
+        }
+        try {
+            const response = await fetch(`${window.apiEndpoint}/new_conversation/${userName}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await response.json();
+            if (response.ok && result.conversation_id) {
+                currentConversationId = result.conversation_id;
+                await loadConversations(); // Reload conversation list to show new one
+                loadHistory(currentConversationId); // Load the empty new conversation
+            } else {
+                console.error("Error creating new conversation:", result.detail || response.statusText);
+            }
+        } catch (error) {
+            console.error("Error de red al crear nueva conversación:", error);
+        }
+    }
+
+    /**
+     * Muestra el modal de confirmación para eliminar una conversación.
+     * @param {string} convIdToDelete - El ID de la conversación a eliminar.
+     */
+    let conversationIdToDelete = null; // Store the ID temporarily
+    function showDeleteConversationConfirmation(convId) {
+        conversationIdToDelete = convId;
+        if (deleteConversationModalOverlay) {
+            deleteConversationModalOverlay.classList.remove('hidden');
+            deleteConversationModalOverlay.classList.add('visible');
+        }
+    }
+
+    /**
+     * Oculta el modal de confirmación para eliminar una conversación.
+     */
+    function hideDeleteConversationConfirmation() {
+        if (deleteConversationModalOverlay) {
+            deleteConversationModalOverlay.classList.add('hidden');
+            deleteConversationModalOverlay.classList.remove('visible');
+        }
+        conversationIdToDelete = null;
+    }
+
+    /**
+     * Elimina una conversación específica del backend y actualiza la UI.
+     */
+    async function deleteSpecificConversation() {
+        if (!userName || !conversationIdToDelete) {
+            hideDeleteConversationConfirmation();
+            console.warn("No hay nombre de usuario o ID de conversación para eliminar.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${window.apiEndpoint}/delete_conversation`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userName, conversation_id: conversationIdToDelete })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Error ${response.status}:`, errorText);
+            } else {
+                // If the deleted conversation was the current one, switch to a new one
+                if (currentConversationId === conversationIdToDelete) {
+                    currentConversationId = null; // Clear current conversation
+                    await createNewConversation(); // Create and load a new empty one
+                } else {
+                    await loadConversations(); // Just reload the list
+                }
+            }
+        } catch (error) {
+            console.error("Error deleting conversation:", error);
+        } finally {
+            hideDeleteConversationConfirmation();
         }
     }
 
@@ -656,6 +911,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cancelButton) cancelButton.addEventListener('click', hideDeleteConfirmation);
     if (confirmButton) confirmButton.addEventListener('click', deleteHistory);
     
+    // New conversation event listener
+    if (newConversationBtn) {
+        newConversationBtn.addEventListener('click', createNewConversation);
+    }
+
+    // Delete conversation modal buttons
+    if (deleteConversationCancelButton) deleteConversationCancelButton.addEventListener('click', hideDeleteConversationConfirmation);
+    if (deleteConversationConfirmButton) deleteConversationConfirmButton.addEventListener('click', deleteSpecificConversation);
+
+
     // Event listener for tab changes to load "liked" solutions
     const tabButtons = document.querySelectorAll('.tab-button');
     tabButtons.forEach(button => {
@@ -681,3 +946,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.toggleLike = toggleLike;
     window.fetchAndDisplayMetadata = fetchAndDisplayMetadata;
 });
+

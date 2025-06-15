@@ -10,116 +10,128 @@
 </head>
 <body>
     <div class="app-container">
-        <div class="tab-nav">
-            <button class="tab-button active" data-tab="chat">Chat</button>
-            <button class="tab-button" data-tab="documentos">Documentos</button>
-            <button class="tab-button" data-tab="soluciones">Soluciones</button>
-            <button class="tab-button" data-tab="tickets">Tickets</button>
+        <div class="sidebar"> <!-- New sidebar for conversations -->
+            <div class="sidebar-header">
+                <h3>Conversaciones</h3>
+                <button id="newConversationBtn" class="new-conversation-button" title="Nueva Conversación">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus-circle"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                </button>
+            </div>
+            <div id="conversationList" class="conversation-list">
+                <!-- Conversations will be loaded here by JavaScript -->
+                <p>Cargando conversaciones...</p>
+            </div>
         </div>
 
-        <div id="chat-tab-content" class="tab-content">
-             <div class="chat-header">
-                <h2>CENACE - Chat</h2>
-                <button id="deleteHistoryBtn" class="delete-button">Eliminar historial</button>
+        <div class="main-content"> <!-- Main content area for tabs -->
+            <div class="tab-nav">
+                <button class="tab-button active" data-tab="chat">Chat</button>
+                <button class="tab-button" data-tab="documentos">Documentos</button>
+                <button class="tab-button" data-tab="soluciones">Soluciones</button>
+                <button class="tab-button" data-tab="tickets">Tickets</button>
             </div>
 
-            <div id="messages-container" class="messages-container">
-            </div>
+            <div id="chat-tab-content" class="tab-content">
+                <div class="chat-header">
+                    <h2>CENACE - Chat</h2>
+                    <button id="deleteHistoryBtn" class="delete-button">Eliminar historial</button>
+                </div>
 
-            <div class="chat-input-area">
-                <div class="search-parameters">
-                    <div class="parameter-group">
-                        <label for="k-value">Número de referencias:</label>
-                        <input type="number" id="k-value" min="1" max="10" value="5">
+                <div id="messages-container" class="messages-container">
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="search-parameters">
+                        <div class="parameter-group">
+                            <label for="k-value">Número de referencias:</label>
+                            <input type="number" id="k-value" min="1" max="10" value="5">
+                        </div>
+
+                        <div class="parameter-group">
+                            <label for="filter-metadata">Colección:</label>
+                            <select id="filter-metadata">
+                                <option value="None" selected>Todos</option>
+                                <option value="documentos">Documentos</option>
+                                <option value="tickets">Tickets</option>
+                                <option value="soluciones">Soluciones</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="parameter-group">
-                        <label for="filter-metadata">Colección:</label>
-                        <select id="filter-metadata">
-                            <option value="None" selected>Todos</option>
-                            <option value="documentos">Documentos</option>
-                            <option value="tickets">Tickets</option>
-                            <option value="soluciones">Soluciones</option>
-                        </select>
+                    <div class="textarea-container">
+                        <textarea id="userQuery" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
+                        <button id="sendBtn" class="send-button" data-action="send">
+                            <span id="sendBtnIcon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </span>
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <div class="textarea-container">
-                    <textarea id="userQuery" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
-                    <button id="sendBtn" class="send-button" data-action="send">
-                        <span id="sendBtnIcon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                            </svg>
-                        </span>
-                    </button>
+            <div id="documentos-tab-content" class="tab-content hidden">
+                <div class="document-manager">
+                    <h3>Gestor de Documentos</h3>
+
+                    <div class="upload-area">
+                        <h4>Subir nuevos documentos PDF</h4>
+                        <input type="file" id="documentUploadInput" accept=".pdf" multiple>
+                        <label for="documentUploadInput">Elegir Archivos</label>
+                        <div id="selectedFilesPreview" class="selected-files-preview"></div>
+                        <button id="uploadDocumentBtn" class="minimal-primary-button">Subir a la carpeta</button>
+                        <div id="uploadStatus" class="status-message"></div>
+                    </div>
+
+                    <div class="document-list-area">
+                        <h4>Documentos disponibles</h4>
+                        <button id="processDocumentsBtn" class="minimal-primary-button" style="margin-bottom: 15px;">Procesar Documentos (Cargar en RAG)</button>
+                        <div id="processStatus" class="status-message"></div>
+
+                        <div class="document-actions">
+                            <button id="refreshDocumentsBtn">Actualizar Lista</button>
+                            <button id="toggleSelectionModeBtn" class="minimal-secondary-button">Eliminar Documentos</button>
+                            <button id="deleteSelectedDocumentsBtn" class="minimal-secondary-button hidden">Eliminar Documentos Seleccionados</button>
+                        </div>
+
+                        <div id="documentListContainer">
+                            <ul id="documentList">
+                                <li>Cargando documentos...</li>
+                            </ul>
+                        </div>
+                        <div id="deleteStatus" class="status-message"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="soluciones-tab-content" class="tab-content hidden">
+                <div class="solutions-container">
+                    <h3>Soluciones Guardadas</h3>
+                    <div class="solution-actions">
+                        <button id="processLikedSolutionsBtn" class="minimal-primary-button">
+                            <i class="fas fa-sync-alt"></i> Procesar Soluciones
+                        </button>
+                        <!-- New buttons for solution deletion -->
+                        <button id="toggleSolutionSelectionModeBtn" class="minimal-secondary-button">Eliminar Soluciones</button>
+                        <button id="deleteSelectedSolutionsBtn" class="minimal-secondary-button hidden">Eliminar Soluciones Seleccionadas</button>
+                    </div>
+                    <div id="processSolutionsStatus" class="status-message"></div>
+                    <div id="deleteSolutionsStatus" class="status-message"></div>
+                    <div id="likedSolutionsList" class="liked-solutions-list">
+                        <p>No hay soluciones guardadas aún.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tickets-tab-content" class="tab-content hidden">
+                <div style="padding: 20px;">
+                    <h3>Sección de Tickets</h3>
+                    <p>Aquí se mostrará la información de tickets.</p>
                 </div>
             </div>
         </div>
-
-        <div id="documentos-tab-content" class="tab-content hidden">
-            <div class="document-manager">
-                <h3>Gestor de Documentos</h3>
-
-                <div class="upload-area">
-                    <h4>Subir nuevos documentos PDF</h4>
-                    <input type="file" id="documentUploadInput" accept=".pdf" multiple>
-                    <label for="documentUploadInput">Choose Files</label>
-                    <div id="selectedFilesPreview" class="selected-files-preview"></div>
-                    <button id="uploadDocumentBtn" class="minimal-primary-button">Subir a la carpeta</button>
-                    <div id="uploadStatus" class="status-message"></div>
-                </div>
-
-                <div class="document-list-area">
-                    <h4>Documentos disponibles</h4>
-                    <button id="processDocumentsBtn" class="minimal-primary-button" style="margin-bottom: 15px;">Procesar Documentos (Cargar en RAG)</button>
-                    <div id="processStatus" class="status-message"></div>
-
-                    <div class="document-actions">
-                        <button id="refreshDocumentsBtn">Actualizar Lista</button>
-                        <button id="toggleSelectionModeBtn" class="minimal-secondary-button">Eliminar Documentos</button>
-                         <button id="deleteSelectedDocumentsBtn" class="minimal-secondary-button hidden">Eliminar Documentos Seleccionados</button>
-                    </div>
-
-                    <div id="documentListContainer">
-                        <ul id="documentList">
-                            <li>Cargando documentos...</li>
-                        </ul>
-                    </div>
-
-
-                     <div id="deleteStatus" class="status-message"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="soluciones-tab-content" class="tab-content hidden">
-             <div class="solutions-container">
-                <h3>Soluciones Guardadas</h3>
-                <div class="solution-actions">
-                    <button id="processLikedSolutionsBtn" class="minimal-primary-button">
-                        <i class="fas fa-sync-alt"></i> Procesar Soluciones
-                    </button>
-                    <!-- New buttons for solution deletion -->
-                    <button id="toggleSolutionSelectionModeBtn" class="minimal-secondary-button">Eliminar Soluciones</button>
-                    <button id="deleteSelectedSolutionsBtn" class="minimal-secondary-button hidden">Eliminar Soluciones Seleccionadas</button>
-                </div>
-                <div id="processSolutionsStatus" class="status-message"></div>
-                 <div id="deleteSolutionsStatus" class="status-message"></div>
-                <div id="likedSolutionsList" class="liked-solutions-list">
-                    <p>No hay soluciones guardadas aún.</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="tickets-tab-content" class="tab-content hidden">
-             <div style="padding: 20px;">
-                <h3>Sección de Tickets</h3>
-                <p>Aquí se mostrará la información de tickets.</p>
-                </div>
-        </div>
-
     </div>
 
     <div id="username-modal" class="modal-overlay">
@@ -135,9 +147,10 @@
         </div>
     </div>
 
+    <!-- Modal for deleting chat history -->
     <div id="delete-confirmation-modal-overlay" class="modal-overlay hidden">
         <div class="modal-box">
-            <div class="modal-message">¿Estás seguro de que quieres eliminar todo el historial?</div>
+            <div class="modal-message">¿Estás seguro de que quieres eliminar todo el historial de esta conversación?</div>
             <div class="modal-buttons">
                 <button class="cancel-button">Cancelar</button>
                 <button class="confirm-button">Sí, Eliminar</button>
@@ -145,9 +158,20 @@
         </div>
     </div>
 
-<script src="documentos.js"></script>
-<script src="soluciones.js"></script>
-<script src="app.js"></script>
-<script src="tabs.js"></script>
+    <!-- New Modal for deleting a specific conversation -->
+    <div id="delete-conversation-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-message">¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.</div>
+            <div class="modal-buttons">
+                <button class="cancel-button">Cancelar</button>
+                <button class="confirm-button">Sí, Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="documentos.js"></script>
+    <script src="soluciones.js"></script>
+    <script src="app.js"></script>
+    <script src="tabs.js"></script>
 </body>
 </html>

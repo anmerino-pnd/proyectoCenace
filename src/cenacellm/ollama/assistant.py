@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from datetime import datetime
 from typing import Generator, Dict, Any, List, Tuple # Importa List y Tuple
 from pymongo import MongoClient
 from bson.objectid import ObjectId # Importa ObjectId
@@ -23,42 +24,52 @@ class OllamaAssistant(Assistant):
 
         self.mongo_uri = mongo_uri
         self.db_name = db_name
-        self.collection_name = "user_histories"
-        self.collection_backup_name = "user_histories_backup"
+        self.collection_name = "conversations" # Changed to conversations
+        self.collection_backup_name = "user_histories_backup" # Kept for backup if needed
 
         self.client = MongoClient(self.mongo_uri)
         self.db = self.client[self.db_name]
         self.collection = self.db[self.collection_name]
         self.collection_backup = self.db[self.collection_backup_name]
 
+        # Create indexes for efficient querying
+        self.collection.create_index([("user_id", 1), ("conversation_id", 1)])
+        self.collection.create_index([("user_id", 1), ("messages.id", 1)]) # For updating specific messages
 
-    def load_history(self, user_id: str) -> list:
-        """Carga el historial de chat de un usuario."""
-        doc = self.collection.find_one({"user_id": user_id})
-        return doc["history"] if doc else []
 
-    def save_history(self, user_id: str, history: list):
-        """Guarda el historial de chat de un usuario."""
+    def load_history(self, user_id: str, conversation_id: str) -> list:
+        """Carga el historial de chat de una conversación específica para un usuario."""
+        doc = self.collection.find_one({"user_id": user_id, "conversation_id": conversation_id})
+        return doc["messages"] if doc and "messages" in doc else []
+
+    def save_history(self, user_id: str, conversation_id: str, history: list):
+        """Guarda el historial de chat de una conversación específica para un usuario."""
         self.collection.update_one(
-            {"user_id": user_id},
-            {"$set": {"history": history}},
+            {"user_id": user_id, "conversation_id": conversation_id},
+            {"$set": {"messages": history, "last_updated": datetime.now()}},
             upsert=True
         )
 
-    def save_backup(self, user_id: str, history: list):
-        """Guarda una copia de seguridad del historial de chat."""
+    def save_backup(self, user_id: str, history_chunk: list):
+        """Guarda una copia de seguridad de un chunk del historial de chat."""
+        # This backup mechanism needs to be re-evaluated for conversations
+        # For now, it just appends the chunk to a general backup history for the user
         self.collection_backup.update_one(
-        {"user_id": user_id},
-        {"$push": {"history": {"$each": history}}},
-        upsert=True
-    )
-
-    def clear_user_history(self, user_id: str):
-        """Borra el historial de chat de un usuario SIN eliminar el documento ni cambiar el _id."""
-        self.collection.update_one(
             {"user_id": user_id},
-            {"$set": {"history": []}}
+            {"$push": {"history": {"$each": history_chunk}}},
+            upsert=True
         )
+
+    def clear_conversation_history(self, user_id: str, conversation_id: str):
+        """Borra el historial de chat de una conversación específica SIN eliminar el documento de la conversación."""
+        self.collection.update_one(
+            {"user_id": user_id, "conversation_id": conversation_id},
+            {"$set": {"messages": []}}
+        )
+
+    def delete_conversation(self, user_id: str, conversation_id: str):
+        """Elimina una conversación completa de la base de datos."""
+        self.collection.delete_one({"user_id": user_id, "conversation_id": conversation_id})
 
 
     def make_metadata(self, response: GenerateResponse, duration: float, references) -> CallMetadata:
@@ -77,12 +88,12 @@ class OllamaAssistant(Assistant):
             disable=False
         )
 
-    def answer(self, question: Question, chunks: Chunks, user_id: str) -> Tuple[Generator[str, None, None], str, Dict[str, Any]]: # Updated return type hint
+    def answer(self, question: Question, chunks: Chunks, user_id: str, conversation_id: str) -> Tuple[Generator[str, None, None], str, Dict[str, Any]]: # Updated return type hint
         """Genera una respuesta a una pregunta del usuario."""
         user_msg = self.answer_user(question, chunks)
         system = self.answer_system()
 
-        history: list = self.load_history(user_id)
+        history: list = self.load_history(user_id, conversation_id)
         window = history[-self.memory_window_size:]
 
         if window:
@@ -117,11 +128,11 @@ class OllamaAssistant(Assistant):
                 final_metadata = self.make_metadata(chunk, duration, chunks).model_dump()
 
                 # Store both user and bot messages in history
-                history.append({"role": "user", "content": question})
+                history.append({"role": "user", "content": question, "id": str(ObjectId())}) # Add ID to user messages
                 history.append({"role": "assistant", "content": "".join(response_tokens), "metadata": final_metadata, "id": bot_message_id})
 
-                self.save_history(user_id, history)
-                self.save_backup(user_id, [history[-2], history[-1]])
+                self.save_history(user_id, conversation_id, history)
+                self.save_backup(user_id, [history[-2], history[-1]]) # Re-evaluate backup strategy
 
             except Exception as e:
                 raise LLMError("ollama assistant", e)
@@ -130,43 +141,83 @@ class OllamaAssistant(Assistant):
 
     def update_message_metadata(self, user_id: str, message_id: str, new_metadata: Dict[str, Any]) -> bool:
         """
-        Actualiza los metadatos de un mensaje específico en el historial de un usuario.
+        Actualiza los metadatos de un mensaje específico en el historial de un usuario,
+        buscando a través de todas las conversaciones.
         """
-        history = self.load_history(user_id)
+        # Find the conversation that contains the message
+        conversation = self.collection.find_one(
+            {"user_id": user_id, "messages.id": message_id}
+        )
+        
+        if not conversation:
+            return False # Message not found
+
         updated = False
-        for i, message in enumerate(history):
-            # Asegúrate de que el mensaje sea del bot y tenga el ID correcto
+        for i, message in enumerate(conversation["messages"]):
             if message.get("role") == "assistant" and message.get("id") == message_id:
-                # Actualiza los metadatos existentes o añade nuevos campos
                 current_metadata = message.get("metadata", {})
                 current_metadata.update(new_metadata)
-                history[i]["metadata"] = current_metadata
+                conversation["messages"][i]["metadata"] = current_metadata
                 updated = True
                 break
+        
         if updated:
-            self.save_history(user_id, history)
+            self.save_history(user_id, conversation["conversation_id"], conversation["messages"])
         return updated
 
     def get_liked_solutions(self, user_id: str) -> List[Dict[str, Any]]:
         """
-        Recupera todos los mensajes del bot del historial de un usuario que están marcados como 'liked' (disable: True).
+        Recupera todos los mensajes del bot del historial de UN USUARIO a través de TODAS LAS CONVERSACIONES
+        que están marcados como 'liked' (disable: True).
         También devuelve la pregunta de usuario precedente.
         """
-        history = self.load_history(user_id)
         liked_solutions = []
-        for i, message in enumerate(history):
-            if message.get("role") == "assistant" and message.get("metadata", {}).get("disable") is True:
-                # Encuentra la pregunta de usuario precedente
-                user_question = None
-                # Busca hacia atrás para encontrar el mensaje de usuario anterior
-                for j in range(i - 1, -1, -1):
-                    if history[j].get("role") == "user":
-                        user_question = history[j].get("content")
-                        break
-                liked_solutions.append({
-                    "question": user_question,
-                    "answer": message.get("content"),
-                    "metadata": message.get("metadata"),
-                    "id": message.get("id") 
-                })
+        # Iterar sobre todas las conversaciones del usuario
+        conversations = self.collection.find({"user_id": user_id}).sort("last_updated", -1)
+
+        for conversation in conversations:
+            history = conversation.get("messages", [])
+            for i, message in enumerate(history):
+                if message.get("role") == "assistant" and message.get("metadata", {}).get("disable") is True:
+                    # Encuentra la pregunta de usuario precedente en la misma conversación
+                    user_question = None
+                    for j in range(i - 1, -1, -1):
+                        if history[j].get("role") == "user":
+                            user_question = history[j].get("content")
+                            break
+                    liked_solutions.append({
+                        "question": user_question,
+                        "answer": message.get("content"),
+                        "metadata": message.get("metadata"),
+                        "id": message.get("id"),
+                        "conversation_id": conversation.get("conversation_id") # Add conversation_id
+                    })
         return liked_solutions
+
+    def get_user_conversations(self, user_id: str) -> List[Dict[str, Any]]:
+        """
+        Obtiene una lista de todas las conversaciones de un usuario,
+        incluyendo el conversation_id y un título (ej. las primeras palabras de la primera pregunta).
+        """
+        conversations_data = []
+        conversations_cursor = self.collection.find(
+            {"user_id": user_id},
+            {"conversation_id": 1, "messages": {"$slice": 1}, "last_updated": 1} # Get only the first message
+        ).sort("last_updated", -1) # Sort by last updated, newest first
+
+        for conv in conversations_cursor:
+            conversation_id = conv.get("conversation_id")
+            title = "Nueva Conversación"
+            if conv.get("messages") and len(conv["messages"]) > 0:
+                first_message = conv["messages"][0]
+                if first_message.get("role") == "user" and first_message.get("content"):
+                    # Use the first 5 words of the first user message as title
+                    title = " ".join(first_message["content"].split()[:5]) + "..." if len(first_message["content"].split()) > 5 else first_message["content"]
+
+            conversations_data.append({
+                "conversation_id": conversation_id,
+                "title": title,
+                "last_updated": conv.get("last_updated")
+            })
+        return conversations_data
+

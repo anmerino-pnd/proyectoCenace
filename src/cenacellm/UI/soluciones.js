@@ -75,7 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const questionDiv = document.createElement('div');
                 questionDiv.classList.add('solution-question');
                 // Display user question and a toggle icon
-                questionDiv.innerHTML = `<span>${solution.question}</span> <span class="toggle-icon">+</span>`;
+                // MODIFICADO: No wrap en un span para permitir flex-grow en el CSS
+                questionDiv.innerHTML = `${solution.question} <span class="toggle-icon">+</span>`;
                 questionDiv.dataset.solutionId = solution.id; // Store solution ID
 
                 const answerDiv = document.createElement('div');
@@ -97,18 +98,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 // If reference metadata exists, add it
                 if (solution.metadata && solution.metadata.references && Array.isArray(solution.metadata.references) && solution.metadata.references.length > 0) {
                     solution.metadata.references.forEach((ref, index) => {
-                        if (ref.metadata.collection === 'documentos') {
+                        // Accede a 'metadata' dentro de 'ref'
+                        const refMetadata = ref.metadata; // Direct access to metadata within the reference object
+                        if (refMetadata && refMetadata.collection === 'documentos') {
                             const refItemDiv = document.createElement('div');
                             refItemDiv.classList.add('metadata-item');
 
                             const refTitle = document.createElement('h6');
-                            refTitle.textContent = `Referencia ${index + 1}${ref.metadata.title ? ': ' + ref.metadata.title : ''}`;
+                            // MODIFICADO: Usar refMetadata directamente
+                            refTitle.textContent = `Referencia ${index + 1}${refMetadata.title ? ': ' + refMetadata.title : ''}`;
                             refItemDiv.appendChild(refTitle);
 
                             const detailsList = document.createElement('ul');
                             const fieldsToShow = ['page_number', 'author', 'subject'];
-                            if (ref.metadata["filename"]) {
-                                const viewDocumentUrl = `${apiEndpoint}/view_document/${encodeURIComponent(ref.metadata.filename)}`;
+                            if (refMetadata.filename) {
+                                const viewDocumentUrl = `${apiEndpoint}/view_document/${encodeURIComponent(refMetadata.filename)}`;
                                 const sourceItem = document.createElement('a');
                                 sourceItem.href = viewDocumentUrl;
                                 sourceItem.textContent = 'Abrir documento';
@@ -116,9 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 detailsList.appendChild(sourceItem);
                             }
                             fieldsToShow.forEach(field => {
-                                if (ref.metadata[field]) {
+                                if (refMetadata[field]) { // MODIFICADO: Usar refMetadata directamente
                                     const listItem = document.createElement('li');
-                                    listItem.textContent = `${field.replace('_', ' ')}: ${ref.metadata[field]}`;
+                                    listItem.textContent = `${field.replace('_', ' ')}: ${refMetadata[field]}`;
                                     detailsList.appendChild(listItem);
                                 }
                             });
@@ -337,3 +341,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadLikedSolutions = loadLikedSolutions;
     window.processLikedSolutions = processLikedSolutions;
 });
+

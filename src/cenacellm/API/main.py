@@ -11,6 +11,7 @@ from cenacellm.API.chat import (
     UpdateMetadataRequest, # Importa el nuevo modelo de solicitud
     DeleteSolutionsRequest, # Import the new model for deleting solutions
     DeleteDocumentsRequest, # NUEVO: Importa el modelo para eliminar documentos
+    DeleteConversationRequest, # NUEVO: Importa el modelo para eliminar conversaciones
     get_chat_history,
     get_preprocessed_files,
     upload_documents,
@@ -19,7 +20,10 @@ from cenacellm.API.chat import (
     update_message_metadata, # Importa la nueva función
     get_liked_solutions, # Importa la nueva función
     process_liked_solutions_to_vectorstore, # Importa la nueva función
-    delete_solution_by_reference # Import the new deletion function
+    delete_solution_by_reference, # Import the new deletion function
+    get_user_conversations, # NUEVO: Importa la función para obtener conversaciones
+    create_new_conversation, # NUEVO: Importa la función para crear nueva conversación
+    delete_conversation # NUEVO: Importa la función para eliminar conversación
 )
 import os
 
@@ -44,16 +48,16 @@ async def metadata():
     """Endpoint para obtener metadatos de la última respuesta del chat."""
     return metadata_generator()
 
-@app.get("/history/{user_id}")
-async def history(user_id: str):
-    """Endpoint para obtener el historial de chat de un usuario."""
-    return get_chat_history(user_id)
+@app.get("/history/{user_id}/{conversation_id}") # Modified route
+async def history(user_id: str, conversation_id: str): # Added conversation_id
+    """Endpoint para obtener el historial de chat de un usuario y conversación."""
+    return get_chat_history(user_id, conversation_id) # Pass conversation_id
 
-@app.delete("/history/{user_id}")
-async def delete_history(user_id: str):
-    """Endpoint para borrar el historial de chat de un usuario."""
-    clear_user_history(user_id)
-    return {"status": "success", "message": "Historial de usuario borrado."}
+@app.delete("/history/{user_id}/{conversation_id}") # Modified route
+async def delete_history(user_id: str, conversation_id: str): # Added conversation_id
+    """Endpoint para borrar el historial de chat de una conversación específica."""
+    clear_user_history(user_id, conversation_id) # Pass conversation_id
+    return {"status": "success", "message": "Historial de conversación borrado."}
 
 @app.post("/load_documents")
 async def load_docs(collection_name: str, force_reload: bool = False):
@@ -109,3 +113,24 @@ def delete_solution(request: DeleteSolutionsRequest): # New endpoint for deletin
     Endpoint para eliminar soluciones del vectorstore basado en sus reference_ids.
     """
     return delete_solution_by_reference(request.reference_ids)
+
+@app.get("/conversations/{user_id}") # NUEVO endpoint
+async def conversations(user_id: str):
+    """
+    Endpoint para obtener la lista de conversaciones de un usuario.
+    """
+    return get_user_conversations(user_id)
+
+@app.post("/new_conversation/{user_id}") # NUEVO endpoint
+async def new_conversation(user_id: str):
+    """
+    Endpoint para crear una nueva conversación.
+    """
+    return create_new_conversation(user_id)
+
+@app.post("/delete_conversation") # NUEVO endpoint
+def delete_conv(request: DeleteConversationRequest):
+    """
+    Endpoint para eliminar una conversación específica.
+    """
+    return delete_conversation(request.user_id, request.conversation_id)
