@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         msgDiv.classList.add("message", sender);
 
         if (sender === "bot") {
-            msgDiv.id = messageId || `bot-message-${Date.now()}`; 
+            msgDiv.id = messageId; 
             msgDiv.dataset.messageId = msgDiv.id; 
             // Para el bot, el texto inicial puede ser un placeholder o el primer chunk
             msgDiv.textContent = initialMessageText; 
@@ -495,6 +495,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let accumulatedText = ""; 
         let botMessageElement = null; // Referencia al elemento DOM del mensaje del bot
 
+        // Obtener los valores de k y filter_metadata aquí, justo antes de enviarlos
+        const kValue = getKValue(); 
+        const filterMetadata = getFilterMetadata();
+
         try {
             const response = await fetch(`${window.apiEndpoint}/chat`, { 
                 method: 'POST',
@@ -502,8 +506,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     user_id: userName,
                     query: userQuery,
-                    k: kValue,
-                    filter_metadata: filterMetadata
+                    k: kValue, // <-- Usar la variable kValue obtenida
+                    filter_metadata: filterMetadata // <-- Usar la variable filterMetadata obtenida
                 })
             });
 
