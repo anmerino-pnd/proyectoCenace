@@ -4,4 +4,4 @@
 /.env
 /src/cenacellm.egg-info/
 
-__pycache__/
+/src/__pycache__/
