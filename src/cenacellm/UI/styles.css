@@ -50,7 +50,7 @@ body {
 
 /* Sidebar for conversations */
 .sidebar {
-    width: 500px; /* Fixed width for sidebar */
+    width: 300px; /* Fixed width for sidebar */
     background-color: #f0f2f5;
     border-right: 1px solid var(--border-color);
     display: flex;
