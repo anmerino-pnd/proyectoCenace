@@ -31,7 +31,7 @@ class RAG:
         self.client = self.assistant.client 
         self.db = self.client[self.assistant.db_name] 
         self.processed_files_collection = self.db["processed_files_registro"]  
-        self.processed_files_collection.create_index("file_key", unique=True)
+        self.processed_files_collection.create_index("reference", unique=True)
 
         # Cargar los datos procesados al iniciar
         self.processed_files : dict = self._load_processed_files()
@@ -80,7 +80,7 @@ class RAG:
                 "reference": message_id,
                 "processed_at": datetime.now().isoformat(),
                 "collection": "soluciones",
-                "user_id": user_id # Store user_id here
+                "user_id": user_id 
             }}, 
             upsert=True
         )
