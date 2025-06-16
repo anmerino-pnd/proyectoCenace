@@ -3,3 +3,5 @@
 /quarto
 /.env
 /src/cenacellm.egg-info/
+
+__pycache__/
