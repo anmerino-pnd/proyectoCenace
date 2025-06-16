@@ -134,7 +134,7 @@ async def upload_documents(files: List[UploadFile] = File(...)):
     # Después de subir documentos, puedes considerar recargar la lista de procesados
     # para asegurar que los recién subidos se reflejen si no se procesan inmediatamente.
     # Si 'load_documents' se llama después de subir, no es estrictamente necesario aquí.
-    # rag.refresh_processed_data() # Opcional, si no hay un paso de "procesar" explícito.
+    rag.refresh_processed_data() # Opcional, si no hay un paso de "procesar" explícito.
 
     return JSONResponse(content={"files": responses})
 
@@ -231,7 +231,7 @@ def delete_solution_by_reference(reference_ids: List[str]):
             solution_info = rag.processed_files_collection.find_one(
                 {"reference": ref_id, "collection": "soluciones"}
             )
-            
+            print(solution_info)
             if solution_info and "user_id" in solution_info:
                 user_id_of_solution = solution_info["user_id"]
                 

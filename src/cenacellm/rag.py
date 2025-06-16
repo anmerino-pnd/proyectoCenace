@@ -72,11 +72,16 @@ class RAG:
         # Esto asegura que solo cargamos IDs de soluciones, no de otros documentos
         return {doc["reference"] for doc in self.processed_files_collection.find({"collection": "soluciones"}, {"reference": 1})}
 
-    def _add_processed_solution_id(self, message_id: str) -> None:
-        """Añade el ID de una solución procesada al registro."""
+    def _add_processed_solution_id(self, message_id: str, user_id: str) -> None: # Added user_id parameter
+        """Añade el ID de una solución procesada al registro, incluyendo el user_id."""
         self.processed_files_collection.update_one(
             {"reference": message_id},
-            {"$set": {"reference": message_id, "processed_at": datetime.now().isoformat(), "collection": "soluciones"}}, # Añadir collection aquí
+            {"$set": {
+                "reference": message_id,
+                "processed_at": datetime.now().isoformat(),
+                "collection": "soluciones",
+                "user_id": user_id # Store user_id here
+            }}, 
             upsert=True
         )
         self.processed_solutions_ids.add(message_id) # Actualiza el conjunto en memoria
@@ -255,7 +260,7 @@ class RAG:
             # Vectorizar el contenido y añadirlo al vectorstore
             vector = self.embedder.vectorize(content)
             self.vectorstore.add_text(vector, text_obj)
-            self._add_processed_solution_id(message_id) # Registrar como procesada
+            self._add_processed_solution_id(message_id, user_id) # Pass user_id here
             solutions_added_count += 1
         
         if solutions_added_count > 0:

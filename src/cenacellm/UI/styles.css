@@ -569,21 +569,21 @@ textarea {
     animation: pulse 1.2s infinite ease-in-out 0.4s;
 }
 
-/* Modal de confirmación */
+/* Modal de confirmación (incluye username-modal, delete-confirmation-modal, delete-conversation-modal) */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
     display: flex;
     justify-content: center;
     align-items: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s;
-    z-index: 100;
+    transition: opacity 0.3s ease-out;
+    z-index: 1000; /* Higher z-index */
 }
 
 .modal-overlay.visible {
@@ -593,98 +593,111 @@ textarea {
 
 .modal-box {
     background-color: white;
-    border-radius: var(--radius-md);
-    padding: 25px;
+    border-radius: var(--radius-lg); /* More rounded corners */
+    padding: 30px; /* Increased padding */
     width: 90%;
-    max-width: 400px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    transform: scale(0.9);
-    transition: transform 0.3s;
-    display: flex; /* Añadido para organizar contenido */
-    flex-direction: column; /* Añadido para organizar contenido */
-    align-items: center; /* Centrar items horizontalmente */
-    text-align: center; /* Centrar texto */
+    max-width: 450px; /* Slightly wider */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); /* Stronger shadow */
+    transform: translateY(-20px); /* Initial subtle lift */
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .modal-overlay.visible .modal-box {
-    transform: scale(1);
+    transform: translateY(0); /* Slide up to center */
+    opacity: 1;
 }
 
 .modal-message {
-    margin-bottom: 20px;
-    font-size: 16px;
-    line-height: 1.5;
+    margin-bottom: 25px; /* Increased margin */
+    font-size: 1.1em; /* Slightly larger font */
+    line-height: 1.6;
     color: var(--text-color);
+    font-weight: 500;
 }
 
 .input-group {
-    width: 100%; /* Ocupar todo el ancho disponible */
-    margin-bottom: 20px;
+    width: 100%;
+    margin-bottom: 25px; /* Increased margin */
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* Alinear labels a la izquierda */
+    align-items: flex-start;
 }
 
 .input-group label {
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #555;
-    font-size: 15px;
+    margin-bottom: 10px; /* Increased margin */
+    font-weight: 600; /* Bolder label */
+    color: #444;
+    font-size: 1em;
 }
 
 .input-group input[type="text"] {
     width: 100%;
-    padding: 12px 15px;
+    padding: 14px 18px; /* Larger padding */
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    font-size: 16px;
+    font-size: 1.1em; /* Larger font */
     color: var(--text-color);
     transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle inner shadow */
 }
 
 .input-group input[type="text"]:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-color), 0.2);
+    box-shadow: 0 0 0 4px rgba(var(--primary-color), 0.25); /* Stronger focus ring */
 }
 
 
 .modal-buttons {
     display: flex;
-    justify-content: flex-end;
-    gap: 12px;
+    justify-content: center; /* Center buttons horizontally */
+    gap: 15px; /* Increased gap */
+    width: 100%; /* Ensure buttons span full width if needed */
+}
+
+.modal-buttons button {
+    flex-grow: 1; /* Allow buttons to grow and fill space */
+    max-width: 180px; /* Limit max width for individual buttons */
+    padding: 12px 20px; /* Larger padding */
+    font-size: 1em; /* Consistent font size */
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
 }
 
 .confirm-button {
     background-color: var(--error-color);
     color: white;
     border: none;
-    border-radius: var(--radius-sm);
-    padding: 10px 16px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    box-shadow: 0 4px 10px rgba(var(--error-color), 0.2);
 }
 
 .confirm-button:hover {
     background-color: #c62828;
+    box-shadow: 0 6px 15px rgba(var(--error-color), 0.3);
+    transform: translateY(-2px);
 }
 
 .cancel-button {
-    background-color: transparent;
+    background-color: var(--secondary-color);
     color: #666;
-    border: 1px solid #ddd;
-    border-radius: var(--radius-sm);
-    padding: 10px 16px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
+    border: 1px solid #c0c0c0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .cancel-button:hover {
-    background-color: #f5f5f5;
+    background-color: #e0e0e0;
     color: #333;
+    border-color: #a0a0a0;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
+
 
 /* Utilidades */
 .hidden {
@@ -774,19 +787,21 @@ textarea {
     /* Modal box responsive */
     .modal-box {
         padding: 20px;
+        max-width: 95%; /* Wider on small screens */
     }
     .modal-message {
-        font-size: 15px;
+        font-size: 1em;
     }
     .input-group label {
-        font-size: 14px;
+        font-size: 0.95em;
     }
     .input-group input[type="text"] {
-        font-size: 15px;
+        font-size: 1em;
+        padding: 10px 14px;
     }
     .modal-buttons button {
-        padding: 8px 12px;
-        font-size: 13px;
+        padding: 10px 15px;
+        font-size: 0.9em;
     }
 }
 
@@ -953,7 +968,7 @@ textarea {
     background-color: var(--light-bg);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 10px 15px; /* Padding inicial */
+    padding: 0; /* Eliminar padding aquí, lo manejará .document-item-content */
     margin-bottom: 8px;
     font-size: 15px;
     color: #444;
@@ -967,7 +982,7 @@ textarea {
     background-color: #eef2f7; /* Un color ligeramente más oscuro al pasar el mouse */
 }
 
-/* Custom checkbox styles for both solutions and documents */
+/* Custom checkbox styles (universal) */
 .custom-checkbox {
     /* Hide default checkbox */
     -webkit-appearance: none;
@@ -983,7 +998,7 @@ textarea {
     cursor: pointer;
     position: relative;
     flex-shrink: 0; /* Prevent it from shrinking */
-    margin: 10px 10px 0 0; /* Adjust margin for positioning */
+    margin: 15px 0 0 15px; /* Adjusted margin for consistent positioning */
     transition: background-color 0.2s, border-color 0.2s;
 }
 
@@ -1012,16 +1027,15 @@ textarea {
     display: block;
 }
 
-/* Ajuste de padding cuando el checkbox está visible */
-.document-item.selection-active {
-    padding-left: 0;
+/* Adjust padding when the checkbox is visible and active */
+.document-item.selection-active .document-item-content {
+    padding-left: 0; /* No need for extra left padding if checkbox has its own margin */
 }
 
-
-/* Estilo para el nombre del archivo dentro del item de la lista */
-.document-item-content { /* Nuevo contenedor para el contenido del item */
-    flex-grow: 1; /* Permitir que el contenido ocupe el espacio restante */
-    padding: 5px 15px; /* Añadir padding aquí para compensar el margen del checkbox */
+/* Estilo para el contenido del item (nombre del archivo y detalles) */
+.document-item-content { 
+    flex-grow: 1; 
+    padding: 10px 15px; /* Padding moved here */
     display: flex;
     flex-direction: column;
 }
@@ -1138,6 +1152,7 @@ textarea {
     background-color: var(--light-bg);
     display: flex; /* Use flexbox for item layout */
     align-items: flex-start; /* Align items to the top */
+    padding: 0; /* Remove padding, handled by children */
 }
 
 .solution-item:last-child {
@@ -1159,8 +1174,8 @@ textarea {
     justify-content: space-between;
     align-items: center;
     transition: background-color 0.2s;
-    /* MODIFICADO: Remover nowrap para que el texto se envuelva si es necesario */
-    white-space: normal;
+    white-space: normal; /* Allow text wrapping */
+    min-height: 40px; /* Ensure a minimum height for the title bar */
 }
 
 .solution-question:hover {
@@ -1173,9 +1188,11 @@ textarea {
     transition: transform 0.2s;
     flex-shrink: 0; /* Prevent icon from shrinking */
     margin-left: 10px; /* Space between text and icon */
+    transform: rotate(0deg); /* Default state for icon */
 }
 
-.solution-question .toggle-icon.open {
+/* Rotate icon when answer is visible */
+.solution-answer.visible + .solution-question .toggle-icon {
     transform: rotate(180deg);
 }
 

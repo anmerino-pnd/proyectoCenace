@@ -214,7 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteSelectedDocumentsBtn.textContent = "Eliminar Documentos Seleccionados";
             deleteSelectedDocumentsBtn.disabled = true; // Disable initially
             selectedDocumentsToDelete = []; // Clear selection when entering mode
-            document.querySelectorAll('.document-checkbox').forEach(checkbox => checkbox.checked = false); // Uncheck all
+            // Ensure all checkboxes are unchecked when entering selection mode
+            document.querySelectorAll('.document-item .custom-checkbox').forEach(checkbox => checkbox.checked = false);
         } else {
             documentListContainer.classList.remove('selection-active'); // Remove class
             toggleSelectionModeBtn.textContent = "Eliminar Documentos";

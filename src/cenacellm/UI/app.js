@@ -25,7 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     let userName = '';
-    let currentConversationId = null; // New: To store the ID of the current conversation
+    window.userName = ''; // Make userName globally accessible
+    let currentConversationId = null; 
+    window.currentConversationId = null; // Make currentConversationId globally accessible
     let currentBotMessageElement = null; 
     let isGeneratingResponse = false; 
 
@@ -206,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!chatbox || !userName || !convId) return;
         
         currentConversationId = convId; // Set the current conversation ID
+        window.currentConversationId = currentConversationId; // Update global
 
         // Highlight the active conversation button
         document.querySelectorAll('.conversation-item-button').forEach(btn => {
@@ -284,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             appendMessage("bot", `¡Hola ${userName}! ¿En qué puedo ayudarte hoy? (Error al conectar con el historial)`);
         }
     }
+    window.loadHistory = loadHistory; // Make loadHistory globally accessible
 
     /**
      * Muestra el modal de confirmación para eliminar el historial.
@@ -504,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         try {
+            // First, update the message metadata (like/unlike)
             const response = await fetch(`${window.apiEndpoint}/history/${userName}/messages/${messageId}`, { 
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -513,11 +518,52 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Error al actualizar los metadatos del mensaje: ${response.status}`, errorText);
+                return; // Exit if initial update fails
+            }
+
+            // If unliking (isLiked is false), trigger deletion from vectorstore
+            if (!isLiked) {
+                try {
+                    const deleteResponse = await fetch(`${window.apiEndpoint}/delete_solution`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reference_ids: [messageId] }) // Pass messageId as reference_id
+                    });
+
+                    if (!deleteResponse.ok) {
+                        const errorText = await deleteResponse.text();
+                        console.error(`Error al eliminar la solución del vectorstore: ${deleteResponse.status}`, errorText);
+                        // Optional: Revert the like status in UI if deletion fails
+                        // messageElement.querySelector('.like-icon').classList.add('liked'); 
+                    } else {
+                        console.log(`Solución con ID ${messageId} eliminada del vectorstore.`);
+                    }
+                } catch (deleteError) {
+                    console.error("Error de red al eliminar solución del vectorstore:", deleteError);
+                }
             } else {
-                if (callback && typeof callback === 'function') {
-                    callback();
+                // If liking (isLiked is true), process it to add to vectorstore
+                try {
+                    const processResponse = await fetch(`${window.apiEndpoint}/process_liked_solutions/${userName}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!processResponse.ok) {
+                        const errorText = await processResponse.text();
+                        console.error(`Error al procesar soluciones 'likeadas': ${processResponse.status}`, errorText);
+                    } else {
+                        console.log(`Solución con ID ${messageId} procesada y añadida al vectorstore.`);
+                    }
+                } catch (processError) {
+                    console.error("Error de red al procesar soluciones 'likeadas':", processError);
                 }
             }
+
+            // Always run the callback after the main update and deletion/processing attempts
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
+
         } catch (error) {
             console.error("Error al alternar el estado de 'me gusta':", error);
         }
@@ -534,8 +580,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 const isCurrentlyLiked = likeIcon.classList.contains('liked');
-                likeIcon.classList.toggle('liked', !isCurrentlyLiked); // Actualización optimista de la UI
-                // Pasar una función de callback para recargar soluciones si la pestaña está activa
+                // Optimistically update the UI *before* backend call
+                likeIcon.classList.toggle('liked', !isCurrentlyLiked); 
+                
                 toggleLike(messageId, !isCurrentlyLiked, () => {
                     const solutionsTabButton = document.querySelector('.tab-button[data-tab="soluciones"]');
                     if (solutionsTabButton && solutionsTabButton.classList.contains('active')) {
@@ -544,6 +591,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             window.loadLikedSolutions(userName, window.apiEndpoint); 
                         }
                     }
+                    // No need to explicitly reload chat history here; the backend already manages 'disable' state,
+                    // and if user switches tabs, loadHistory will be called anyway, reflecting the correct state.
+                    // For immediate visual feedback on the same tab, optimistic update is sufficient.
                 });
             }
         });
@@ -820,6 +870,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (response.ok && result.conversation_id) {
                 currentConversationId = result.conversation_id;
+                window.currentConversationId = currentConversationId; // Update global
                 await loadConversations(); // Reload conversation list to show new one
                 loadHistory(currentConversationId); // Load the empty new conversation
             } else {
@@ -878,6 +929,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // If the deleted conversation was the current one, switch to a new one
                 if (currentConversationId === conversationIdToDelete) {
                     currentConversationId = null; // Clear current conversation
+                    window.currentConversationId = null; // Update global
                     await createNewConversation(); // Create and load a new empty one
                 } else {
                     await loadConversations(); // Just reload the list
@@ -937,6 +989,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else {
                     console.error("loadLikedSolutions is not defined. Make sure soluciones.js is loaded correctly.");
+                }
+            } else if (tabId === 'chat') { // When switching back to chat
+                if (window.currentConversationId && window.loadHistory) {
+                    window.loadHistory(window.currentConversationId); // Reload chat history
                 }
             }
         });

@@ -65,23 +65,29 @@ document.addEventListener('DOMContentLoaded', () => {
             solutions.forEach(solution => {
                 const solutionItem = document.createElement('div');
                 solutionItem.classList.add('solution-item');
+                // Add the selection-active class if mode is active for immediate styling
+                if (isSolutionSelectionMode) {
+                    solutionItem.classList.add('selection-active');
+                }
+
 
                 // Checkbox for selection
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.classList.add('solution-checkbox');
+                checkbox.classList.add('custom-checkbox'); // Use the generic custom-checkbox class
                 checkbox.dataset.solutionReferenceId = solution.id; // Store the solution's reference ID
+
+                // Wrapper for question and answer
+                const contentWrapper = document.createElement('div');
+                contentWrapper.classList.add('solution-item-content'); // New wrapper for content
 
                 const questionDiv = document.createElement('div');
                 questionDiv.classList.add('solution-question');
-                // Display user question and a toggle icon
-                // MODIFICADO: No wrap en un span para permitir flex-grow en el CSS
                 questionDiv.innerHTML = `${solution.question} <span class="toggle-icon">+</span>`;
                 questionDiv.dataset.solutionId = solution.id; // Store solution ID
 
                 const answerDiv = document.createElement('div');
                 answerDiv.classList.add('solution-answer', 'hidden');
-                // Ensure 'marked' is globally available or import it
                 answerDiv.innerHTML = typeof marked !== "undefined" ? marked.parse(solution.answer) : solution.answer.replace(/\n/g, '<br>');
 
                 // Create container for references
@@ -98,14 +104,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // If reference metadata exists, add it
                 if (solution.metadata && solution.metadata.references && Array.isArray(solution.metadata.references) && solution.metadata.references.length > 0) {
                     solution.metadata.references.forEach((ref, index) => {
-                        // Accede a 'metadata' dentro de 'ref'
-                        const refMetadata = ref.metadata; // Direct access to metadata within the reference object
+                        const refMetadata = ref.metadata; 
                         if (refMetadata && refMetadata.collection === 'documentos') {
                             const refItemDiv = document.createElement('div');
                             refItemDiv.classList.add('metadata-item');
 
                             const refTitle = document.createElement('h6');
-                            // MODIFICADO: Usar refMetadata directamente
                             refTitle.textContent = `Referencia ${index + 1}${refMetadata.title ? ': ' + refMetadata.title : ''}`;
                             refItemDiv.appendChild(refTitle);
 
@@ -120,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 detailsList.appendChild(sourceItem);
                             }
                             fieldsToShow.forEach(field => {
-                                if (refMetadata[field]) { // MODIFICADO: Usar refMetadata directamente
+                                if (refMetadata[field]) { 
                                     const listItem = document.createElement('li');
                                     listItem.textContent = `${field.replace('_', ' ')}: ${refMetadata[field]}`;
                                     detailsList.appendChild(listItem);
@@ -144,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     answerDiv.classList.toggle('hidden');
                     answerDiv.classList.toggle('visible');
                     const icon = questionDiv.querySelector('.toggle-icon');
+                    // Update icon based on answer visibility
                     if (answerDiv.classList.contains('hidden')) {
                         icon.textContent = '+';
                     } else {
@@ -164,8 +169,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 solutionItem.appendChild(checkbox); // Add checkbox first
-                solutionItem.appendChild(questionDiv);
-                solutionItem.appendChild(answerDiv);
+                contentWrapper.appendChild(questionDiv);
+                contentWrapper.appendChild(answerDiv);
+                solutionItem.appendChild(contentWrapper); // Append the content wrapper
                 likedSolutionsList.appendChild(solutionItem);
             });
 
@@ -220,12 +226,14 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteSelectedSolutionsBtn.classList.remove('hidden'); // Show delete button
             deleteSelectedSolutionsBtn.textContent = "Eliminar Soluciones Seleccionadas";
             deleteSelectedSolutionsBtn.disabled = true; // Disable delete button initially
+            selectedSolutionsToDelete = []; // Clear selected solutions
+            document.querySelectorAll('.solution-item .custom-checkbox').forEach(checkbox => checkbox.checked = false); // Uncheck all
         } else {
             likedSolutionsList.classList.remove('selection-active');
             toggleSolutionSelectionModeBtn.textContent = "Eliminar Soluciones";
             deleteSelectedSolutionsBtn.classList.add('hidden'); // Hide delete button
             selectedSolutionsToDelete = []; // Clear selected solutions
-            document.querySelectorAll('.solution-checkbox').forEach(checkbox => checkbox.checked = false);
+            document.querySelectorAll('.solution-item .custom-checkbox').forEach(checkbox => checkbox.checked = false); // Uncheck all
         }
         showStatus(deleteSolutionsStatusDiv, '', ''); // Clear status message
     }
@@ -247,7 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                // CORRECTED LINE: Wrap the array in an object with 'reference_ids' key
                 body: JSON.stringify({ reference_ids: selectedSolutionsToDelete })
             });
 
@@ -257,8 +264,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 showStatus(deleteSolutionsStatusDiv, `Soluciones eliminadas exitosamente.`, 'success');
                 isSolutionSelectionMode = false; // Exit selection mode
                 loadLikedSolutions(window.userName, window.apiEndpoint); // Reload the list
+                
+                // IMPORTANT: Trigger chat history reload to update 'like' buttons
+                const chatTabButton = document.querySelector('.tab-button[data-tab="chat"]');
+                if (chatTabButton && chatTabButton.classList.contains('active') && window.currentConversationId && window.loadHistory) {
+                    window.loadHistory(window.currentConversationId);
+                } else if (chatTabButton && !chatTabButton.classList.contains('active')) {
+                    // If chat tab is not active, ensure its state is consistent for when user switches back
+                    // This is more complex if we don't reload, but a simple reload when tab is active is enough for immediate feedback.
+                }
+
             } else {
-                console.error("Delete response:", result); // Log the full error response from server
+                console.error("Delete response:", result); 
                 showStatus(deleteSolutionsStatusDiv, `Error al eliminar soluciones: ${result.detail || response.statusText}`, 'error');
             }
 
@@ -321,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener for checkbox changes within the solutions list
     if (likedSolutionsList) {
         likedSolutionsList.addEventListener('change', (event) => {
-            if (isSolutionSelectionMode && event.target.classList.contains('solution-checkbox')) {
+            if (isSolutionSelectionMode && event.target.classList.contains('custom-checkbox')) { // Changed to custom-checkbox
                 const checkbox = event.target;
                 const solutionReferenceId = checkbox.dataset.solutionReferenceId;
 
