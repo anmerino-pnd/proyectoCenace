@@ -23,7 +23,8 @@ from cenacellm.API.chat import (
     delete_solution_by_reference, # Import the new deletion function
     get_user_conversations, # NUEVO: Importa la función para obtener conversaciones
     create_new_conversation, # NUEVO: Importa la función para crear nueva conversación
-    delete_conversation # NUEVO: Importa la función para eliminar conversación
+    delete_conversation, # NUEVO: Importa la función para eliminar conversación
+    get_tickets_list
 )
 import os
 
@@ -134,3 +135,7 @@ def delete_conv(request: DeleteConversationRequest):
     Endpoint para eliminar una conversación específica.
     """
     return delete_conversation(request.user_id, request.conversation_id)
+
+@app.get("/tickets")
+def get_tickets_list():
+    return get_tickets_list()

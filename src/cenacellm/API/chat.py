@@ -273,3 +273,6 @@ def delete_conversation(user_id: str, conversation_id: str): # New function
     rag.assistant.delete_conversation(user_id, conversation_id)
     return {"status": "success", "message": f"Conversación {conversation_id} eliminada."}
 
+def get_tickets_list():
+    return rag.get_tickets()
+

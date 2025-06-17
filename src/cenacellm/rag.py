@@ -33,6 +33,8 @@ class RAG:
         self.processed_files_collection = self.db["processed_files_registro"]  
         self.processed_files_collection.create_index("reference", unique=True)
 
+        self.tickets_collection = self.db['tickets']
+
         # Cargar los datos procesados al iniciar
         self.processed_files : dict = self._load_processed_files()
         self.processed_solutions_ids : set = self._load_processed_solutions_ids()
@@ -283,3 +285,5 @@ class RAG:
         self.processed_files = self._load_processed_files()
         self.processed_solutions_ids = self._load_processed_solutions_ids()
 
+    def get_tickets(self):
+        return list(self.tickets_collection.find({}, {'_id': 0}))
