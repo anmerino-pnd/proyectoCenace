@@ -12,6 +12,9 @@ from cenacellm.API.chat import (
     DeleteSolutionsRequest, # Import the new model for deleting solutions
     DeleteDocumentsRequest, # NUEVO: Importa el modelo para eliminar documentos
     DeleteConversationRequest, # NUEVO: Importa el modelo para eliminar conversaciones
+    AddTicketRequest, # NUEVO: Importa el modelo para agregar tickets
+    UpdateTicketMetadataRequest, # NUEVO: Importa el modelo para actualizar metadatos de tickets
+    CreateConversationRequest, # NUEVO: Importa el modelo para crear una conversación
     get_chat_history,
     get_preprocessed_files,
     upload_documents,
@@ -24,7 +27,9 @@ from cenacellm.API.chat import (
     get_user_conversations, # NUEVO: Importa la función para obtener conversaciones
     create_new_conversation, # NUEVO: Importa la función para crear nueva conversación
     delete_conversation, # NUEVO: Importa la función para eliminar conversación
-    get_tickets_list
+    get_tickets_list, # Importa la función para obtener la lista de tickets
+    add_ticket_to_db, # NUEVO: Importa la función para agregar ticket a DB
+    update_ticket_metadata_db # NUEVO: Importa la función para actualizar metadatos de tickets en DB
 )
 import os
 
@@ -122,12 +127,13 @@ async def conversations(user_id: str):
     """
     return get_user_conversations(user_id)
 
-@app.post("/new_conversation/{user_id}") # NUEVO endpoint
-async def new_conversation(user_id: str):
+# Modificado para aceptar un cuerpo con el user_id y el título opcional
+@app.post("/new_conversation") # Ruta más genérica, el user_id está en el body ahora
+async def new_conversation(request: CreateConversationRequest):
     """
     Endpoint para crear una nueva conversación.
     """
-    return create_new_conversation(user_id)
+    return create_new_conversation(request)
 
 @app.post("/delete_conversation") # NUEVO endpoint
 def delete_conv(request: DeleteConversationRequest):
@@ -137,5 +143,24 @@ def delete_conv(request: DeleteConversationRequest):
     return delete_conversation(request.user_id, request.conversation_id)
 
 @app.get("/tickets")
-def get_tickets_list():
+def tickets_list(): # Renamed function to avoid conflict with imported get_tickets_list
+    """
+    Endpoint para obtener la lista de tickets.
+    """
     return get_tickets_list()
+
+@app.post("/tickets") # NUEVO endpoint para agregar tickets
+def add_ticket(request: AddTicketRequest):
+    """
+    Endpoint para añadir un nuevo ticket a la base de datos.
+    """
+    return add_ticket_to_db(request)
+
+@app.patch("/tickets/{ticket_reference}") # NUEVO endpoint para actualizar metadatos de tickets
+def update_ticket_metadata(ticket_reference: str, new_metadata: Dict[str, Any] = Body(..., embed=True)):
+    """
+    Endpoint para actualizar los metadatos de un ticket.
+    """
+    # El `ticket_reference` viene del path. `new_metadata` viene del body.
+    # `embed=True` asegura que el JSON body se vea como {"new_metadata": {...}}
+    return update_ticket_metadata_db(ticket_reference, new_metadata)

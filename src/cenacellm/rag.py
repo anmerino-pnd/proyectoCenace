@@ -8,6 +8,7 @@ from cenacellm.vectorstore import FAISSVectorStore
 from cenacellm.doccollection import DisjointCollection
 from cenacellm.ollama.assistant import OllamaAssistant
 from cenacellm.types import Text, TextMetadata # Import Text and TextMetadata
+from bson.objectid import ObjectId
 
 class RAG:
     def __init__(
@@ -34,6 +35,9 @@ class RAG:
         self.processed_files_collection.create_index("reference", unique=True)
 
         self.tickets_collection = self.db['tickets']
+        # Asegurarse de que la colección de tickets tiene un índice único para 'reference'
+        self.tickets_collection.create_index("reference", unique=True, sparse=True)
+
 
         # Cargar los datos procesados al iniciar
         self.processed_files : dict = self._load_processed_files()
@@ -43,12 +47,14 @@ class RAG:
     def _load_processed_files(self) -> Dict[str, Any]:
         """Carga los archivos procesados desde la base de datos."""
         processed_files_dict = {}
-        for doc in self.processed_files_collection.find():
-            file_key = doc.get("file_key")
-            if file_key:
-                doc.pop("_id", None)
-                processed_files_dict[file_key] = doc
+        cursor = self.processed_files_collection.find(
+            {"file_key": {"$exists": True}},  # solo documentos que tengan file_key
+            {"_id": 0}  # excluye el _id
+        )
+        for doc in cursor:
+            processed_files_dict[doc["file_key"]] = doc
         return processed_files_dict
+
     
     def _save_processed_files(self) -> None:
         """Guarda los archivos procesados en la base de datos."""
@@ -59,7 +65,6 @@ class RAG:
                 {"$set": document_to_save},
                 upsert=True 
             )
-    
     
     def _delete_processed_file(self, file_key: List[str]) -> None:
         """Elimina archivos procesados de la base de datos (y la caché en memoria)."""
@@ -198,11 +203,25 @@ class RAG:
     def get_user_history(self, user_id : str, conversation_id: str) -> List[Dict[str, Any]]: # Added conversation_id
         return self.assistant.load_history(user_id, conversation_id) # Pass conversation_id
     
-    def clear_user_history(self, user_id: str, conversation_id: str) -> None: # Added conversation_id
+    def clear_user_history(self, user_id: str, conversation_id: str): # Added conversation_id
         return self.assistant.clear_conversation_history(user_id, conversation_id) # Call new method
     
     def get_user_conversations(self, user_id: str) -> List[Dict[str, Any]]: # New method
         return self.assistant.get_user_conversations(user_id)
+
+    def delete_conversation(self, user_id: str, conversation_id: str):
+        """
+        Elimina una conversación específica para un usuario y desvincula
+        cualquier ticket asociado a esa conversación.
+        """
+        # Primero, elimina la conversación del asistente
+        self.assistant.delete_conversation(user_id, conversation_id)
+        
+        # Luego, busca y actualiza cualquier ticket que tenga este conversation_id
+        self.tickets_collection.update_many(
+            {"solucion_id": conversation_id},  # Busca tickets con el solucion_id de la conversación eliminada
+            {"$set": {"solucion_id": None}}    # Establece solucion_id a None
+        )
 
     def add_liked_solutions_to_vectorstore(self, user_id: str) -> int:
         """
@@ -286,4 +305,54 @@ class RAG:
         self.processed_solutions_ids = self._load_processed_solutions_ids()
 
     def get_tickets(self):
-        return list(self.tickets_collection.find({}, {'_id': 0}))
+        """
+        Obtiene la lista de tickets de la base de datos, excluyendo _id y solucion.
+        Incluye un campo 'is_solved' basado en si su solucion_id está vinculado a una conversación con una solución liked.
+        """
+        tickets_list = []
+        for ticket in self.tickets_collection.find({}, {'_id': 0}): # Get all fields including solucion_id
+            if 'reference' not in ticket:
+                # Genera un nuevo reference si no existe y actualiza en DB
+                new_reference = str(ObjectId())
+                self.tickets_collection.update_one(
+                    {"titulo": ticket['titulo']}, # Asume que el título es un identificador único si no hay reference
+                    {"$set": {"reference": new_reference}}
+                )
+                ticket['reference'] = new_reference
+            
+            # Check if the ticket's solucion_id is linked to a conversation with a liked solution
+            is_solved = False
+            if ticket.get('solucion_id'): # If there's a linked conversation
+                is_solved = self.assistant.has_liked_solution_in_conversation(ticket['solucion_id'])
+            
+            ticket['is_solved'] = is_solved # Add the solved status to the ticket dictionary
+            tickets_list.append(ticket)
+        return tickets_list
+
+    def add_ticket(self, titulo: str, descripcion: str, categories: str) -> Dict[str, Any]:
+        """
+        Añade un nuevo ticket a la base de datos con un UUID generado como 'reference'.
+        """
+        new_ticket_id = str(ObjectId())
+        new_ticket = {
+            "titulo": titulo,
+            "descripcion": descripcion,
+            "categories": categories,
+            "reference": new_ticket_id,  # Asigna un UUID como reference
+            "created_at": datetime.now().isoformat(),
+            "solucion_id": None # Inicializa solucion_id como None
+        }
+        self.tickets_collection.insert_one(new_ticket)
+        # Retorna el ticket sin el _id de MongoDB, pero con el reference
+        new_ticket.pop('_id', None)
+        return new_ticket
+
+    def update_ticket_metadata(self, ticket_reference: str, new_metadata: Dict[str, Any]):
+        """
+        Actualiza los metadatos de un ticket específico en la base de datos basado en su 'reference'.
+        """
+        result = self.tickets_collection.update_one(
+            {"reference": ticket_reference}, # Buscar el ticket por su reference
+            {"$set": new_metadata} # Establecer los nuevos metadatos
+        )
+        return result.modified_count > 0 # Retorna True si se modificó al menos un documento

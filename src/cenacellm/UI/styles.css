@@ -44,8 +44,8 @@ body {
     box-shadow: var(--shadow-medium);
     overflow: hidden;
     position: relative;
-    display: flex; 
-    flex-direction: row; 
+    display: flex;
+    flex-direction: row;
 }
 
 /* Sidebar for conversations */
@@ -427,8 +427,8 @@ body {
     margin-bottom: 12px;
     padding: 8px 12px;
     background-color: var(--light-bg);
-    border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
 }
 
 .parameter-group {
@@ -634,7 +634,8 @@ textarea {
     font-size: 1em;
 }
 
-.input-group input[type="text"] {
+.input-group input[type="text"],
+.input-group textarea { /* Apply to textarea for ticket modal */
     width: 100%;
     padding: 14px 18px; /* Larger padding */
     border: 1px solid var(--border-color);
@@ -644,8 +645,13 @@ textarea {
     transition: border-color 0.2s, box-shadow 0.2s;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle inner shadow */
 }
+.input-group textarea {
+    resize: vertical; /* Allow vertical resizing for textareas */
+    min-height: 80px; /* Minimum height for textarea */
+}
 
-.input-group input[type="text"]:focus {
+.input-group input[type="text"]:focus,
+.input-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 4px rgba(var(--primary-color), 0.25); /* Stronger focus ring */
@@ -953,7 +959,7 @@ textarea {
     color: white;
 }
 #deleteSelectedDocumentsBtn:not([disabled]):hover {
-    background-color: #c62828; /* Rojo más oscuro al pasar el mouse */
+    background-color: #c62828; /* Rojo más oscuro al pasar el ratón */
 }
 
 
@@ -1033,8 +1039,8 @@ textarea {
 }
 
 /* Estilo para el contenido del item (nombre del archivo y detalles) */
-.document-item-content { 
-    flex-grow: 1; 
+.document-item-content {
+    flex-grow: 1;
     padding: 10px 15px; /* Padding moved here */
     display: flex;
     flex-direction: column;
@@ -1352,4 +1358,146 @@ textarea {
     color: #777;
     font-size: 0.9em;
     padding: 10px;
+}
+
+/* --- Nuevos estilos para la sección de Tickets --- */
+.tickets-manager {
+    padding: 20px;
+}
+
+.tickets-manager h3 {
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+.ticket-actions {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ticket-list-area {
+    background-color: white;
+    padding: 20px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-light);
+}
+
+.ticket-list-area h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.ticket-list-area ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0;
+}
+
+.ticket-item {
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.ticket-item:hover {
+    background-color: #eef2f7;
+}
+
+/* New style for solved tickets */
+.ticket-item.ticket-solved {
+    border-color: #4CAF50; /* Green border */
+    background-color: #e8f5e9; /* Light green background */
+}
+
+.ticket-item.ticket-solved .ticket-title-bar {
+    background-color: #4CAF50; /* Darker green for title bar */
+}
+
+.ticket-solved-indicator {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 3px 8px;
+    font-size: 0.75em;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+.ticket-solved-indicator i {
+    margin-right: 5px;
+}
+
+
+.ticket-title-bar {
+    padding: 10px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 40px;
+}
+
+.ticket-title-bar .toggle-icon {
+    font-size: 1.2em;
+    font-weight: bold;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.ticket-details-content {
+    padding: 15px;
+    background-color: white;
+    border-top: 1px solid var(--border-color);
+    display: none; /* Hidden by default */
+    animation: fadeIn 0.3s ease-out;
+}
+
+.ticket-details-content.visible {
+    display: block;
+}
+
+.ticket-details-content p {
+    margin-bottom: 8px;
+    line-height: 1.5;
+    color: #444;
+}
+
+.ticket-details-content p:last-child {
+    margin-bottom: 0;
+}
+
+.ticket-category-pill {
+    display: inline-block;
+    background-color: #9c27b0; /* Un color púrpura distintivo */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-top: 10px; /* Espacio superior para separarlo de la descripción */
+    margin-right: 5px; /* Espacio entre si hay varias categorías (aunque el ejemplo solo tiene una) */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.ticket-actions-row {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed var(--border-color);
+    display: flex;
+    justify-content: flex-end; /* Alinea el botón a la derecha */
+    gap: 10px;
 }

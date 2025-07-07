@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatbox = document.getElementById('messages-container');
     const userQueryTextarea = document.getElementById('userQuery');
     const sendBtn = document.getElementById('sendBtn');
-    const sendBtnIconContainer = document.getElementById('sendBtnIcon'); 
+    const sendBtnIconContainer = document.getElementById('sendBtnIcon');
     const deleteHistoryBtn = document.getElementById('deleteHistoryBtn');
     const deleteConfirmationModalOverlay = document.getElementById('delete-confirmation-modal-overlay');
     const cancelButton = deleteConfirmationModalOverlay ? deleteConfirmationModalOverlay.querySelector('.cancel-button') : null;
@@ -26,10 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let userName = '';
     window.userName = ''; // Make userName globally accessible
-    let currentConversationId = null; 
+    let currentConversationId = null;
     window.currentConversationId = null; // Make currentConversationId globally accessible
-    let currentBotMessageElement = null; 
-    let isGeneratingResponse = false; 
+    let currentBotMessageElement = null;
+    let isGeneratingResponse = false;
 
     const sendIconSVG = `
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -44,11 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
         </svg>
     `;
 
+    // Corrected trash icon SVG to avoid path errors
+    const trashIconSVG = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6z"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+    `;
+
     /**
      * Muestra el modal para solicitar el nombre de usuario.
      */
     function requestUsername() {
-        const mainAppContainer = document.querySelector('.app-container'); 
+        const mainAppContainer = document.querySelector('.app-container');
         if (mainAppContainer) mainAppContainer.classList.add('hidden');
 
         if (usernameModal) {
@@ -65,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const enteredUsername = usernameInput.value.trim();
         if (enteredUsername) {
             userName = enteredUsername;
-            window.userName = userName; 
+            window.userName = userName;
             if (usernameModal) {
                 usernameModal.classList.add('hidden');
                 usernameModal.classList.remove('visible');
@@ -125,17 +136,17 @@ document.addEventListener('DOMContentLoaded', () => {
         msgDiv.classList.add("message", sender);
 
         if (sender === "bot") {
-            msgDiv.id = messageId || `bot-message-${Date.now()}`; 
-            msgDiv.dataset.messageId = msgDiv.id; 
+            msgDiv.id = messageId || `bot-message-${Date.now()}`;
+            msgDiv.dataset.messageId = msgDiv.id;
             // Para el bot, el texto inicial puede ser un placeholder o el primer chunk
-            msgDiv.textContent = initialMessageText; 
+            msgDiv.textContent = initialMessageText;
         } else { // Mensaje de usuario
             // Para mensajes de usuario, renderizar directamente con saltos de línea
             const tempDiv = document.createElement('div');
             tempDiv.textContent = initialMessageText;
             msgDiv.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
         }
-        
+
         chatbox.appendChild(msgDiv);
         chatbox.scrollTop = chatbox.scrollHeight;
         return msgDiv;
@@ -206,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function loadHistory(convId) {
         if (!chatbox || !userName || !convId) return;
-        
+
         currentConversationId = convId; // Set the current conversation ID
         window.currentConversationId = currentConversationId; // Update global
 
@@ -222,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatbox.innerHTML = "";
         const loadingMsg = appendMessage("bot", "Cargando conversación...");
         try {
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}/${convId}`); 
+            const response = await fetch(`${window.apiEndpoint}/history/${userName}/${convId}`);
             if (loadingMsg && loadingMsg.parentNode === chatbox) {
                 loadingMsg.remove();
             }
@@ -323,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         try {
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}/${currentConversationId}`, { 
+            const response = await fetch(`${window.apiEndpoint}/history/${userName}/${currentConversationId}`, {
                 method: 'DELETE'
             });
 
@@ -339,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 appendMessage("bot", `¡Hola ${userName}! ¿En qué puedo ayudarte hoy?`);
             }
             // After deleting history, refresh the conversation list to update titles if needed
-            await loadConversations(); 
+            await loadConversations();
         } catch (error) {
             console.error("Error al borrar historial:", error);
             appendMessage("bot", `Error al borrar historial: ${error.message}`);
@@ -371,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "documentos": {"collection": "documentos"},
             "tickets": {"collection": "tickets"},
             "soluciones": {"collection": "soluciones"},
-            "None": {} 
+            "None": {}
         };
 
         return filterOptions[selectedValue] || {};
@@ -422,13 +433,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (collectionType === 'documentos') {
                     referenceTitlePrefix = 'Documento';
                     if (item.metadata?.filename) {
-                        viewDocumentUrl = `${window.apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`; 
+                        viewDocumentUrl = `${window.apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`;
                     }
                 } else if (collectionType === 'soluciones') {
                     referenceTitlePrefix = 'Solución';
                     // Nota: Actualmente no hay una URL directa para ver soluciones individuales en este frontend.
                     // Si existiera, la añadirías aquí.
-                } else {
+                } else if (collectionType === 'tickets') { // NUEVO: Manejo de referencias de tickets
+                    referenceTitlePrefix = 'Ticket';
+                    // Para tickets, podrías mostrar un enlace para ver el ticket en la pestaña de tickets si fuera navegable
+                    // o simplemente su información aquí.
+                }
+                else {
                     referenceTitlePrefix = 'Referencia'; // Tipo genérico
                 }
 
@@ -454,11 +470,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Muestra condicionalmente otros campos de metadatos (si existen)
-                const fieldsToShow = ['page_number', 'author', 'subject', 'source']; 
+                const fieldsToShow = ['page_number', 'author', 'subject', 'source', 'categories']; // Added 'categories' for tickets
                 fieldsToShow.forEach(field => {
                     if (item.metadata?.[field]) { // Usa optional chaining para item.metadata
                         const listItem = document.createElement('li');
-                        listItem.textContent = `${field.replace('_', ' ')}: ${item.metadata[field]}`;
+                        // Para categorías, podríamos querer un estilo diferente si es necesario
+                        if (field === 'categories') {
+                             listItem.innerHTML = `${field.replace('_', ' ')}: <span class="ticket-category-pill-small">${item.metadata[field]}</span>`;
+                        } else {
+                            listItem.textContent = `${field.replace('_', ' ')}: ${item.metadata[field]}`;
+                        }
                         detailsList.appendChild(listItem);
                     }
                 });
@@ -473,11 +494,11 @@ document.addEventListener('DOMContentLoaded', () => {
             metadataSection.appendChild(metadataHeader);
             metadataSection.appendChild(metadataDetails);
             messageElement.appendChild(metadataSection);
-            
+
             metadataHeader.addEventListener('click', () => {
                 metadataDetails.classList.toggle('hidden');
                 const icon = metadataHeader.querySelector('.toggle-icon');
-                if (icon) { 
+                if (icon) {
                     if (metadataDetails.classList.contains('hidden')) {
                         icon.textContent = '+';
                     } else {
@@ -509,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             // First, update the message metadata (like/unlike)
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}/messages/${messageId}`, { 
+            const response = await fetch(`${window.apiEndpoint}/history/${userName}/messages/${messageId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ new_metadata: { disable: isLiked } })
@@ -534,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const errorText = await deleteResponse.text();
                         console.error(`Error al eliminar la solución del vectorstore: ${deleteResponse.status}`, errorText);
                         // Optional: Revert the like status in UI if deletion fails
-                        // messageElement.querySelector('.like-icon').classList.add('liked'); 
+                        // messageElement.querySelector('.like-icon').classList.add('liked');
                     } else {
                         console.log(`Solución con ID ${messageId} eliminada del vectorstore.`);
                     }
@@ -581,14 +602,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const isCurrentlyLiked = likeIcon.classList.contains('liked');
                 // Optimistically update the UI *before* backend call
-                likeIcon.classList.toggle('liked', !isCurrentlyLiked); 
-                
+                likeIcon.classList.toggle('liked', !isCurrentlyLiked);
+
                 toggleLike(messageId, !isCurrentlyLiked, () => {
                     const solutionsTabButton = document.querySelector('.tab-button[data-tab="soluciones"]');
                     if (solutionsTabButton && solutionsTabButton.classList.contains('active')) {
                         // Llamar a la función global para cargar soluciones definida en soluciones.js
                         if (typeof window.loadLikedSolutions === 'function') {
-                            window.loadLikedSolutions(userName, window.apiEndpoint); 
+                            window.loadLikedSolutions(userName, window.apiEndpoint);
+                        }
+                    }
+                    // If tickets tab is active, reload it to reflect potential solved status change
+                    const ticketsTabButton = document.querySelector('.tab-button[data-tab="tickets"]');
+                    if (ticketsTabButton && ticketsTabButton.classList.contains('active')) {
+                        if (typeof window.loadTickets === 'function') {
+                            window.loadTickets();
                         }
                     }
                     // No need to explicitly reload chat history here; the backend already manages 'disable' state,
@@ -627,26 +655,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userQueryTextarea) userQueryTextarea.focus();
 
         showSpinner(); // Mostrar spinner
-        
+
         let latestBotMessageId = null;
-        let finalMetadata = {}; 
-        let accumulatedText = ""; 
+        let finalMetadata = {};
+        let accumulatedText = "";
         let botMessageElement = null; // Referencia al elemento DOM del mensaje del bot
 
         // Obtener los valores de k y filter_metadata aquí, justo antes de enviarlos
-        const kValue = getKValue(); 
+        const kValue = getKValue();
         const filterMetadata = getFilterMetadata();
 
         try {
-            const response = await fetch(`${window.apiEndpoint}/chat`, { 
+            const response = await fetch(`${window.apiEndpoint}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
                 body: JSON.stringify({
                     user_id: userName,
                     conversation_id: currentConversationId, // Pass current conversation ID
                     query: userQuery,
-                    k: kValue, 
-                    filter_metadata: filterMetadata 
+                    k: kValue,
+                    filter_metadata: filterMetadata
                 })
             });
 
@@ -658,17 +686,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     const errorJson = JSON.parse(errorText);
                     if (errorJson.detail) errorMessage += `: ${errorJson.detail}`;
                 } catch (e) {
-                    errorMessage += `: ${errorText.substring(0,100)}...`;
+                    errorMessage += `: ${errorText.substring(0, 100)}...`;
                 }
                 appendMessage("bot", errorMessage);
-                isGeneratingResponse = false; 
-                toggleInputAndButtonState(true); 
+                isGeneratingResponse = false;
+                toggleInputAndButtonState(true);
                 return;
             }
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
-            
+
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
@@ -687,11 +715,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Añadir la parte de texto al acumulado
                     accumulatedText += textPart;
-                    
+
                     // Asegurar que el elemento del bot existe y actualizar su contenido con el texto
                     if (!botMessageElement) {
                         hideSpinner();
-                        botMessageElement = appendMessage("bot", "", latestBotMessageId); 
+                        botMessageElement = appendMessage("bot", "", latestBotMessageId);
                     }
                     if (typeof marked !== "undefined") {
                         botMessageElement.innerHTML = marked.parse(accumulatedText);
@@ -707,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             latestBotMessageId = parsedFinalChunk.final_message_data.message_id;
                             finalMetadata = parsedFinalChunk.final_message_data.metadata;
                             // ¡Hemos encontrado el JSON final! Salir del bucle de streaming.
-                            break; 
+                            break;
                         }
                     } catch (e) {
                         console.error("Error al parsear la parte JSON final:", e);
@@ -725,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     accumulatedText += chunkValue;
                     if (!botMessageElement) {
                         hideSpinner();
-                        botMessageElement = appendMessage("bot", "", latestBotMessageId); 
+                        botMessageElement = appendMessage("bot", "", latestBotMessageId);
                     }
                     if (typeof marked !== "undefined") {
                         botMessageElement.innerHTML = marked.parse(accumulatedText);
@@ -739,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- Procesamiento Post-streaming (después de que el bucle de lectura haya terminado) ---
             hideSpinner();
 
-            if (botMessageElement) { 
+            if (botMessageElement) {
                 if (latestBotMessageId && botMessageElement.id !== latestBotMessageId) {
                     botMessageElement.id = latestBotMessageId;
                     botMessageElement.dataset.messageId = latestBotMessageId;
@@ -770,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     likeIcon.classList.add('liked');
                 }
                 botMessageElement.appendChild(likeIcon);
-            } else if (!botMessageElement && accumulatedText) { 
+            } else if (!botMessageElement && accumulatedText) {
                 appendMessage("bot", accumulatedText);
             }
 
@@ -784,9 +812,9 @@ document.addEventListener('DOMContentLoaded', () => {
             appendMessage("bot", "Hubo un problema al enviar el mensaje. Intenta nuevamente.");
         } finally {
             isGeneratingResponse = false;
-            toggleInputAndButtonState(true); 
+            toggleInputAndButtonState(true);
             if (chatbox) chatbox.scrollTop = chatbox.scrollHeight;
-            currentBotMessageElement = null; 
+            currentBotMessageElement = null;
         }
     }
 
@@ -823,7 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const convButton = document.createElement('button');
                 convButton.classList.add('conversation-item-button');
                 convButton.dataset.conversationId = conv.conversation_id;
-                convButton.textContent = conv.title || "Conversación sin título";
+                convButton.textContent = conv.title || "Conversación sin título"; // Use title from backend
                 
                 // Add active class if this is the current conversation
                 if (conv.conversation_id === currentConversationId) {
@@ -833,7 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Delete button for each conversation
                 const deleteConvButton = document.createElement('button');
                 deleteConvButton.classList.add('delete-conversation-button');
-                deleteConvButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+                deleteConvButton.innerHTML = trashIconSVG; // Use the corrected SVG
                 deleteConvButton.dataset.conversationId = conv.conversation_id;
                 deleteConvButton.title = "Eliminar conversación";
 
@@ -856,16 +884,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Crea una nueva conversación y la carga.
+     * @param {string} [title] - Título opcional para la nueva conversación.
      */
-    async function createNewConversation() {
+    async function createNewConversation(title = null) {
         if (!userName) {
             console.warn("No se puede crear una nueva conversación sin nombre de usuario.");
             return;
         }
         try {
-            const response = await fetch(`${window.apiEndpoint}/new_conversation/${userName}`, {
+            const payload = { user_id: userName };
+            if (title) {
+                payload.title = title;
+            }
+            const response = await fetch(`${window.apiEndpoint}/new_conversation`, { // Changed endpoint
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
             const result = await response.json();
             if (response.ok && result.conversation_id) {
@@ -942,6 +976,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Función para cambiar la pestaña activa.
+     * @param {string} tabId - El ID de la pestaña a activar (ej. 'chat', 'documentos', 'soluciones', 'tickets').
+     */
+    function changeTab(tabId) {
+        // Eliminar 'active' de todos los botones de pestaña y 'hidden' de todos los contenidos
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+
+        // Añadir 'active' al botón clickeado y mostrar su contenido
+        const clickedButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+        const targetContent = document.getElementById(`${tabId}-tab-content`);
+
+        if (clickedButton) clickedButton.classList.add('active');
+        if (targetContent) targetContent.classList.remove('hidden');
+
+        // Disparar carga de contenido para la pestaña específica si es necesario
+        if (tabId === 'soluciones') {
+            if (typeof window.loadLikedSolutions === 'function') {
+                const currentUserName = window.userName || userName;
+                const currentApiEndpoint = window.apiEndpoint;
+                if (currentUserName && currentApiEndpoint) {
+                    window.loadLikedSolutions(currentUserName, currentApiEndpoint);
+                } else {
+                    console.error("Nombre de usuario o API endpoint no disponibles para cargar soluciones.");
+                }
+            } else {
+                console.error("loadLikedSolutions is not defined. Make sure soluciones.js is loaded correctly.");
+            }
+        } else if (tabId === 'tickets') {
+            if (typeof window.loadTickets === 'function') {
+                window.loadTickets();
+            } else {
+                console.error("loadTickets is not defined. Make sure tickets.js is loaded correctly.");
+            }
+        } else if (tabId === 'chat') {
+            if (window.currentConversationId && window.loadHistory) {
+                window.loadHistory(window.currentConversationId); // Recargar historial de chat
+            }
+        }
+    }
+    window.changeTab = changeTab; // Hacer changeTab accesible globalmente
+
 
     // Existing event listeners
     if (sendBtn && userQueryTextarea) {
@@ -949,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userQueryTextarea.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                if (!isGeneratingResponse) { 
+                if (!isGeneratingResponse) {
                     sendMessage();
                 } else {
                     console.log("No se puede enviar un nuevo mensaje mientras se genera una respuesta.");
@@ -962,10 +1039,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deleteHistoryBtn) deleteHistoryBtn.addEventListener('click', showDeleteConfirmation);
     if (cancelButton) cancelButton.addEventListener('click', hideDeleteConfirmation);
     if (confirmButton) confirmButton.addEventListener('click', deleteHistory);
-    
+
     // New conversation event listener
     if (newConversationBtn) {
-        newConversationBtn.addEventListener('click', createNewConversation);
+        newConversationBtn.addEventListener('click', () => createNewConversation()); // Call without title
     }
 
     // Delete conversation modal buttons
@@ -973,28 +1050,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deleteConversationConfirmButton) deleteConversationConfirmButton.addEventListener('click', deleteSpecificConversation);
 
 
-    // Event listener for tab changes to load "liked" solutions
+    // Event listener for tab changes to load content
     const tabButtons = document.querySelectorAll('.tab-button');
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const tabId = button.getAttribute('data-tab');
-            if (tabId === 'soluciones') {
-                if (typeof window.loadLikedSolutions === 'function') {
-                    const currentUserName = window.userName || userName; 
-                    const currentApiEndpoint = window.apiEndpoint;
-                    if (currentUserName && currentApiEndpoint) {
-                        window.loadLikedSolutions(currentUserName, currentApiEndpoint);
-                    } else {
-                        console.error("Nombre de usuario o API endpoint no disponibles para cargar soluciones.");
-                    }
-                } else {
-                    console.error("loadLikedSolutions is not defined. Make sure soluciones.js is loaded correctly.");
-                }
-            } else if (tabId === 'chat') { // When switching back to chat
-                if (window.currentConversationId && window.loadHistory) {
-                    window.loadHistory(window.currentConversationId); // Reload chat history
-                }
-            }
+            changeTab(tabId); // Use the new changeTab function
         });
     });
 
@@ -1002,4 +1063,3 @@ document.addEventListener('DOMContentLoaded', () => {
     window.toggleLike = toggleLike;
     window.fetchAndDisplayMetadata = fetchAndDisplayMetadata;
 });
-

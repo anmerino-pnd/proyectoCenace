@@ -2,12 +2,12 @@ import os
 import json
 import time
 from datetime import datetime
-from typing import Generator, Dict, Any, List, Tuple # Importa List y Tuple
+from typing import Generator, Dict, Any, List, Tuple, Optional
 from pymongo import MongoClient
-from bson.objectid import ObjectId # Importa ObjectId
+from bson.objectid import ObjectId
 from ollama import GenerateResponse
-from cenacellm.clients import ollama as api, mongo_uri, db_name
 
+from cenacellm.clients import ollama as api, mongo_uri, db_name
 from cenacellm.tools.assistant import Assistant
 from cenacellm.types import (
     LLMError,
@@ -42,11 +42,18 @@ class OllamaAssistant(Assistant):
         doc = self.collection.find_one({"user_id": user_id, "conversation_id": conversation_id})
         return doc["messages"] if doc and "messages" in doc else []
 
-    def save_history(self, user_id: str, conversation_id: str, history: list):
-        """Guarda el historial de chat de una conversación específica para un usuario."""
+    def save_history(self, user_id: str, conversation_id: str, history: list, conversation_title: Optional[str] = None):
+        """
+        Guarda el historial de chat de una conversación específica para un usuario.
+        Puede opcionalmente guardar o actualizar el título de la conversación.
+        """
+        update_fields = {"messages": history, "last_updated": datetime.now()}
+        if conversation_title:
+            update_fields["title"] = conversation_title # Add or update title
+        
         self.collection.update_one(
             {"user_id": user_id, "conversation_id": conversation_id},
-            {"$set": {"messages": history, "last_updated": datetime.now()}},
+            {"$set": update_fields},
             upsert=True
         )
 
@@ -70,6 +77,7 @@ class OllamaAssistant(Assistant):
     def delete_conversation(self, user_id: str, conversation_id: str):
         """Elimina una conversación completa de la base de datos."""
         self.collection.delete_one({"user_id": user_id, "conversation_id": conversation_id})
+
 
 
     def make_metadata(self, response: GenerateResponse, duration: float, references) -> CallMetadata:
@@ -198,21 +206,26 @@ class OllamaAssistant(Assistant):
         """
         Obtiene una lista de todas las conversaciones de un usuario,
         incluyendo el conversation_id y un título (ej. las primeras palabras de la primera pregunta).
+        Prioriza el título guardado explícitamente.
         """
         conversations_data = []
         conversations_cursor = self.collection.find(
             {"user_id": user_id},
-            {"conversation_id": 1, "messages": {"$slice": 1}, "last_updated": 1} # Get only the first message
+            {"conversation_id": 1, "messages": {"$slice": 1}, "last_updated": 1, "title": 1} # Get only the first message and the title
         ).sort("last_updated", -1) # Sort by last updated, newest first
 
         for conv in conversations_cursor:
             conversation_id = conv.get("conversation_id")
-            title = "Nueva Conversación"
-            if conv.get("messages") and len(conv["messages"]) > 0:
-                first_message = conv["messages"][0]
-                if first_message.get("role") == "user" and first_message.get("content"):
-                    # Use the first 5 words of the first user message as title
-                    title = " ".join(first_message["content"].split()[:5]) + "..." if len(first_message["content"].split()) > 5 else first_message["content"]
+            # Prioritize the explicitly stored title
+            title = conv.get("title")
+            if not title: # If no explicit title, fall back to first user message
+                if conv.get("messages") and len(conv["messages"]) > 0:
+                    first_message = conv["messages"][0]
+                    if first_message.get("role") == "user" and first_message.get("content"):
+                        # Use the first 5 words of the first user message as title
+                        title = " ".join(first_message["content"].split()[:5]) + "..." if len(first_message["content"].split()) > 5 else first_message["content"]
+                else:
+                    title = "Nueva Conversación" # Default if no title and no messages
 
             conversations_data.append({
                 "conversation_id": conversation_id,
@@ -221,3 +234,17 @@ class OllamaAssistant(Assistant):
             })
         return conversations_data
 
+    def has_liked_solution_in_conversation(self, conversation_id: str) -> bool:
+        """
+        Checks if a given conversation_id contains any bot messages marked as 'liked' (disable: True).
+        """
+        doc = self.collection.find_one(
+            {"conversation_id": conversation_id, "messages.metadata.disable": True},
+            {"messages": {"$elemMatch": {"metadata.disable": True, "role": "assistant"}}} # Project only the first matching message
+        )
+        # Check if a document was found and if any message within it has disable: True
+        if doc and "messages" in doc and len(doc["messages"]) > 0:
+            for message in doc["messages"]:
+                if message.get("role") == "assistant" and message.get("metadata", {}).get("disable") is True:
+                    return True
+        return False

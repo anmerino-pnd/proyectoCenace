@@ -2,7 +2,7 @@ import os
 import shutil
 from cenacellm.rag import RAG
 from pydantic import BaseModel
-from typing import AsyncGenerator, List, Dict, Any, Union
+from typing import AsyncGenerator, List, Dict, Any, Union, Optional
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from cenacellm.config import VECTORS_DIR, DOCUMENTS_DIR
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body # Importa Body
@@ -35,244 +35,176 @@ class DeleteConversationRequest(BaseModel):
     conversation_id: str
 
 
-def get_chat_history(user_id: str, conversation_id: str) -> str: # Added conversation_id
-    """Obtiene el historial de chat formateado para un usuario y conversación específica."""
-    histories = rag.get_user_history(user_id, conversation_id) # Pass conversation_id
-    if not histories:
-        return []
+class AddTicketRequest(BaseModel):
+    titulo: str
+    descripcion: str
+    categories: str
 
-    formatted_history = []
-    for message in histories:
-        role = "user" if message.get('role') == "user" else "bot"
-        content = message.get('content', '')
-        if role == "bot":
-            formatted_history.append({
-                "role": role,
-                "content": content,
-                "id": message.get("id"),
-                "metadata": message.get("metadata", {})
-            })
-        else:
-            formatted_history.append({
-                "role": role,
-                "content": content,
-                "id": message.get("id", str(ObjectId())) # Ensure user messages also have an ID
-            })
+# NUEVO: Modelo Pydantic para actualizar los metadatos de un ticket
+# Solo el new_metadata se envía en el body, el ticket_reference viene del path
+class UpdateTicketMetadataRequest(BaseModel):
+    new_metadata: Dict[str, Any]
 
-    return formatted_history
+# NUEVO: Modelo Pydantic para la creación de nueva conversación con título opcional
+class CreateConversationRequest(BaseModel):
+    user_id: str
+    title: Optional[str] = None # Nuevo campo para el título de la conversación
 
-async def chat_stream(request: QueryRequest) -> AsyncGenerator[str, None]:
-    """Generates a stream of chat response tokens."""
-    user_id = request.user_id
-    conversation_id = request.conversation_id # Get conversation_id
-    question = request.query
-    k = request.k
-    filter_metadata = request.filter_metadata if request.filter_metadata != "None" else None
-
-
-    for item in rag.answer(
-        user_id=user_id,
-        conversation_id=conversation_id, # Pass conversation_id
-        question=question,
-        k=k,
-        filter_metadata=filter_metadata
-    ):
-        # El rag.answer ya se encarga de json.dumps si es un diccionario
-        yield item
 
 async def async_chat_stream(request: QueryRequest) -> StreamingResponse:
-    """Envuelve el stream de chat en una StreamingResponse."""
-    return StreamingResponse(
-        chat_stream(request),
-        media_type="text/event-stream"
+    """Función asíncrona para manejar el streaming del chat."""
+    token_generator = rag.answer(
+        request.user_id,
+        request.conversation_id, # Pass conversation_id
+        request.query,
+        k=request.k,
+        filter_metadata=request.filter_metadata
     )
+    return StreamingResponse(token_generator, media_type="text/event-stream")
 
 def metadata_generator():
-    """Retorna los últimos chunks de metadatos procesados por RAG."""
-    # Nota: rag.last_chunks contiene objetos Text, no diccionarios.
-    # Necesitas convertirlos a diccionarios si este endpoint espera JSON.
-    # Asumiendo que este endpoint es para depuración y quieres ver la estructura Text.
-    return [chunk.model_dump() for chunk in rag.last_chunks] if hasattr(rag, 'last_chunks') else []
+    """Generador para obtener metadatos del último chat."""
+    # Asegúrate de que `rag.last_chunks` sea accesible y contenga los datos esperados.
+    # El formato exacto de los metadatos dependerá de cómo los almacenes en `rag`.
+    if hasattr(rag, 'last_chunks') and rag.last_chunks:
+        # Extraer solo los metadatos relevantes de cada chunk
+        metadata_list = [
+            {"reference": chunk.metadata.reference, "metadata": chunk.metadata.model_dump()}
+            for chunk in rag.last_chunks if hasattr(chunk, 'metadata') and hasattr(chunk.metadata, 'reference')
+        ]
+        return {"references": metadata_list}
+    return {"references": []}
 
-def clear_user_history(user_id: str, conversation_id: str) -> None: # Added conversation_id
-    """Borra el historial de chat de una conversación específica para un usuario."""
-    rag.clear_user_history(user_id, conversation_id) # Pass conversation_id
+def get_chat_history(user_id: str, conversation_id: str): # Added conversation_id
+    """Obtiene el historial de chat de un usuario y conversación específica."""
+    return rag.get_user_history(user_id, conversation_id) # Pass conversation_id
 
-def load_documents(collection_name : str, force_reload : bool = False) -> list:
-    """Carga documentos en el sistema RAG."""
-    # rag.load_documents ya llama a refresh_processed_data()
-    lista = rag.load_documents(
-        collection_name=collection_name,
-        folder_path=DOCUMENTS_DIR,
-        force_reload=force_reload
+def clear_user_history(user_id: str, conversation_id: str): # Added conversation_id
+    """Borra el historial de chat de un usuario y conversación específica."""
+    return rag.clear_user_history(user_id, conversation_id) # Pass conversation_id
+
+def load_documents(collection_name: str, force_reload: bool = False):
+    """Carga y procesa documentos."""
+    docs_count, new_docs_count, chunks_count = rag.load_documents(
+        DOCUMENTS_DIR, collection_name, force_reload
     )
-    return lista
+    return {
+        "docs_count": docs_count,
+        "new_docs_count": new_docs_count,
+        "chunks_count": chunks_count,
+    }
 
-def get_preprocessed_files() -> dict:
+def get_preprocessed_files():
     """Obtiene la lista de archivos preprocesados."""
-    # Asegurarse de que la caché está fresca antes de devolverla
-    rag.refresh_processed_data() 
     return rag.processed_files
 
-async def upload_documents(files: List[UploadFile] = File(...)):
-    """Sube documentos PDF al servidor."""
-    responses = []
-
+async def upload_documents(files: List[UploadFile]):
+    """Sube documentos a la carpeta de documentos."""
+    uploaded_files_info = []
     for file in files:
-        if file.content_type != "application/pdf":
-            raise HTTPException(status_code=400, detail=f"El archivo '{file.filename}' no es un PDF.")
-
         file_location = os.path.join(DOCUMENTS_DIR, file.filename)
-
         try:
             with open(file_location, "wb+") as file_object:
                 shutil.copyfileobj(file.file, file_object)
-            responses.append({"filename": file.filename, "message": "Archivo subido con éxito"})
+            uploaded_files_info.append({"filename": file.filename, "size": file.size})
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error al guardar '{file.filename}': {e}")
-    
-    # Después de subir documentos, puedes considerar recargar la lista de procesados
-    # para asegurar que los recién subidos se reflejen si no se procesan inmediatamente.
-    # Si 'load_documents' se llama después de subir, no es estrictamente necesario aquí.
-    rag.refresh_processed_data() # Opcional, si no hay un paso de "procesar" explícito.
+            raise HTTPException(status_code=500, detail=f"Error al subir el archivo {file.filename}: {e}")
+    return {"status": "success", "files": uploaded_files_info}
 
-    return JSONResponse(content={"files": responses})
-
-# MODIFICADO: Ahora acepta DeleteDocumentsRequest
-def delete_document(request: DeleteDocumentsRequest):
-    """Elimina documentos del vectorstore y del registro de archivos procesados
-       basado en sus reference_ids.
-    """
-    successful_deletions = []
-    failed_deletions = []
+def delete_document(request: DeleteDocumentsRequest): # Ahora espera DeleteDocumentsRequest
+    """Elimina documentos del servidor y del vectorstore."""
+    deleted_count = 0
     for reference_id in request.reference_ids:
-        try:
-            # Primero, obtenemos el file_key asociado a este reference_id para poder eliminarlo de rag.processed_files
-            # Esto asume que 'reference' es único y está en processed_files.
-            file_key_to_delete = None
-            for key, doc_info in rag.processed_files.items():
-                if doc_info.get("reference") == reference_id:
-                    file_key_to_delete = key
-                    break
-
-            if file_key_to_delete:
-                rag.delete_from_vectorstore(reference_id) # Eliminar del vectorstore
-                # Eliminar del registro de archivos procesados en la DB y de la caché en memoria
-                rag.processed_files_collection.delete_one({"reference": reference_id})
-                # No llamamos a _delete_processed_file directamente porque ya actualizamos la caché via refresh
-                # y no siempre tenemos el file_key fácilmente. La clave es el refresh.
-                
-                # Opcional: Si quieres eliminar también el archivo físico, añade la lógica aquí
-                # filepath = os.path.join(DOCUMENTS_DIR, file_key_to_delete)
-                # if os.path.exists(filepath):
-                #     os.remove(filepath)
-
-                successful_deletions.append(reference_id)
-            else:
-                failed_deletions.append(f"Documento con reference_id {reference_id} no encontrado en registros.")
-
-        except Exception as e:
-            print(f"Error al eliminar el documento con reference_id {reference_id}: {e}")
-            failed_deletions.append(f"Error al eliminar el documento con ID {reference_id}: {e}")
-    
-    # Después de todas las eliminaciones, refrescar la caché en memoria
-    rag.refresh_processed_data()
-
-    if failed_deletions:
-        raise HTTPException(status_code=500, detail={"success": successful_deletions, "failed": failed_deletions})
-    return {"status": "success", "message": f"Se eliminaron {len(successful_deletions)} documentos.", "deleted_ids": successful_deletions}
+        # Primero eliminar del vectorstore usando la referencia
+        rag.delete_from_vectorstore(reference_id)
+        # Luego eliminar del registro de archivos procesados (si es un documento)
+        # Necesitas buscar el file_key por reference_id si no lo tienes directamente
+        # Esto asume que reference_id es único y se puede usar para encontrar el file_key
+        # Una forma es iterar o tener un mapeo inverso si la referencia es un UUID de documento
+        file_key_to_delete = None
+        for key, value in rag.processed_files.items():
+            if value.get("reference") == reference_id:
+                file_key_to_delete = key
+                break
+        
+        if file_key_to_delete:
+            rag._delete_processed_file([file_key_to_delete])
+            # Eliminar el archivo físico si es un documento
+            file_path = os.path.join(DOCUMENTS_DIR, file_key_to_delete)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            deleted_count += 1
+        else:
+            # Si no es un documento (ej. es una solución), solo se elimina del vectorstore
+            # y el _delete_processed_file ya no es el método principal para soluciones.
+            # La eliminación de soluciones ya se maneja en delete_solution_by_reference
+            pass
+    rag.refresh_processed_data() # Refresh cache after deletion
+    return {"status": "success", "deleted_count": deleted_count}
 
 
 async def view_document(filename: str):
-    """Permite ver un documento PDF en el navegador."""
-    base_directory = DOCUMENTS_DIR
-    file_path = os.path.join(base_directory, filename)
-
-    if os.path.exists(file_path):
-        return FileResponse(file_path, media_type="application/pdf", headers={"Content-Disposition": "inline"})
-    else:
-        raise HTTPException(status_code=404, detail="Documento no encontrado en el servidor.")
+    """Permite ver un documento PDF."""
+    file_path = os.path.join(DOCUMENTS_DIR, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Documento no encontrado.")
+    return FileResponse(path=file_path, media_type="application/pdf", filename=filename)
 
 def update_message_metadata(user_id: str, message_id: str, new_metadata: Dict[str, Any]):
-    """
-    Actualiza los metadatos de un mensaje específico en el historial del usuario.
-    """
+    """Actualiza los metadatos de un mensaje específico."""
     updated = rag.assistant.update_message_metadata(user_id, message_id, new_metadata)
-    if not updated:
-        raise HTTPException(status_code=404, detail="Mensaje no encontrado o no es un mensaje del bot.")
-    return {"status": "success", "message": "Metadatos del mensaje actualizados."}
+    if updated:
+        return {"status": "success", "message": "Metadatos del mensaje actualizados."}
+    raise HTTPException(status_code=404, detail="Mensaje no encontrado.")
 
-def get_liked_solutions(user_id: str) -> List[Dict[str, Any]]:
-    """
-    Obtiene una lista de soluciones (mensajes del bot) que han sido marcadas como 'liked'.
-    """
+def get_liked_solutions(user_id: str):
+    """Obtiene soluciones "likeadas" de un usuario."""
     return rag.assistant.get_liked_solutions(user_id)
 
-def process_liked_solutions_to_vectorstore(user_id: str) -> Dict[str, Any]:
-    """
-    Procesa las soluciones "likeadas" de un usuario y las añade al vectorstore.
-    Retorna el número de soluciones nuevas añadidas.
-    """
-    # rag.add_liked_solutions_to_vectorstore ya llama a refresh_processed_data()
-    solutions_added_count = rag.add_liked_solutions_to_vectorstore(user_id)
-    return {"status": "success", "message": f"Se han procesado {solutions_added_count} nuevas soluciones 'likeadas'.", "count": solutions_added_count}
+def process_liked_solutions_to_vectorstore(user_id: str):
+    """Procesa soluciones "likeadas" y las añade al vectorstore."""
+    count = rag.add_liked_solutions_to_vectorstore(user_id)
+    return {"status": "success", "count": count}
 
 def delete_solution_by_reference(reference_ids: List[str]):
-    """
-    Elimina soluciones del vectorstore y del registro de archivos procesados
-    basado en sus reference_ids, y desmarca el 'like' del mensaje original.
-    """
-    successful_deletions = []
-    failed_deletions = []
+    """Elimina soluciones del vectorstore por su ID de referencia."""
+    deleted_count = 0
     for ref_id in reference_ids:
-        try:
-            # 1. Obtener el user_id asociado a esta solución para poder actualizar el historial
-            # La referencia (ref_id) en processed_files_collection para soluciones es el message_id.
-            solution_info = rag.processed_files_collection.find_one(
-                {"reference": ref_id, "collection": "soluciones"}
-            )
-            print(solution_info)
-            if solution_info and "user_id" in solution_info:
-                user_id_of_solution = solution_info["user_id"]
-                
-                # 2. Desmarcar el 'like' del mensaje original en el historial del chat
-                # Llamamos directamente a update_message_metadata del assistant, pasando el user_id
-                rag.assistant.update_message_metadata(user_id_of_solution, ref_id, {"disable": False})
+        rag.delete_from_vectorstore(ref_id)
+        # También elimina del registro de processed_files_registro si existe
+        rag.processed_files_collection.delete_one({"reference": ref_id, "collection": "soluciones"})
+        deleted_count += 1
+    rag.refresh_processed_data() # Refresh cache
+    return {"status": "success", "deleted_count": deleted_count}
 
-            # 3. Eliminar del vectorstore
-            rag.delete_from_vectorstore(ref_id)
-            
-            # 4. Eliminar del registro de soluciones procesadas en la DB
-            rag.processed_files_collection.delete_one({"reference": ref_id, "collection": "soluciones"})
-            
-            successful_deletions.append(ref_id)
-        except Exception as e:
-            print(f"Error al eliminar la solución con reference_id {ref_id}: {e}")
-            failed_deletions.append(f"Error al eliminar la solución con ID {ref_id}: {e}")
-    
-    # Después de todas las eliminaciones, refrescar la caché en memoria del RAG
-    rag.refresh_processed_data()
 
-    if failed_deletions:
-        raise HTTPException(status_code=500, detail={"success": successful_deletions, "failed": failed_deletions})
-    return {"status": "success", "message": f"Se eliminaron {len(successful_deletions)} soluciones.", "deleted_ids": successful_deletions}
-
-def get_user_conversations(user_id: str) -> List[Dict[str, Any]]: # New function
+def get_user_conversations(user_id: str) -> List[Dict[str, Any]]:
     """Obtiene una lista de las conversaciones de un usuario."""
-    return rag.get_user_conversations(user_id)
+    return rag.assistant.get_user_conversations(user_id)
 
-def create_new_conversation(user_id: str) -> Dict[str, str]: # New function
-    """Crea una nueva conversación y devuelve su ID."""
+def create_new_conversation(request: CreateConversationRequest) -> Dict[str, str]: # Modified signature
+    """Crea una nueva conversación y devuelve su ID, con un título opcional."""
     new_conversation_id = str(ObjectId())
-    # Save an empty conversation to create the document in MongoDB
-    rag.assistant.save_history(user_id, new_conversation_id, [])
+    # Pass the title to save_history
+    rag.assistant.save_history(request.user_id, new_conversation_id, [], conversation_title=request.title)
     return {"conversation_id": new_conversation_id}
 
 def delete_conversation(user_id: str, conversation_id: str): # New function
     """Elimina una conversación específica para un usuario."""
-    rag.assistant.delete_conversation(user_id, conversation_id)
+    rag.delete_conversation(user_id, conversation_id)
     return {"status": "success", "message": f"Conversación {conversation_id} eliminada."}
 
 def get_tickets_list():
+    """Obtiene la lista de tickets desde el RAG."""
     return rag.get_tickets()
 
+def add_ticket_to_db(request: AddTicketRequest):
+    """Añade un nuevo ticket a la base de datos."""
+    return rag.add_ticket(request.titulo, request.descripcion, request.categories)
+
+def update_ticket_metadata_db(ticket_reference: str, new_metadata: Dict[str, Any]): # Actualiza la firma
+    """Actualiza los metadatos de un ticket en la base de datos."""
+    updated = rag.update_ticket_metadata(ticket_reference, new_metadata)
+    if updated:
+        return {"status": "success", "message": f"Metadatos del ticket {ticket_reference} actualizados."}
+    raise HTTPException(status_code=404, detail="Ticket no encontrado.")

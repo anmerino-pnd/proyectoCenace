@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p><strong>Procesado en:</strong> ${processedAt}</p>
                     <p><strong>Fragmentos:</strong> ${documentData.chunks}</p>
                 `;
-                
+
                 contentWrapper.appendChild(detailsDiv);
 
                 listItem.appendChild(checkbox);
@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Si viene de Python datetime.now().isoformat() y luego new Date(iso_string), ya es correcto.
         // Si es un UNIX timestamp (segundos), multiplica por 1000:
         const date = typeof timestamp === 'number' && timestamp.toString().length === 10 ? new Date(timestamp * 1000) : new Date(timestamp);
-        
+
         const options = {
             year: 'numeric',
             month: 'short',

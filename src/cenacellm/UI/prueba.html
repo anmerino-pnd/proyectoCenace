@@ -52,7 +52,6 @@
                             <select id="filter-metadata">
                                 <option value="None" selected>Todos</option>
                                 <option value="documentos">Documentos</option>
-                                <option value="tickets">Tickets</option>
                                 <option value="soluciones">Soluciones</option>
                             </select>
                         </div>
@@ -126,10 +125,45 @@
             </div>
 
             <div id="tickets-tab-content" class="tab-content hidden">
-                <div style="padding: 20px;">
-                    <h3>Sección de Tickets</h3>
-                    <p>Aquí se mostrará la información de tickets.</p>
+                <div class="tickets-manager">
+                    <h3>Gestor de Tickets</h3>
+                    <div class="ticket-actions">
+                        <button id="addTicketBtn" class="minimal-primary-button">
+                            <i class="fas fa-plus-circle"></i> Agregar Ticket
+                        </button>
+                    </div>
+                    <div id="ticketStatus" class="status-message"></div>
+                    <div class="ticket-list-area">
+                        <h4>Tickets Disponibles</h4>
+                        <ul id="ticketList">
+                            <!-- Tickets will be loaded here by JavaScript -->
+                            <li>Cargando tickets...</li>
+                        </ul>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding a new ticket -->
+    <div id="add-ticket-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-message">Agregar Nuevo Ticket</div>
+            <div class="input-group">
+                <label for="ticket-title-input">Título:</label>
+                <input type="text" id="ticket-title-input" placeholder="Título del ticket">
+            </div>
+            <div class="input-group">
+                <label for="ticket-description-input">Descripción:</label>
+                <textarea id="ticket-description-input" placeholder="Descripción del problema" rows="4"></textarea>
+            </div>
+            <div class="input-group">
+                <label for="ticket-category-input">Categoría:</label>
+                <input type="text" id="ticket-category-input" placeholder="Categoría (ej: COMPUTO Y PERIFERICOS)">
+            </div>
+            <div class="modal-buttons">
+                <button class="cancel-button" id="cancelAddTicketBtn">Cancelar</button>
+                <button class="minimal-primary-button" id="submitAddTicketBtn">Agregar Ticket</button>
             </div>
         </div>
     </div>
@@ -171,6 +205,7 @@
 
     <script src="documentos.js"></script>
     <script src="soluciones.js"></script>
+    <script src="tickets.js"></script> <!-- Ensure tickets.js is loaded -->
     <script src="app.js"></script>
     <script src="tabs.js"></script>
 </body>

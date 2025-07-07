@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // If reference metadata exists, add it
                 if (solution.metadata && solution.metadata.references && Array.isArray(solution.metadata.references) && solution.metadata.references.length > 0) {
                     solution.metadata.references.forEach((ref, index) => {
-                        const refMetadata = ref.metadata; 
+                        const refMetadata = ref.metadata;
                         if (refMetadata && refMetadata.collection === 'documentos') {
                             const refItemDiv = document.createElement('div');
                             refItemDiv.classList.add('metadata-item');
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 detailsList.appendChild(sourceItem);
                             }
                             fieldsToShow.forEach(field => {
-                                if (refMetadata[field]) { 
+                                if (refMetadata[field]) {
                                     const listItem = document.createElement('li');
                                     listItem.textContent = `${field.replace('_', ' ')}: ${refMetadata[field]}`;
                                     detailsList.appendChild(listItem);
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showStatus(deleteSolutionsStatusDiv, `Soluciones eliminadas exitosamente.`, 'success');
                 isSolutionSelectionMode = false; // Exit selection mode
                 loadLikedSolutions(window.userName, window.apiEndpoint); // Reload the list
-                
+
                 // IMPORTANT: Trigger chat history reload to update 'like' buttons
                 const chatTabButton = document.querySelector('.tab-button[data-tab="chat"]');
                 if (chatTabButton && chatTabButton.classList.contains('active') && window.currentConversationId && window.loadHistory) {
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
             } else {
-                console.error("Delete response:", result); 
+                console.error("Delete response:", result);
                 showStatus(deleteSolutionsStatusDiv, `Error al eliminar soluciones: ${result.detail || response.statusText}`, 'error');
             }
 
@@ -358,4 +358,3 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadLikedSolutions = loadLikedSolutions;
     window.processLikedSolutions = processLikedSolutions;
 });
-
