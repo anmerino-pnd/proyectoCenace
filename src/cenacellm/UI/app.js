@@ -23,12 +23,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteConversationCancelButton = deleteConversationModalOverlay ? deleteConversationModalOverlay.querySelector('.cancel-button') : null;
     const deleteConversationConfirmButton = deleteConversationModalOverlay ? deleteConversationModalOverlay.querySelector('.confirm-button') : null;
 
+    // Custom Alert Modal elements
+    const customAlertModalOverlay = document.getElementById('custom-alert-modal-overlay');
+    const customAlertMessageDiv = customAlertModalOverlay ? customAlertModalOverlay.querySelector('.modal-message') : null;
+    const customAlertOkButton = customAlertModalOverlay ? customAlertModalOverlay.querySelector('.custom-alert-ok-button') : null;
+    let customAlertCallback = null; // To store callback for custom alert
 
     let userName = '';
     window.userName = ''; // Make userName globally accessible
     let currentConversationId = null;
     window.currentConversationId = null; // Make currentConversationId globally accessible
-    let currentBotMessageElement = null;
     let isGeneratingResponse = false;
 
     const sendIconSVG = `
@@ -51,9 +55,48 @@ document.addEventListener('DOMContentLoaded', () => {
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6z"></path>
             <line x1="10" y1="11" x2="10" y2="17"></line>
             <line x1="14" y1="11" x2="14" y2="17"></line>
-            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <path d="M8 6V4a2 0 0 1 2-2h4a2 0 0 1 2 2v2"></path>
         </svg>
     `;
+
+    /**
+     * Muestra un modal de alerta personalizado.
+     * @param {string} message - El mensaje a mostrar en el modal.
+     * @param {function} [callback] - Función opcional a ejecutar cuando se cierra el modal.
+     */
+    function showCustomAlert(message, callback = null) {
+        if (customAlertModalOverlay && customAlertMessageDiv) {
+            customAlertMessageDiv.textContent = message;
+            customAlertCallback = callback; // Store the callback
+            customAlertModalOverlay.classList.remove('hidden');
+            customAlertModalOverlay.classList.add('visible');
+        } else {
+            console.error('Custom alert modal elements not found.');
+            // Fallback to native alert if custom modal is not available
+            window.alert(message);
+            if (callback) callback();
+        }
+    }
+
+    /**
+     * Oculta el modal de alerta personalizado.
+     */
+    function hideCustomAlert() {
+        if (customAlertModalOverlay) {
+            customAlertModalOverlay.classList.add('hidden');
+            customAlertModalOverlay.classList.remove('visible');
+        }
+        if (customAlertCallback) {
+            customAlertCallback(); // Execute callback if it exists
+            customAlertCallback = null; // Clear callback
+        }
+    }
+
+    // Event listener for the custom alert's OK button
+    if (customAlertOkButton) {
+        customAlertOkButton.addEventListener('click', hideCustomAlert);
+    }
+
 
     /**
      * Muestra el modal para solicitar el nombre de usuario.
@@ -102,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userQueryTextarea) userQueryTextarea.focus();
         } else {
             console.warn("Nombre de usuario vacío.");
-            // Podrías mostrar un mensaje al usuario aquí
+            showCustomAlert("Por favor, ingresa un nombre de usuario para continuar.");
             if (usernameInput) usernameInput.focus();
         }
     }
@@ -121,15 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
     requestUsername();
 
     /**
-     * Añade un mensaje al contenedor de chat. Esta función ahora solo crea
-     * y añade el elemento inicial. El contenido y el Markdown se manejan
-     * directamente en la función sendMessage para el streaming.
+     * Añade un mensaje al contenedor de chat.
      * @param {string} sender - El remitente del mensaje ('user' o 'bot').
-     * @param {string} initialMessageText - El contenido inicial del mensaje (texto plano).
+     * @param {string} messageText - El contenido del mensaje (texto plano o Markdown).
      * @param {string|null} messageId - El ID único del mensaje (solo para mensajes del bot).
      * @returns {HTMLElement|null} El elemento del mensaje HTML creado.
      */
-    function appendMessage(sender, initialMessageText, messageId = null) {
+    function appendMessage(sender, messageText, messageId = null) {
         if (!chatbox) return null;
 
         const msgDiv = document.createElement("div");
@@ -138,12 +179,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sender === "bot") {
             msgDiv.id = messageId || `bot-message-${Date.now()}`;
             msgDiv.dataset.messageId = msgDiv.id;
-            // Para el bot, el texto inicial puede ser un placeholder o el primer chunk
-            msgDiv.textContent = initialMessageText;
-        } else { // Mensaje de usuario
-            // Para mensajes de usuario, renderizar directamente con saltos de línea
+        }
+
+        // Renderizar Markdown si es un mensaje del bot y marked.js está disponible
+        // O simplemente establecer el texto para mensajes de usuario o si no hay marked.js
+        if (sender === "bot" && typeof marked !== "undefined") {
+            msgDiv.innerHTML = marked.parse(messageText);
+        } else {
+            // Para mensajes de usuario o si marked.js no está disponible,
+            // reemplazar saltos de línea por <br> para HTML
             const tempDiv = document.createElement('div');
-            tempDiv.textContent = initialMessageText;
+            tempDiv.textContent = messageText;
             msgDiv.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
         }
 
@@ -262,15 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const msgElement = appendMessage(sender, msg.content, msg.id);
 
                     if (sender === "bot" && msgElement) {
-                        // Renderizar Markdown directamente al cargar historial (mensajes completos)
-                        if (typeof marked !== "undefined") {
-                            msgElement.innerHTML = marked.parse(msg.content);
-                        } else {
-                            const tempDiv = document.createElement('div');
-                            tempDiv.textContent = msg.content;
-                            msgElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
-                        }
-
                         // Mostrar metadatos
                         if (msg.metadata && msg.metadata.references) {
                             window.fetchAndDisplayMetadata(msgElement, msg.metadata.references);
@@ -635,8 +672,12 @@ document.addEventListener('DOMContentLoaded', () => {
     async function sendMessage() {
         if (!currentConversationId) {
             console.warn("No hay conversación activa. Por favor, crea o selecciona una.");
-            // Optionally, prompt the user to create a new conversation
-            createNewConversation();
+            showCustomAlert("No hay conversación activa. Por favor, crea o selecciona una para empezar a chatear.");
+            return;
+        }
+
+        if (isGeneratingResponse) {
+            console.log("Ya se está generando una respuesta. Espera a que termine.");
             return;
         }
 
@@ -721,10 +762,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         hideSpinner();
                         botMessageElement = appendMessage("bot", "", latestBotMessageId);
                     }
+                    // Update content with Markdown parsing for each chunk
                     if (typeof marked !== "undefined") {
                         botMessageElement.innerHTML = marked.parse(accumulatedText);
                     } else {
-                        botMessageElement.textContent = accumulatedText;
+                        const tempDiv = document.createElement('div');
+                        tempDiv.textContent = accumulatedText;
+                        botMessageElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
                     }
                     chatbox.scrollTop = chatbox.scrollHeight;
 
@@ -744,7 +788,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (typeof marked !== "undefined") {
                             botMessageElement.innerHTML = marked.parse(accumulatedText);
                         } else {
-                            botMessageElement.textContent = accumulatedText;
+                            const tempDiv = document.createElement('div');
+                            tempDiv.textContent = accumulatedText;
+                            botMessageElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
                         }
                     }
                 } else {
@@ -755,10 +801,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         hideSpinner();
                         botMessageElement = appendMessage("bot", "", latestBotMessageId);
                     }
+                    // Update content with Markdown parsing for each chunk
                     if (typeof marked !== "undefined") {
                         botMessageElement.innerHTML = marked.parse(accumulatedText);
                     } else {
-                        botMessageElement.textContent = accumulatedText;
+                        const tempDiv = document.createElement('div');
+                        tempDiv.textContent = accumulatedText;
+                        botMessageElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
                     }
                     chatbox.scrollTop = chatbox.scrollHeight;
                 }
@@ -771,15 +820,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (latestBotMessageId && botMessageElement.id !== latestBotMessageId) {
                     botMessageElement.id = latestBotMessageId;
                     botMessageElement.dataset.messageId = latestBotMessageId;
-                }
-
-                // Asegurar que el Markdown final esté renderizado
-                if (typeof marked !== "undefined" && accumulatedText) {
-                    botMessageElement.innerHTML = marked.parse(accumulatedText);
-                } else {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.textContent = accumulatedText;
-                    botMessageElement.innerHTML = tempDiv.innerHTML.replace(/\n/g, '<br>');
                 }
 
                 // 1. Mostrar metadatos usando el finalMetadata recibido
@@ -799,6 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 botMessageElement.appendChild(likeIcon);
             } else if (!botMessageElement && accumulatedText) {
+                // Fallback if botMessageElement was never created (shouldn't happen with current logic)
                 appendMessage("bot", accumulatedText);
             }
 
@@ -814,7 +855,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isGeneratingResponse = false;
             toggleInputAndButtonState(true);
             if (chatbox) chatbox.scrollTop = chatbox.scrollHeight;
-            currentBotMessageElement = null;
         }
     }
 
@@ -889,6 +929,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function createNewConversation(title = null) {
         if (!userName) {
             console.warn("No se puede crear una nueva conversación sin nombre de usuario.");
+            showCustomAlert("Por favor, ingresa tu nombre de usuario para crear una nueva conversación.");
             return;
         }
         try {
@@ -909,9 +950,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadHistory(currentConversationId); // Load the empty new conversation
             } else {
                 console.error("Error creating new conversation:", result.detail || response.statusText);
+                showCustomAlert(`Error al crear nueva conversación: ${result.detail || response.statusText}`);
             }
         } catch (error) {
             console.error("Error de red al crear nueva conversación:", error);
+            showCustomAlert(`Error de red al crear nueva conversación: ${error.message}`);
         }
     }
 
@@ -959,6 +1002,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Error ${response.status}:`, errorText);
+                showCustomAlert(`Error al eliminar conversación: ${response.status} - ${errorText}`);
             } else {
                 // If the deleted conversation was the current one, switch to a new one
                 if (currentConversationId === conversationIdToDelete) {
@@ -971,6 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Error deleting conversation:", error);
+            showCustomAlert(`Error de red al eliminar conversación: ${error.message}`);
         } finally {
             hideDeleteConversationConfirmation();
         }
@@ -1001,23 +1046,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.loadLikedSolutions(currentUserName, currentApiEndpoint);
                 } else {
                     console.error("Nombre de usuario o API endpoint no disponibles para cargar soluciones.");
+                    showCustomAlert("No se pudo cargar las soluciones. Por favor, asegúrate de haber iniciado sesión.");
                 }
             } else {
                 console.error("loadLikedSolutions is not defined. Make sure soluciones.js is loaded correctly.");
+                showCustomAlert("Error interno: La funcionalidad de soluciones no está disponible.");
             }
         } else if (tabId === 'tickets') {
             if (typeof window.loadTickets === 'function') {
                 window.loadTickets();
             } else {
                 console.error("loadTickets is not defined. Make sure tickets.js is loaded correctly.");
+                showCustomAlert("Error interno: La funcionalidad de tickets no está disponible.");
             }
-        } else if (tabId === 'chat') {
+        } else if (tabId === 'documentos') {
+             // Assuming fetchAndDisplayDocuments is global or called from documentos.js DOMContentLoaded
+             // If it's not called on DOMContentLoaded, you might need a global window.fetchAndDisplayDocuments
+             // or a more robust module pattern. For now, it's called on DOMContentLoaded in documentos.js
+             // so it should be loaded when the tab is first accessed.
+        }
+        else if (tabId === 'chat') {
             if (window.currentConversationId && window.loadHistory) {
                 window.loadHistory(window.currentConversationId); // Recargar historial de chat
             }
         }
     }
     window.changeTab = changeTab; // Hacer changeTab accesible globalmente
+    window.showCustomAlert = showCustomAlert; // Make custom alert globally accessible
 
 
     // Existing event listeners
@@ -1030,6 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     sendMessage();
                 } else {
                     console.log("No se puede enviar un nuevo mensaje mientras se genera una respuesta.");
+                    showCustomAlert("Por favor, espera a que el chatbot termine de responder antes de enviar un nuevo mensaje.");
                 }
             }
         });

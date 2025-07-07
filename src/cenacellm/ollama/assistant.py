@@ -19,7 +19,7 @@ from cenacellm.types import (
 
 class OllamaAssistant(Assistant):
     def __init__(self):
-        self.model = "phi4:latest"
+        self.model = "gemma3:4b"
         self.memory_window_size = 3
 
         self.mongo_uri = mongo_uri

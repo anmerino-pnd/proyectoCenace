@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function bringTicketToConversation(ticketTitle, ticketDescription, ticketReference, existingSolucionId) {
         if (!window.userName) {
-            alert("Por favor, ingresa tu nombre de usuario para comenzar un chat.");
+            window.showCustomAlert("Por favor, ingresa tu nombre de usuario para comenzar un chat.");
             return;
         }
 
@@ -266,12 +266,11 @@ Descripción: ${ticketDescription}
                         }
                     } else {
                         console.error("Elementos del chat no encontrados para pasar el ticket.");
-                        // Using alert only as a fallback for critical UI interaction failure.
-                        alert("No se pudo pasar el ticket al chat. Recarga la página y vuelve a intentarlo.");
+                        window.showCustomAlert("No se pudo pasar el ticket al chat. Recarga la página y vuelve a intentarlo.");
                     }
                 } else {
                     console.error("Funciones globales (loadHistory, changeTab) no disponibles.");
-                    alert("Funciones internas del chat no disponibles. Recarga la página.");
+                    window.showCustomAlert("Funciones internas del chat no disponibles. Recarga la página.");
                 }
 
             } catch (error) {
@@ -293,7 +292,7 @@ Descripción: ${ticketDescription}
                 }
             } else {
                 console.error("Funciones globales (loadHistory, changeTab) no disponibles.");
-                alert("Funciones internas del chat no disponibles. Recarga la página.");
+                window.showCustomAlert("Funciones internas del chat no disponibles. Recarga la página.");
             }
         }
         loadTickets(); // Reload ticket list to reflect any changes like new solucion_id or solved status

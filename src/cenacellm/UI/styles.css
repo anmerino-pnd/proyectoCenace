@@ -7,13 +7,13 @@
     --light-bg: #f7f9fc;
     --error-color: #f19e5a;
     --user-msg-bg: #e1ebff;
-    --bot-msg-bg: #f9f9f9;
+    --bot-msg-bg: #f9f9f9; /* Subtle background for bot messages */
     --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.05);
     --shadow-medium: 0 6px 12px rgba(0, 0, 0, 0.08);
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 20px;
-    --font-main: system-ui, -apple-system, BlinkMacMacFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --font-main: system-ui, -apple-system, BlinkMacFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 * {
@@ -277,7 +277,7 @@ body {
     position: relative;
     word-wrap: break-word;
     line-height: 1.5;
-    animation: fadeIn 0.3s;
+    animation: fadeIn 0.3s; /* Re-added global fadeIn */
 }
 
 .message.user {
@@ -289,10 +289,10 @@ body {
 
 .message.bot {
     align-self: flex-start;
-    background-color: transparent;
+    background-color: var(--bot-msg-bg); /* Added subtle background for bot messages */
     border-bottom-left-radius: 4px;
     color: #333;
-    box-shadow: none;
+    box-shadow: var(--shadow-light); /* Added subtle shadow for bot messages */
 }
 
 /* Código de bloque y sintaxis en los mensajes del bot */
@@ -569,7 +569,7 @@ textarea {
     animation: pulse 1.2s infinite ease-in-out 0.4s;
 }
 
-/* Modal de confirmación (incluye username-modal, delete-confirmation-modal, delete-conversation-modal) */
+/* Modal de confirmación (incluye username-modal, delete-confirmation-modal, delete-conversation-modal, custom-alert-modal) */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -701,6 +701,20 @@ textarea {
     color: #333;
     border-color: #a0a0a0;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Custom Alert Modal specific button */
+.custom-alert-ok-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 10px rgba(var(--primary-color), 0.2);
+}
+
+.custom-alert-ok-button:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 6px 15px rgba(var(--primary-color), 0.3);
     transform: translateY(-2px);
 }
 
