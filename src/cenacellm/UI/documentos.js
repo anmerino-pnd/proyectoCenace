@@ -18,12 +18,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedDocumentsToDelete = []; // This will now store reference_ids (UUIDs)
     let isSelectionMode = false;
 
-    function showStatus(element, message, type) {
+    // Modified showStatus function to include a spinner
+    function showStatus(element, message, type, showSpinner = false) {
         if (element) {
-            element.textContent = message;
-            element.className = 'status-message';
+            // Clear existing content and classes
+            element.innerHTML = '';
+            element.className = 'status-message'; // Reset to base class
+
             if (type) {
                 element.classList.add(type);
+            }
+
+            if (showSpinner) {
+                element.classList.add('loading'); // Add 'loading' class for flexbox styles
+                const spinner = document.createElement('div');
+                spinner.classList.add('loading-spinner'); // Add the CSS spinner class
+
+                element.appendChild(spinner); // Add the spinner to the element
+                const textNode = document.createTextNode(message);
+                element.appendChild(textNode); // Add the message text
+            } else {
+                element.textContent = message; // Just show the message if no spinner
             }
         }
     }
@@ -40,7 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('files', files[i]);
         }
 
-        showStatus(uploadStatusDiv, '<i class="fas fa-spinner fa-spin"></i> Subiendo archivos...', '');
+        // Use the updated showStatus function with spinner
+        showStatus(uploadStatusDiv, 'Subiendo archivos...', '', true);
         uploadDocumentBtn.disabled = true;
 
         try {
@@ -178,7 +194,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function processDocuments() {
-        showStatus(processStatusDiv, '<i class="fas fa-spinner fa-spin"></i> Procesando documentos...', '');
+        // Use the updated showStatus function with spinner
+        showStatus(processStatusDiv, 'Procesando documentos...', '', true);
         processDocumentsBtn.disabled = true;
 
         try {
