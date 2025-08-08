@@ -20,7 +20,9 @@ A lo largo de los ciclos de desarrollo, se han cumplido los hitos establecidos, 
 Elaborar un sistema de Help Desk que utilice la base de conocimientos del CENACE y modelos de lenguaje grande para que los ingenieros tengan apoyo inmediato y puedan tomar decisiones rápidas al alcance de la mano y con esto ahorrar tiempo en la clasificación, recuperación y generación de la información técnica.
 
 La fase de evaluación, aunque continua, ha mostrado un progreso positivo, y ahora nos enfocamos en las etapas finales de despliegue y validación en un entorno real.
+:::
 
+::: {style="text-align: justify"}
 2.7 Despliegue en el ambiente de desarrollo
 Una vez que el sistema RAG y la API de FastAPI estuvieron funcionales y probados en un entorno local, se procedió a un despliegue inicial en un ambiente de desarrollo del CENACE. Este paso fue crucial para:
 

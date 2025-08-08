@@ -9,7 +9,6 @@ toc-depth: 5
 ---
 
 ::: {style="text-align: justify"}
-
 1 Modelado
 El objetivo de esta fase es desarrollar la arquitectura del sistema de recuperación aumentada con generación (RAG) y las herramientas que utilizará el chatbot para interactuar con la base de conocimientos. Para ello, se utiliza como fuente de conocimiento la base de datos vectorizada construida en la etapa de preparación de los datos.
 
@@ -30,7 +29,9 @@ Se realiza una búsqueda de similitud en la base de datos vectorial (FAISS) para
 Estos fragmentos, junto con la consulta del usuario, se envían al LLM (gemma3:4b) alojado en Ollama.
 
 El LLM utiliza el contexto proporcionado para generar una respuesta coherente y precisa que es devuelta al usuario.
+:::
 
+::: {style="text-align: justify"}
 2 Evaluación
 La fase de evaluación es crucial para validar el desempeño del sistema y asegurar que cumple con los objetivos del proyecto. La evaluación se realiza a través de pruebas manuales y automatizadas.
 

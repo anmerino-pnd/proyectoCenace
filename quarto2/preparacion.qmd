@@ -1,0 +1,12 @@
+---
+title: "Preparación de los datos"
+format: 
+    html:
+         page-layout: article
+toc-title: "Tabla de Contenidos"
+toc: true
+toc-depth: 5
+---
+
+::: {style="text-align: justify"}
+:::

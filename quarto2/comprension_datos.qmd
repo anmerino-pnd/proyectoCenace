@@ -16,7 +16,9 @@ La fuente principal de información es la base de conocimientos técnica del CEN
 
 0.1.2 Datos adquiridos
 Para este proyecto, se ha utilizado una muestra de la documentación técnica del CENACE. Los documentos seleccionados abarcan áreas críticas para el trabajo de los ingenieros.
+:::
 
+::: {style="text-align: justify"}
 0.2 Análisis exploratorio de los datos
 Se debe realizar un análisis para entender la estructura y el contenido de la documentación. Esto incluye:
 
@@ -25,7 +27,9 @@ Formatos de los archivos: Identificar los tipos de archivo (PDF, DOCX, TXT, etc.
 Tamaño de los documentos: Analizar la extensión de los documentos para planear la estrategia de fragmentación (chunking).
 
 Contenido: Realizar un análisis preliminar del contenido, identificando términos clave, acrónimos, y la densidad de información técnica.
+:::
 
+::: {style="text-align: justify"}
 0.3 Preparación de los datos
 Una vez analizados los datos, se deben aplicar las técnicas de preparación necesarias para hacerlos aptos para el sistema RAG. Esto incluye:
 
