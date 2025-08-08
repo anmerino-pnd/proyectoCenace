@@ -1,0 +1,50 @@
+---
+title: "Comprensión del negocio"
+format: 
+    html:
+         page-layout: article
+toc-title: "Tabla de Contenidos"
+toc: true
+toc-depth: 3
+---
+
+::: {style="text-align: justify"}
+El Centro Nacional de Control de Energía (CENACE) es el organismo encargado de la planeación y el control operativo del Sistema Eléctrico Nacional (SEN). El CENACE cuenta con una mesa de ayuda (Help Desk), el cual provee soporte y le da seguimiento a incidentes reportados en todo el país. En este trabajo nos restringimos a los incidentes reportados para la zona noroeste, la cual se conforma de los estados de Sonora y Sinaloa. Los incidentes se reportan en formato de tickets y son gestionados por los ingenieros de la organización.
+
+Teniendo en cuenta la naturaleza crítica del sector energético, la constante evolución tecnológica y la gran cantidad de documentación técnica existente, surge la necesidad de optimizar el acceso a la información. La búsqueda manual de esta información para resolver incidentes puede ser un proceso lento y propenso a errores, impactando la eficiencia operativa.
+
+0.1 Propuesta de solución
+La propuesta es desarrollar un sistema de Help Desk inteligente basado en Inteligencia Artificial que utilice la metodología de Recuperación Aumentada por Generación (RAG) y modelos de lenguaje grandes. Este sistema actuará como una herramienta de apoyo para los ingenieros, proporcionando respuestas inmediatas a sus consultas técnicas. El sistema permitirá una clasificación y recuperación de información más eficiente, y generará respuestas contextualizadas a partir de la base de conocimientos interna del CENACE.
+
+0.2 Objetivos
+El objetivo principal es elaborar un sistema de Help Desk que utilice la base de conocimientos del CENACE y modelos de lenguaje grande para que los ingenieros tengan apoyo inmediato y puedan tomar decisiones rápidas al alcance de la mano. Con esto, se espera ahorrar tiempo en la clasificación, recuperación y generación de la información técnica, y a su vez, nutrir la base de conocimientos con las soluciones generadas.
+
+0.3 Terminología
+RAG (Retrieval-Augmented Generation): Un enfoque de IA que combina la recuperación de información con la generación de lenguaje, para crear respuestas más precisas y contextualizadas.
+
+LLM (Large Language Model): Modelo de lenguaje grande capaz de comprender y generar texto similar al humano, como el modelo gemma3:4b que se utilizará en el proyecto.
+
+Ollama: Un framework que permite ejecutar modelos de lenguaje grandes de código abierto de forma local.
+
+Vector Embeddings: Representaciones numéricas de texto que capturan su significado semántico, facilitando la búsqueda de información similar.
+
+Base de datos vectorial: Una base de datos optimizada para almacenar y buscar vector embeddings.
+
+FastAPI: Un framework web de Python de alto rendimiento para construir APIs.
+
+MongoDB: Una base de datos NoSQL que se utilizará para almacenar el historial de conversaciones, tickets y la documentación original.
+
+0.4 Beneficios
+Innovación en el soporte técnico: Introducir un nuevo enfoque para acceder a la información técnica, brindando una experiencia más personalizada y eficiente para los ingenieros.
+
+Optimización del flujo de trabajo: El sistema permitirá a los ingenieros ahorrar tiempo en la búsqueda de información, lo que se traducirá en una mayor eficiencia operativa y una toma de decisiones más rápida.
+
+Preservación del conocimiento: El sistema ayuda a estructurar y hacer accesible la vasta base de conocimientos del CENACE, garantizando que el conocimiento institucional no se pierda.
+
+Clasificación y sugerencia automática: El sistema puede ayudar a clasificar los tickets de incidentes y sugerir soluciones, lo que agiliza el proceso de resolución.
+
+0.5 Costos
+Tiempo: El proyecto tiene un plazo estimado para desarrollar una versión funcional que pueda ser evaluada y mejorada.
+
+Financieros: Aunque se utilizan modelos y herramientas de código abierto, se consideran costos asociados al hardware necesario para ejecutar los modelos de manera local (servidores, etc.).
+:::

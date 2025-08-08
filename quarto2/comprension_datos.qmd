@@ -1,0 +1,39 @@
+---
+title: "Comprensión de los datos"
+format: 
+    html:
+         page-layout: article
+toc-title: "Tabla de Contenidos"
+toc: true
+toc-depth: 3
+---
+
+::: {style="text-align: justify"}
+
+0.1 Recolección de los datos
+0.1.1 Datos existentes
+La fuente principal de información es la base de conocimientos técnica del CENACE. Esta documentación puede incluir manuales de operación, normativas, reportes técnicos, y guías de procedimiento en diversos formatos como PDF, documentos de texto y posiblemente bases de datos o tablas estructuradas.
+
+0.1.2 Datos adquiridos
+Para este proyecto, se ha utilizado una muestra de la documentación técnica del CENACE. Los documentos seleccionados abarcan áreas críticas para el trabajo de los ingenieros.
+
+0.2 Análisis exploratorio de los datos
+Se debe realizar un análisis para entender la estructura y el contenido de la documentación. Esto incluye:
+
+Formatos de los archivos: Identificar los tipos de archivo (PDF, DOCX, TXT, etc.).
+
+Tamaño de los documentos: Analizar la extensión de los documentos para planear la estrategia de fragmentación (chunking).
+
+Contenido: Realizar un análisis preliminar del contenido, identificando términos clave, acrónimos, y la densidad de información técnica.
+
+0.3 Preparación de los datos
+Una vez analizados los datos, se deben aplicar las técnicas de preparación necesarias para hacerlos aptos para el sistema RAG. Esto incluye:
+
+Extracción de texto: Convertir los documentos (ej. PDF) a texto plano.
+
+Limpieza de datos: Eliminar encabezados, pies de página, y otros elementos no relevantes.
+
+Fragmentación (Chunking): Dividir los documentos largos en fragmentos más pequeños y manejables, manteniendo la coherencia semántica.
+
+Enriquecimiento de metadatos: Añadir metadatos a cada fragmento (ej. nombre del documento, sección, número de página) para mejorar la precisión de la recuperación.
+:::

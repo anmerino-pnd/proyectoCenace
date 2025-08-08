@@ -1,0 +1,89 @@
+---
+title: "Documentación"
+format: 
+  html:
+    page-layout: article
+toc-title: "Tabla de Contenidos"
+toc: true
+toc-depth: 3
+---
+
+::: {style="text-align: justify"}
+
+1 Manual de instalación y despliegue
+1.1 Configuraciones importantes
+El proyecto está diseñado para ser desplegado en entornos Linux o Windows con Python 3.12.9. Requiere acceso a Ollama (para la ejecución de modelos open-source), así como conectividad a una instancia de MongoDB para el registro del historial de conversaciones y tickets.
+
+La aplicación backend se expone a través de FastAPI en el puerto 8000. Es crucial asegurar que este puerto esté abierto y accesible en el entorno de despliegue.
+
+Todas las credenciales y configuraciones sensibles se gestionan mediante un archivo de variables de entorno (.env), garantizando la seguridad y facilidad de configuración.
+
+1.2 Requisitos del sistema
+Python: Versión 3.12.9
+
+Pip: Última versión
+
+UV: Última versión (gestor de paquetes y entornos)
+
+Ollama: Instalado y en ejecución en el servidor para el hosting de modelos open-source.
+
+MongoDB: Acceso remoto configurado para las colecciones de historial de conversaciones y tickets.
+
+1.3 Pasos para el despliegue
+Clonar el repositorio:
+git clone <URL_del_repositorio>
+
+Configurar el entorno:
+uv venv
+uv install -r requirements.txt
+
+Configurar Ollama:
+Asegurarse de que Ollama esté instalado y corriendo en el servidor. Descargar el modelo requerido, por ejemplo:
+ollama pull gemma3:4b
+
+Configurar variables de entorno:
+Crear el archivo .env con las variables necesarias para la conexión a MongoDB y la configuración de Ollama.
+
+Ejecutar la API:
+uvicorn main:app --reload
+
+2 Guía de uso
+El sistema está diseñado para ser utilizado por ingenieros del CENACE a través de una interfaz de usuario (frontend) que se conecta a la API de FastAPI. Los ingenieros pueden interactuar con el chatbot haciendo preguntas técnicas. El sistema recuperará información relevante de la base de conocimientos y generará respuestas para ayudar en la toma de decisiones.
+
+3 Arquitectura del sistema
+3.1 Componentes principales
+Interfaz de Usuario (UI): Un widget o aplicación web que permite a los ingenieros interactuar con el chatbot.
+
+API del Chatbot (FastAPI): La aplicación de backend que maneja las solicitudes de la UI. Orquesta las interacciones con los modelos de lenguaje y la base de datos.
+
+Módulo de Recuperación Aumentada por Generación (RAG): Procesa las consultas del usuario, recupera información relevante de la base de conocimientos y la utiliza para generar respuestas.
+
+Base de Datos Vectorial (FAISS): Almacena los embeddings de la documentación técnica del CENACE para una búsqueda semántica eficiente.
+
+Base de Conocimientos (MongoDB): Contiene los documentos originales del CENACE, el historial de conversaciones, y los tickets generados.
+
+Modelo de Lenguaje Grande (LLM): Un modelo open-source (ej. gemma3:4b) alojado en Ollama, responsable de generar las respuestas finales.
+
+3.2 Flujo de la interacción
+El ingeniero realiza una consulta a través del widget en la página web.
+
+La consulta se envía a la API del chatbot.
+
+La API crea o continúa una sesión de conversación y la consulta se procesa por el módulo RAG.
+
+El módulo RAG realiza una búsqueda en la base de datos vectorial para encontrar los fragmentos de documentos más relevantes.
+
+Los fragmentos recuperados se combinan con la consulta del usuario y se envían al LLM para generar una respuesta al usuario.
+
+Todas las interacciones se registran en la base de datos de MongoDB para análisis futuros.
+
+3.3 Flujo de datos
+La documentación técnica se procesa a través de un módulo ETL, que extrae los datos, los divide en fragmentos (chunks), y los convierte en embeddings.
+
+Estos embeddings se cargan en la base de datos vectorial (FAISS).
+
+La documentación original también se almacena en MongoDB.
+
+Las interacciones de los usuarios se guardan en MongoDB.
+
+:::
