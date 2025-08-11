@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const apiEndpoint = "http://localhost:8000";
+    // const apiEndpoint = "http://localhost:8000";
     const documentUploadInput = document.getElementById('documentUploadInput');
     const uploadDocumentBtn = document.getElementById('uploadDocumentBtn');
     const uploadStatusDiv = document.getElementById('uploadStatus');
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadDocumentBtn.disabled = true;
 
         try {
-            const response = await fetch(`${apiEndpoint}/upload_documents`, {
+            const response = await fetch(`${window.API_ENDPOINT}/upload_documents`, {
                 method: 'POST',
                 body: formData
             });
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!documentListUl) return;
         documentListUl.innerHTML = '<li>Cargando documentos...</li>';
         try {
-            const response = await fetch(`${apiEndpoint}/documents`);
+            const response = await fetch(`${window.API_ENDPOINT}/documents`);
             if (!response.ok) {
                 const errorText = await response.text();
                 documentListUl.innerHTML = `<li>Error al cargar documentos: ${response.status} - ${errorText}</li>`;
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Actualmente se procesan todos los documentos en la carpeta DOCUMENTS_DIR
             // Aquí puedes añadir lógica para seleccionar qué colección procesar si lo deseas.
             const collectionName = "documentos"; // O puedes hacer esto seleccionable en la UI
-            const response = await fetch(`${apiEndpoint}/load_documents?collection_name=${collectionName}&force_reload=true`, {
+            const response = await fetch(`${window.API_ENDPOINT}/load_documents?collection_name=${collectionName}&force_reload=true`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleSelectionModeBtn.disabled = true;
 
         try {
-            const response = await fetch(`${apiEndpoint}/delete_document`, {
+            const response = await fetch(`${window.API_ENDPOINT}/delete_document`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

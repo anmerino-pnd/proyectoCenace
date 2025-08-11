@@ -35,7 +35,8 @@ git clone <URL_del_repositorio>
 
 Configurar el entorno:
 uv venv
-uv install -r requirements.txt
+.venv\Scripts\activate
+uv pip install -e .
 
 Configurar Ollama:
 Asegurarse de que Ollama esté instalado y corriendo en el servidor. Descargar el modelo requerido, por ejemplo:

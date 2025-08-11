@@ -1,6 +1,6 @@
 // tickets.js
 document.addEventListener('DOMContentLoaded', () => {
-    const apiEndpoint = "http://localhost:8000";
+    // const apiEndpoint = "http://localhost:8000";
     const ticketListUl = document.getElementById('ticketList');
     const addTicketBtn = document.getElementById('addTicketBtn');
     const ticketStatusDiv = document.getElementById('ticketStatus');
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!ticketListUl) return;
         ticketListUl.innerHTML = '<li>Cargando tickets...</li>';
         try {
-            const response = await fetch(`${apiEndpoint}/tickets`);
+            const response = await fetch(`${window.API_ENDPOINT}/tickets`);
             if (!response.ok) {
                 const errorText = await response.text();
                 ticketListUl.innerHTML = `<li>Error al cargar tickets: ${response.status} - ${errorText}</li>`;
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelAddTicketBtn.disabled = true;
 
         try {
-            const response = await fetch(`${apiEndpoint}/tickets`, {
+            const response = await fetch(`${window.API_ENDPOINT}/tickets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ titulo, descripcion, categories })
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // No existing conversation for this ticket, create a new one
             try {
                 showStatus(ticketStatusDiv, '<i class="fas fa-spinner fa-spin"></i> Creando nueva conversación...', '');
-                const newConversationResponse = await fetch(`${apiEndpoint}/new_conversation`, { // Changed endpoint
+                const newConversationResponse = await fetch(`${window.API_ENDPOINT}/new_conversation`, { // Changed endpoint
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: window.userName, title: ticketTitle }) // Pass user_id and title
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showStatus(ticketStatusDiv, 'Nueva conversación creada exitosamente.', 'success');
 
                 // Update the ticket in the database with the new conversation_id
-                const updateResponse = await fetch(`${apiEndpoint}/tickets/${ticketReference}`, {
+                const updateResponse = await fetch(`${window.API_ENDPOINT}/tickets/${ticketReference}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ new_metadata: { solucion_id: conversationIdToUse } })
