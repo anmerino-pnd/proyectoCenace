@@ -1,6 +1,6 @@
 import numpy as np
 from cenacellm.tools.embedder import Embedder
-from cenacellm.clients import ollama as api
+from cenacellm.settings.clients import ollama as api
 
 
 class OllamaEmbedder(Embedder):

@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple
 from cenacellm.types import Text, TextMetadata
 from cenacellm.tools.embedder import Embedder
 from cenacellm.tools.vectorstore import VectorStore
-from cenacellm.config import VECTORS_DIR
+from cenacellm.settings.config import VECTORS_DIR
 
 class FAISSVectorStore(VectorStore):
     def __init__(self, embeddings: Embedder, dim: int, folder_path: str = VECTORS_DIR):

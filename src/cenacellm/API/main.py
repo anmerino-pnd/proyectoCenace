@@ -35,7 +35,7 @@ from cenacellm.API.chat import (
     update_ticket_metadata_db # NUEVO: Importa la función para actualizar metadatos de tickets en DB
 )
 
-app = FastAPI(root_path="/app")
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -168,8 +168,9 @@ def update_ticket_metadata(ticket_reference: str, new_metadata: Dict[str, Any] =
     return update_ticket_metadata_db(ticket_reference, new_metadata)
 
 
-ui_path = os.path.join(os.path.dirname(__file__), "..", "..", "UI")
+ui_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "UI")
 ui_path = os.path.abspath(ui_path)  # Normaliza la ruta
+print("UI path usado por FastAPI:", ui_path)  # Verifica que apunte a C:\...\proyectoCenace\UI
 
 
 # Montar CSS, JS, imágenes, etc. (excluye index.html)

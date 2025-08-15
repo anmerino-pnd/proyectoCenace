@@ -2,7 +2,7 @@ import os
 import json
 from typing import List, Dict, Any, Generator, Optional, Union, Tuple
 from datetime import datetime
-from cenacellm.config import VECTORS_DIR, PROCESSED_FILES
+from cenacellm.settings.config import VECTORS_DIR, PROCESSED_FILES
 from cenacellm.ollama.embedder import OllamaEmbedder
 from cenacellm.vectorstore import FAISSVectorStore
 from cenacellm.doccollection import DisjointCollection

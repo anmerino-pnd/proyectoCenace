@@ -4,9 +4,8 @@ from cenacellm.rag import RAG
 from pydantic import BaseModel
 from typing import AsyncGenerator, List, Dict, Any, Union, Optional
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
-from cenacellm.config import VECTORS_DIR, DOCUMENTS_DIR
+from cenacellm.settings.config import VECTORS_DIR, DOCUMENTS_DIR
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body # Importa Body
-import json # Importa json para serializar el diccionario final
 from bson.objectid import ObjectId # Import ObjectId for new conversation IDs
 
 rag = RAG(vectorstore_path=VECTORS_DIR)

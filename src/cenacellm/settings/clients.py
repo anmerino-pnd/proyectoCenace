@@ -16,7 +16,7 @@ mongo_uri: str = os.getenv("MONGO_URI")
 db_name: str = os.getenv("DB_NAME")
 
 openai = openai_api.OpenAI(api_key=openai_api_key)
-ollama = ollama_api.Client(host=ollama_base_url)
+ollama = ollama_api.Client() #(host=ollama_base_url)
 
 
 
