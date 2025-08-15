@@ -32,9 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
      * Carga y muestra las soluciones "likeadas" en la pestaña de soluciones.
      * Esta función es llamada desde app.js cuando se activa la pestaña de soluciones.
      * @param {string} userName - El nombre de usuario actual.
-     * @param {string} apiEndpoint - La URL base del endpoint de la API.
      */
-    async function loadLikedSolutions(userName, apiEndpoint) {
+    async function loadLikedSolutions(userName) {
         if (!likedSolutionsList || !userName) {
             console.warn("Contenedor de soluciones 'likeadas' o nombre de usuario no disponible.");
             return;
@@ -46,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSolutionSelectionModeUI(); // Update UI for selection mode
 
         try {
-            const response = await fetch(`${apiEndpoint}/solutions/${userName}`);
+            const response = await fetch(`${window.API_ENDPOINT}/solutions/${userName}`);
             if (!response.ok) {
                 const errorText = await response.text();
                 likedSolutionsList.innerHTML = `<p>Error al cargar soluciones: ${response.status} - ${errorText}</p>`;
@@ -116,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const detailsList = document.createElement('ul');
                             const fieldsToShow = ['page_number', 'author', 'subject'];
                             if (refMetadata.filename) {
-                                const viewDocumentUrl = `${apiEndpoint}/view_document/${encodeURIComponent(refMetadata.filename)}`;
+                                const viewDocumentUrl = `${window.API_ENDPOINT}/view_document/${encodeURIComponent(refMetadata.filename)}`;
                                 const sourceItem = document.createElement('a');
                                 sourceItem.href = viewDocumentUrl;
                                 sourceItem.textContent = 'Abrir documento';
@@ -185,19 +184,13 @@ document.addEventListener('DOMContentLoaded', () => {
      * Procesa las soluciones "likeadas" y las añade al vectorstore.
      * Muestra un estado de carga y el resultado del procesamiento.
      * @param {string} userName - El nombre de usuario actual.
-     * @param {string} apiEndpoint - La URL base del endpoint de la API.
      */
-    async function processLikedSolutions(userName, apiEndpoint) {
-        if (!userName || !apiEndpoint) {
-            showStatus(processSolutionsStatusDiv, "Error: Nombre de usuario o endpoint de API no disponible.", 'error');
-            return;
-        }
-
+    async function processLikedSolutions(userName) {
         showStatus(processSolutionsStatusDiv, '<i class="fas fa-spinner fa-spin"></i> Procesando soluciones...', '');
         processLikedSolutionsBtn.disabled = true;
 
         try {
-            const response = await fetch(`${apiEndpoint}/process_liked_solutions/${userName}`, {
+            const response = await fetch(`${window.API_ENDPOINT}/process_liked_solutions/${userName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -206,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 showStatus(processSolutionsStatusDiv, `Procesamiento completado. Se añadieron ${result.count} nuevas soluciones.`, 'success');
-                loadLikedSolutions(userName, apiEndpoint); // Reload to show updated list
+                loadLikedSolutions(userName); // Reload to show updated list
             } else {
                 showStatus(processSolutionsStatusDiv, `Error al procesar soluciones: ${result.detail || response.statusText}`, 'error');
             }
@@ -250,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleSolutionSelectionModeBtn.disabled = true;
 
         try {
-            const response = await fetch(`${window.apiEndpoint}/delete_solution`, {
+            const response = await fetch(`${window.API_ENDPOINT}/delete_solution`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -263,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 showStatus(deleteSolutionsStatusDiv, `Soluciones eliminadas exitosamente.`, 'success');
                 isSolutionSelectionMode = false; // Exit selection mode
-                loadLikedSolutions(window.userName, window.apiEndpoint); // Reload the list
+                loadLikedSolutions(window.userName); // Reload the list
 
                 // IMPORTANT: Trigger chat history reload to update 'like' buttons
                 const chatTabButton = document.querySelector('.tab-button[data-tab="chat"]');
@@ -314,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener for processing liked solutions
     if (processLikedSolutionsBtn) {
         processLikedSolutionsBtn.addEventListener('click', () => {
-            processLikedSolutions(window.userName, window.apiEndpoint);
+            processLikedSolutions(window.userName);
         });
     }
 

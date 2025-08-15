@@ -7,7 +7,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from ollama import GenerateResponse
 
-from cenacellm.clients import ollama as api, mongo_uri, db_name
+from cenacellm.settings.clients import ollama as api, mongo_uri, db_name
 from cenacellm.tools.assistant import Assistant
 from cenacellm.types import (
     LLMError,

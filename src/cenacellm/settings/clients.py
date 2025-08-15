@@ -1,7 +1,4 @@
-from google import genai as google_api
-import anthropic as anthropic_api
 import openai as openai_api
-import mistralai as mistral_api
 import ollama as ollama_api
 from ollama import AsyncClient
 
@@ -18,11 +15,8 @@ ollama_base_url: str = os.getenv("OLLAMA_BASE_URL")
 mongo_uri: str = os.getenv("MONGO_URI")
 db_name: str = os.getenv("DB_NAME")
 
-google = google_api.Client(api_key=google_api_key)
-anthropic = anthropic_api.Anthropic(api_key=anthropic_api_key)
 openai = openai_api.OpenAI(api_key=openai_api_key)
-mistral = mistral_api.Mistral(api_key=mistral_api_key)
-ollama = ollama_api.Client(host=ollama_base_url)
+ollama = ollama_api.Client() #(host=ollama_base_url)
 
 
 

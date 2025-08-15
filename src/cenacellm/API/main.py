@@ -1,7 +1,10 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Body
+from fastapi import FastAPI, UploadFile, File, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from typing import List, Dict, Any
+import os
 from cenacellm.API.chat import (
     async_chat_stream,
     metadata_generator,
@@ -31,7 +34,6 @@ from cenacellm.API.chat import (
     add_ticket_to_db, # NUEVO: Importa la función para agregar ticket a DB
     update_ticket_metadata_db # NUEVO: Importa la función para actualizar metadatos de tickets en DB
 )
-import os
 
 app = FastAPI()
 
@@ -164,3 +166,25 @@ def update_ticket_metadata(ticket_reference: str, new_metadata: Dict[str, Any] =
     # El `ticket_reference` viene del path. `new_metadata` viene del body.
     # `embed=True` asegura que el JSON body se vea como {"new_metadata": {...}}
     return update_ticket_metadata_db(ticket_reference, new_metadata)
+
+
+ui_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "UI")
+ui_path = os.path.abspath(ui_path)  # Normaliza la ruta
+print("UI path usado por FastAPI:", ui_path)  # Verifica que apunte a C:\...\proyectoCenace\UI
+
+
+# Montar CSS, JS, imágenes, etc. (excluye index.html)
+app.mount("/static", StaticFiles(directory=ui_path), name="static")
+
+# --- Configurar sistema de plantillas ---
+templates = Jinja2Templates(directory=ui_path)
+
+# --- Ruta para servir index.html ---
+@app.get("/")
+def serve_ui(request: Request):
+    # Usa variable de entorno para definir la URL base de tu API
+    api_url = os.getenv("API_URL", "")  
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "api_url": api_url
+    })

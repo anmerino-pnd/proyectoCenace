@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    window.apiEndpoint = "http://localhost:8000";
+    // window.apiEndpoint = "http://localhost:8000";
 
     // Solicitar nombre de usuario al cargar la página
     requestUsername();
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatbox.innerHTML = "";
         const loadingMsg = appendMessage("bot", "Cargando conversación...");
         try {
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}/${convId}`);
+            const response = await fetch(`${window.API_ENDPOINT}/history/${userName}/${convId}`);
             if (loadingMsg && loadingMsg.parentNode === chatbox) {
                 loadingMsg.remove();
             }
@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         try {
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}/${currentConversationId}`, {
+            const response = await fetch(`${window.API_ENDPOINT}/history/${userName}/${currentConversationId}`, {
                 method: 'DELETE'
             });
 
@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (collectionType === 'documentos') {
                     referenceTitlePrefix = 'Documento';
                     if (item.metadata?.filename) {
-                        viewDocumentUrl = `${window.apiEndpoint}/view_document/${encodeURIComponent(item.metadata.filename)}`;
+                        viewDocumentUrl = `${window.API_ENDPOINT}/view_document/${encodeURIComponent(item.metadata.filename)}`;
                     }
                 } else if (collectionType === 'soluciones') {
                     referenceTitlePrefix = 'Solución';
@@ -567,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             // First, update the message metadata (like/unlike)
-            const response = await fetch(`${window.apiEndpoint}/history/${userName}/messages/${messageId}`, {
+            const response = await fetch(`${window.API_ENDPOINT}/history/${userName}/messages/${messageId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ new_metadata: { disable: isLiked } })
@@ -582,7 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // If unliking (isLiked is false), trigger deletion from vectorstore
             if (!isLiked) {
                 try {
-                    const deleteResponse = await fetch(`${window.apiEndpoint}/delete_solution`, {
+                    const deleteResponse = await fetch(`${window.API_ENDPOINT}/delete_solution`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ reference_ids: [messageId] }) // Pass messageId as reference_id
@@ -602,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // If liking (isLiked is true), process it to add to vectorstore
                 try {
-                    const processResponse = await fetch(`${window.apiEndpoint}/process_liked_solutions/${userName}`, {
+                    const processResponse = await fetch(`${window.API_ENDPOINT}/process_liked_solutions/${userName}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
                     });
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (solutionsTabButton && solutionsTabButton.classList.contains('active')) {
                         // Llamar a la función global para cargar soluciones definida en soluciones.js
                         if (typeof window.loadLikedSolutions === 'function') {
-                            window.loadLikedSolutions(userName, window.apiEndpoint);
+                            window.loadLikedSolutions(userName, window.API_ENDPOINT);
                         }
                     }
                     // If tickets tab is active, reload it to reflect potential solved status change
@@ -707,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterMetadata = getFilterMetadata();
 
         try {
-            const response = await fetch(`${window.apiEndpoint}/chat`, {
+            const response = await fetch(`${window.API_ENDPOINT}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
                 body: JSON.stringify({
@@ -867,7 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         conversationListDiv.innerHTML = '<p class="loading-conversations-message">Cargando conversaciones...</p>';
         try {
-            const response = await fetch(`${window.apiEndpoint}/conversations/${userName}`);
+            const response = await fetch(`${window.API_ENDPOINT}/conversations/${userName}`);
             if (!response.ok) {
                 const errorText = await response.text();
                 conversationListDiv.innerHTML = `<p class="error-conversations-message">Error al cargar conversaciones: ${errorText}</p>`;
@@ -937,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (title) {
                 payload.title = title;
             }
-            const response = await fetch(`${window.apiEndpoint}/new_conversation`, { // Changed endpoint
+            const response = await fetch(`${window.API_ENDPOINT}/new_conversation`, { // Changed endpoint
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -993,7 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`${window.apiEndpoint}/delete_conversation`, {
+            const response = await fetch(`${windowwindow.API_ENDPOINT}/delete_conversation`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: userName, conversation_id: conversationIdToDelete })
@@ -1041,9 +1041,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'soluciones') {
             if (typeof window.loadLikedSolutions === 'function') {
                 const currentUserName = window.userName || userName;
-                const currentApiEndpoint = window.apiEndpoint;
-                if (currentUserName && currentApiEndpoint) {
-                    window.loadLikedSolutions(currentUserName, currentApiEndpoint);
+                if (currentUserName && window.API_ENDPOINT) {
+                    window.loadLikedSolutions(currentUserName);
                 } else {
                     console.error("Nombre de usuario o API endpoint no disponibles para cargar soluciones.");
                     showCustomAlert("No se pudo cargar las soluciones. Por favor, asegúrate de haber iniciado sesión.");
