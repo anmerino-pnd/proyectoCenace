@@ -1,0 +1,36 @@
+/* Este archivo CSS fue actualizado para utilizar la paleta de colores del CENACE.
+  Se ha investigado que los colores principales son un azul marino y un dorado/amarillo.
+*/
+
+.navbar-brand img {
+    max-height: none !important; /* Elimina cualquier restricción de altura */
+    height: 60px !important;  /* Ajusta la altura según lo necesites */
+    width: auto !important;    /* Mantiene la proporción */
+}
+
+/* Se establece el color de fondo de la barra de navegación a un azul marino.
+  Se utiliza la variable CSS --cenace-blue para consistencia.
+*/
+:root {
+  --cenace-blue: #0A1C4E;
+  --cenace-gold: #FFC72C;
+}
+
+.navbar {
+    background-color: var(--cenace-blue) !important; 
+    border-bottom: 3px solid var(--cenace-gold); /* Añade un borde dorado en la parte inferior */
+}
+
+/* Se ajustan los colores de los enlaces, texto y el botón de alternancia.
+  Se utiliza un color claro para que sea visible sobre el fondo oscuro.
+*/
+.navbar a, .navbar-brand, .navbar-toggler {
+    color: #ffffff !important; /* Texto y enlaces en blanco */
+}
+
+/* Se cambia el color al pasar el cursor sobre los enlaces para un efecto visual.
+  Se utiliza el color dorado para resaltar.
+*/
+.navbar a:hover {
+    color: var(--cenace-gold) !important; /* Tono dorado al pasar el mouse */
+}

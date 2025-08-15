@@ -9,35 +9,110 @@ toc-depth: 3
 ---
 
 ::: {style="text-align: justify"}
+## 0.1. Recolección de los datos
 
-0.1 Recolección de los datos
-0.1.1 Datos existentes
-La fuente principal de información es la base de conocimientos técnica del CENACE. Esta documentación puede incluir manuales de operación, normativas, reportes técnicos, y guías de procedimiento en diversos formatos como PDF, documentos de texto y posiblemente bases de datos o tablas estructuradas.
+### 0.1.1. Datos existentes
+La fuente principal de información son, los documentos de información (manuales, guías, contratos, etc.) y la base de datos que contiene todos los incidentes **resueltos** por parte de la gerencia **Noroeste** del CENACE. Además, se nos compartieron 4 archivos pdf para crear una base de datos vectorial con ellos. Los incidentes resueltos fueron extraídos de SQL y trabajados en formato csv.
 
-0.1.2 Datos adquiridos
-Para este proyecto, se ha utilizado una muestra de la documentación técnica del CENACE. Los documentos seleccionados abarcan áreas críticas para el trabajo de los ingenieros.
+### 0.1.2. Datos adquiridos
+En una primera instancia, se realizó una Exploración de Datos (EDA) sobre un conjunto de 175 incidentes correspondientes al período de enero de 2023 a mayo de 2024. Este conjunto incluía 14 variables, como título, descripción, categoría, solución, entre otras. Se utilizará el título y la descripción para sugerir la categoría de un incidente.
+
+Aunque se obtuvieron hallazgos interesantes, este EDA evidenció la necesidad de hacer una análisis con más datos y abordar inconsistencias presentes en los registros analizados.
+
+### 0.1.3. Datos adicionales
+Para ampliar la cantidad de datos disponibles, fue necesario **realizar un proceso de codificación y anonimización**. Esto fue para **garantizar la protección de información sensible**, como nombres de personal, números telefónicos, correos electrónicos, normas, y nombres de subestaciones, entre otros. 
+
+Con herramientas como **expresiones regulares** y **SpaCy**, se logró recuperar un total de **2,817 registros**, es decir, **15 veces más registros** que los disponibles al inicio.
 :::
 
 ::: {style="text-align: justify"}
-0.2 Análisis exploratorio de los datos
-Se debe realizar un análisis para entender la estructura y el contenido de la documentación. Esto incluye:
+## 0.2. Descripción de los datos
 
-Formatos de los archivos: Identificar los tipos de archivo (PDF, DOCX, TXT, etc.).
+A partir de estos últimos datos extraídos, obtenemos las siguiente información:
 
-Tamaño de los documentos: Analizar la extensión de los documentos para planear la estrategia de fragmentación (chunking).
+```markdown
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 2817 entries, 0 to 2816
+Data columns (total 5 columns):
+ #   Column       Non-Null Count  Dtype 
+---  ------       --------------  ----- 
+ 0   titulo       2817 non-null   object
+ 1   descripcion  2817 non-null   object
+ 2   solucion     1159 non-null   object
+ 3   categories   2817 non-null   object
+ 4   fecha        2817 non-null   object
+dtypes: object(5)
+memory usage: 110.2+ KB
+```
 
-Contenido: Realizar un análisis preliminar del contenido, identificando términos clave, acrónimos, y la densidad de información técnica.
+Donde cada variable tiene la siguiente descripción:
+
+| **Variable** | **Descripción**                                                   | **Tipo de dato** |
+|--------------|-------------------------------------------------------------------|------------------|
+| `titulo`     | Título del incidente en cuestión.                                 | Texto            |
+| `descripcion`| Desarrollo de la problemática y explicación del incidente.        | Texto            | 
+| `solucion`   | Explicación de cómo se llegó a la solución.                       | Texto            | 
+| `categories` | Categoría a la que pertenece la problemática.                     | Texto            | 
+| `fecha`      | Fecha.                                                            | Texto            | 
+
 :::
 
 ::: {style="text-align: justify"}
-0.3 Preparación de los datos
-Una vez analizados los datos, se deben aplicar las técnicas de preparación necesarias para hacerlos aptos para el sistema RAG. Esto incluye:
+## 0.3 Exploración de los datos
 
-Extracción de texto: Convertir los documentos (ej. PDF) a texto plano.
+### 0.3.1 Variedad de categorías
+Empezamos la exploración analizando la cantidad de categorías únicas que teníamos en los tickets. Ya que parte del trabajo es la creación de un modelo capaz de clasificar, o asignar la categoría de tickets a partir de su contenido.
 
-Limpieza de datos: Eliminar encabezados, pies de página, y otros elementos no relevantes.
+```markdown
+categories
+ADTR SP7 > SCADA                                     1410
+INTRANET Y SOPORTE DE APLICACIONES                    379
+COMPUTO Y PERIFERICOS                                 257
+SEGURIDAD INFORMATICA                                 166
+CORREO ELECTRONICO                                     97
+ADTR SP7 > SIREL                                       89
+ADTR SP7                                               82
+TELEFONIA Y HERRAMIENTAS COLABORATIVAS                 55
+INFRAESTRUCTURA BASICA Y DE SERVICIOS PROPIOS          51
+ADTR > Consulta                                        38
+ADTR SP7 > Historico                                   37
+ADTR SP7 > SIGUARD                                     32
+INTERNET                                               32
+ADTR SP7 > Hospedaje                                   23
+ADOMEM                                                 16
+ADTR                                                   11
+DESARROLLO DE APLICACIONES                             10
+OPERACION DE RED DE DATOS                               9
+MESA DE SERVICIO                                        8
+BASE DE DATOS                                           7
+ADTR > Hospedaje de Aplicativos de Potencia (EMS)       6
+MONITOREO DE ACTIVOS DE TIC                             2
+Name: count, dtype: int64
+```
 
-Fragmentación (Chunking): Dividir los documentos largos en fragmentos más pequeños y manejables, manteniendo la coherencia semántica.
+Observando los valores, tomamos la decisión de partir solamente con tickets que tengan más de 20 incidentes por categoría, esta decisión fue pensada en la cantidad de datos necesarios para entrenamiento, validación y testeo. Teniendo finalmente un total de 14 categorías.
 
-Enriquecimiento de metadatos: Añadir metadatos a cada fragmento (ej. nombre del documento, sección, número de página) para mejorar la precisión de la recuperación.
+### 0.3.2. Distribución de las palabras
+En esta sección, analizaremos la cantidad de palabras utilizadas en los títulos, descripciones y soluciones. Lo que nos permite darnos una idea de la cantidad de información que disponemos y la cual puede servir para responder a problemáticas que ya se han trabajado anteriormente.
+
+![Distribución de palabras en los títulos](./datos/titulo.png){width=100%}
+
+![Distribución de palabras en las descripciones](./datos/descripcion.png){width=100%}
+
+![Distribución de palabras en las soluciones](./datos/solucion.png){width=100%}
+
+### 0.3.3. Análisis de los bigramas más comunes
+
+![Bigramas de los títulos](./datos/bigrama_tickets.png){width=100%}
+
+![Bigramas de las descripciones](./datos/bigrama_descripcion.png){width=100%}
+
+:::
+
+::: {style="text-align: justify"}
+## 0.4 Verificación de la calidad de los datos
+
+### 0.4.1 Datos faltantes
+
+
 :::

@@ -9,23 +9,23 @@ toc-depth: 3
 ---
 
 ::: {style="text-align: justify"}
-El **Centro Nacional de Control de Energía** (**CENACE**) es el organismo encargado de la planeación y el control operativo del Sistema Eléctrico Nacional (SEN). El CENACE cuenta con una mesa de ayuda (**Help Desk**), el cual provee soporte y le da seguimiento a incidentes reportados en todo el país. En este trabajo nos restringimos a los incidentes reportados para la zona noroeste, la cual se conforma de los estados de Sonora y Sinaloa. Los incidentes se reportan en formato de tickets y son gestionados por los ingenieros de la organización.
+El **Centro Nacional de Control de Energía** (**CENACE**) es el organismo encargado de la planeación y el control operativo del **Sistema Eléctrico Nacional** (**SEN**). El CENACE cuenta con una mesa de ayuda (**Help Desk**), la cual provee soporte y le da seguimiento a incidentes reportados en todo el país. En este trabajo nos restringimos a los incidentes reportados para la zona noroeste, la cual se conforma de los estados de Sonora y Sinaloa. Los incidentes se reportan en formato de tickets y son gestionados por los ingenieros de la organización.
 
-Teniendo en cuenta la naturaleza **crítica del sector energético**, la **constante evolución tecnológica** y la **gran cantidad de documentación técnica** existente, surge la necesidad de optimizar el acceso a la información. La búsqueda manual de esta información para resolver incidentes puede ser un proceso lento, impactando la eficiencia operativa.
+Teniendo en cuenta la naturaleza **crítica del sector energético**, la **constante evolución tecnológica** y la **gran cantidad de documentación técnica** existente, surge la necesidad de optimizar el acceso a la información. La búsqueda manual de esta información para resolver incidentes puede ser un proceso lento, impactando la eficiencia operativa. Además de aprovechar la base de conocimientos que ya se tiene para proponer soluciones a problemas previamente vistos.
 :::
 
 ::: {style="text-align: justify"}
-## 0.1 Propuesta de solución
-Proponemos desarrollar un sistema de Help Desk inteligente basado en Inteligencia Artificial Generativa que utilice la metodología de **Recuperación Aumentada por Generación** (**RAG**) y modelos de lenguaje grandes. Este sistema actuará como una herramienta de apoyo para los ingenieros, proporcionando respuestas inmediatas a sus consultas técnicas. El sistema permitirá una clasificación y recuperación de información más eficiente, y generará respuestas contextualizadas a partir de la base de conocimientos interna del CENACE.
+## 0.1. Propuesta de solución
+Proponemos desarrollar un sistema de Help Desk inteligente basado en Inteligencia Artificial Generativa que utilice la metodología de **Recuperación Aumentada por Generación** (**RAG**) y **modelos de lenguaje grandes** (**LLM**). Este sistema actuará como una herramienta de apoyo para los ingenieros, proporcionando respuestas inmediatas a sus consultas técnicas. El sistema permitirá una clasificación y recuperación de información más eficiente, y generará respuestas contextualizadas a partir de la base de conocimientos interna del CENACE.
 :::
 
 ::: {style="text-align: justify"}
-## 0.2 Objetivos
+## 0.2. Objetivos
 El objetivo principal es elaborar un sistema de **Help Desk** que utilice la base de conocimientos del **CENACE** y **modelos de lenguaje grande** para que los ingenieros tengan apoyo inmediato y puedan tomar decisiones rápidas al alcance de la mano. Con esto, se espera ahorrar tiempo en la **clasificación, recuperación y generación** de la información técnica, y a su vez, nutrir la base de conocimientos con las soluciones generadas.
 :::
 
 ::: {style="text-align: justify"}
-## 0.3 Terminología
+## 0.3. Terminología
 
 * **RAG (Retrieval-Augmented Generation)**: Un enfoque de IA que combina la recuperación de información con la generación de lenguaje, para crear respuestas más precisas y contextualizadas.
 
@@ -43,7 +43,7 @@ El objetivo principal es elaborar un sistema de **Help Desk** que utilice la bas
 :::
 
 ::: {style="text-align: justify"}
-## 0.4 Beneficios
+## 0.4. Beneficios
 
 * **Innovación en el soporte técnico**: Introducir un nuevo enfoque para acceder a la información técnica, brindando una experiencia más personalizada y eficiente para los ingenieros.
 
@@ -55,7 +55,7 @@ El objetivo principal es elaborar un sistema de **Help Desk** que utilice la bas
 :::
 
 ::: {style="text-align: justify"}
-## 0.5 Costos
+## 0.5. Costos
 
 * **Tiempo**: El proyecto tiene un plazo estimado para desarrollar una versión funcional que pueda ser evaluada y mejorada.
 
