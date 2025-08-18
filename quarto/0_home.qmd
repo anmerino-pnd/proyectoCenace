@@ -6,6 +6,8 @@ format:
 toc: false
 author: 
     - Angel Alberto Merino Cedeño
+    - Eduardo Yeomans Acuña
+    - Hector Alberto Gutierrez Ibarra
 date: last-modified
 date-format: long
 lang: es

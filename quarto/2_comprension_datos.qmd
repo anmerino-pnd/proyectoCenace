@@ -17,7 +17,7 @@ La fuente principal de información son, los documentos de información (manuale
 ### 0.1.2. Datos adquiridos
 En una primera instancia, se realizó una Exploración de Datos (EDA) sobre un conjunto de 175 incidentes correspondientes al período de enero de 2023 a mayo de 2024. Este conjunto incluía 14 variables, como título, descripción, categoría, solución, entre otras. Se utilizará el título y la descripción para sugerir la categoría de un incidente.
 
-Aunque se obtuvieron hallazgos interesantes, este EDA evidenció la necesidad de hacer una análisis con más datos y abordar inconsistencias presentes en los registros analizados.
+Aunque se obtuvieron hallazgos interesantes, este EDA evidenció la necesidad de hacer un análisis con más datos y abordar inconsistencias presentes en los registros analizados.
 
 ### 0.1.3. Datos adicionales
 Para ampliar la cantidad de datos disponibles, fue necesario **realizar un proceso de codificación y anonimización**. Esto fue para **garantizar la protección de información sensible**, como nombres de personal, números telefónicos, correos electrónicos, normas, y nombres de subestaciones, entre otros. 
@@ -93,7 +93,7 @@ Name: count, dtype: int64
 Observando los valores, tomamos la decisión de partir solamente con tickets que tengan más de 20 incidentes por categoría, esta decisión fue pensada en la cantidad de datos necesarios para entrenamiento, validación y testeo. Teniendo finalmente un total de 14 categorías.
 
 ### 0.3.2. Distribución de las palabras
-En esta sección, analizaremos la cantidad de palabras utilizadas en los títulos, descripciones y soluciones. Lo que nos permite darnos una idea de la cantidad de información que disponemos y la cual puede servir para responder a problemáticas que ya se han trabajado anteriormente.
+En esta sección, analizaremos la cantidad de palabras utilizadas en los títulos, descripciones y soluciones. Lo que nos permite darnos una idea de la cantidad de información que disponemos y la cual puede servir para responder a problemáticas que ya se han trabajado anteriormente, además de la creación de un modelo que pueda clasificar tickets a partir de títulos y descripciones.
 
 ![Distribución de palabras en los títulos](./datos/titulo.png){width=100%}
 
