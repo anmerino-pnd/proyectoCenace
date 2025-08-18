@@ -107,9 +107,9 @@ nohup uvicorn main:app --reload &
 ```bash
 tail -f nohup.out
 ```
+:::
 
-
-
+::: {style="text-align: justify"}
 ## 2. Documentación técnica del código
 
 ### 2.1. Estructura de carpetas y módulos
@@ -122,6 +122,9 @@ tail -f nohup.out
 ### 2.3. Puntos de entrada y funciones clave
 
 
+:::
+
+::: {style="text-align: justify"}
 ## 3. Guía de entrenamiento y mejora
 
 ### 3.1.  Generación de la base de datos vectorial
@@ -129,7 +132,10 @@ tail -f nohup.out
 
 
 ### 3.2. Flujo de la interacción
+:::
 
+
+::: {style="text-align: justify"}
 ## 4. Diagrama de arquitectura
 
 

@@ -165,8 +165,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Tabla de Contenidos</h2>
+   
+  <ul>
+  <li><a href="#manual-de-instalación-y-despliegue" id="toc-manual-de-instalación-y-despliegue" class="nav-link active" data-scroll-target="#manual-de-instalación-y-despliegue">1. Manual de instalación y despliegue</a>
+  <ul class="collapse">
+  <li><a href="#configuraciones-importantes" id="toc-configuraciones-importantes" class="nav-link" data-scroll-target="#configuraciones-importantes">1.1. Configuraciones importantes</a></li>
+  <li><a href="#requisitos-del-sistema" id="toc-requisitos-del-sistema" class="nav-link" data-scroll-target="#requisitos-del-sistema">1.2. Requisitos del sistema</a></li>
+  <li><a href="#dependencias-principales-del-sistema" id="toc-dependencias-principales-del-sistema" class="nav-link" data-scroll-target="#dependencias-principales-del-sistema">1.3. Dependencias principales del sistema</a></li>
+  <li><a href="#instalación-del-sistema" id="toc-instalación-del-sistema" class="nav-link" data-scroll-target="#instalación-del-sistema">1.4. Instalación del sistema</a></li>
+  </ul></li>
+  <li><a href="#documentación-técnica-del-código" id="toc-documentación-técnica-del-código" class="nav-link" data-scroll-target="#documentación-técnica-del-código">2. Documentación técnica del código</a>
+  <ul class="collapse">
+  <li><a href="#estructura-de-carpetas-y-módulos" id="toc-estructura-de-carpetas-y-módulos" class="nav-link" data-scroll-target="#estructura-de-carpetas-y-módulos">2.1. Estructura de carpetas y módulos</a></li>
+  <li><a href="#modelos-llm-utilizados" id="toc-modelos-llm-utilizados" class="nav-link" data-scroll-target="#modelos-llm-utilizados">2.2. Modelos LLM utilizados</a></li>
+  <li><a href="#puntos-de-entrada-y-funciones-clave" id="toc-puntos-de-entrada-y-funciones-clave" class="nav-link" data-scroll-target="#puntos-de-entrada-y-funciones-clave">2.3. Puntos de entrada y funciones clave</a></li>
+  </ul></li>
+  <li><a href="#guía-de-entrenamiento-y-mejora" id="toc-guía-de-entrenamiento-y-mejora" class="nav-link" data-scroll-target="#guía-de-entrenamiento-y-mejora">3. Guía de entrenamiento y mejora</a>
+  <ul class="collapse">
+  <li><a href="#generación-de-la-base-de-datos-vectorial" id="toc-generación-de-la-base-de-datos-vectorial" class="nav-link" data-scroll-target="#generación-de-la-base-de-datos-vectorial">3.1. Generación de la base de datos vectorial</a></li>
+  <li><a href="#flujo-de-la-interacción" id="toc-flujo-de-la-interacción" class="nav-link" data-scroll-target="#flujo-de-la-interacción">3.2. Flujo de la interacción</a></li>
+  </ul></li>
+  <li><a href="#diagrama-de-arquitectura" id="toc-diagrama-de-arquitectura" class="nav-link" data-scroll-target="#diagrama-de-arquitectura">4. Diagrama de arquitectura</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -190,8 +214,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<div style="text-align: justify">
-<section id="manual-de-instalación-y-despliegue" class="level2">
+<section id="manual-de-instalación-y-despliegue" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="manual-de-instalación-y-despliegue">1. Manual de instalación y despliegue</h2>
 <section id="configuraciones-importantes" class="level3">
 <h3 class="anchored" data-anchor-id="configuraciones-importantes">1.1. Configuraciones importantes</h3>
@@ -282,7 +305,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-f</span> nohup.out</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
-<section id="documentación-técnica-del-código" class="level2">
+<section id="documentación-técnica-del-código" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="documentación-técnica-del-código">2. Documentación técnica del código</h2>
 <section id="estructura-de-carpetas-y-módulos" class="level3">
 <h3 class="anchored" data-anchor-id="estructura-de-carpetas-y-módulos">2.1. Estructura de carpetas y módulos</h3>
@@ -294,7 +317,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="puntos-de-entrada-y-funciones-clave">2.3. Puntos de entrada y funciones clave</h3>
 </section>
 </section>
-<section id="guía-de-entrenamiento-y-mejora" class="level2">
+<section id="guía-de-entrenamiento-y-mejora" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="guía-de-entrenamiento-y-mejora">3. Guía de entrenamiento y mejora</h2>
 <section id="generación-de-la-base-de-datos-vectorial" class="level3">
 <h3 class="anchored" data-anchor-id="generación-de-la-base-de-datos-vectorial">3.1. Generación de la base de datos vectorial</h3>
@@ -303,10 +326,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="flujo-de-la-interacción">3.2. Flujo de la interacción</h3>
 </section>
 </section>
-<section id="diagrama-de-arquitectura" class="level2">
+<section id="diagrama-de-arquitectura" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="diagrama-de-arquitectura">4. Diagrama de arquitectura</h2>
 </section>
-</div>
 
 
 

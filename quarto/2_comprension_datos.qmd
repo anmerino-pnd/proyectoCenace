@@ -97,6 +97,8 @@ En esta sección, analizaremos la cantidad de palabras utilizadas en los título
 
 ![Distribución de palabras en los títulos](./datos/titulo.png){width=100%}
 
+
+
 ![Distribución de palabras en las descripciones](./datos/descripcion.png){width=100%}
 
 ![Distribución de palabras en las soluciones](./datos/solucion.png){width=100%}

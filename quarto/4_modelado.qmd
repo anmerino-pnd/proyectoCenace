@@ -9,17 +9,18 @@ toc-depth: 5
 ---
 
 ::: {style="text-align: justify"}
-1 Modelado
-El objetivo de esta fase es desarrollar la arquitectura del sistema de recuperación aumentada con generación (RAG) y las herramientas que utilizará el chatbot para interactuar con la base de conocimientos. Para ello, se utiliza como fuente de conocimiento la base de datos vectorizada construida en la etapa de preparación de los datos.
 
-1.1 Modelos
+## 1. Modelado
+
+
+### 1.1. Modelos
 Dado que el enfoque del proyecto se basa en el uso de modelos de lenguaje grandes (open-source) alojados localmente, los modelos considerados para esta fase son los siguientes:
 
 Modelos open-source integrados mediante Ollama: Ollama permite correr modelos de lenguaje open-source de manera local o privada. En este proyecto se contempla el modelo gemma3:4b, que ofrece un buen rendimiento en tareas conversacionales, manteniendo la privacidad de la información sensible del CENACE. Este modelo es de código abierto y no requiere una API externa, lo que se alinea con la necesidad de mantener el control sobre los datos.
 
 Modelos de embeddings: Se utiliza un modelo de embeddings como bge-m3:latest (también disponible en Ollama) para convertir los fragmentos de la documentación en vectores numéricos, lo que permite una búsqueda semántica eficiente en la base de datos vectorial.
 
-1.2 Arquitectura del sistema
+### 1.2. Arquitectura del sistema
 El sistema se basa en una arquitectura de Recuperación Aumentada por Generación (RAG). Cuando un usuario envía una consulta, el sistema realiza los siguientes pasos:
 
 La consulta se convierte en un vector.
@@ -32,17 +33,9 @@ El LLM utiliza el contexto proporcionado para generar una respuesta coherente y 
 :::
 
 ::: {style="text-align: justify"}
-2 Evaluación
+## 2. Evaluación
 La fase de evaluación es crucial para validar el desempeño del sistema y asegurar que cumple con los objetivos del proyecto. La evaluación se realiza a través de pruebas manuales y automatizadas.
 
-2.1 Criterios de evaluación
-Precisión: ¿Las respuestas generadas por el chatbot son técnicamente correctas y se basan en la documentación del CENACE?
+### 2.1 Criterios de evaluación
 
-Relevancia: ¿Los fragmentos de documentos recuperados son relevantes para la consulta del usuario?
-
-Coherencia: ¿Las respuestas son coherentes y mantienen el hilo de la conversación?
-
-Tiempo de respuesta: ¿El sistema responde de manera oportuna para ser una herramienta de apoyo efectiva para los ingenieros?
-
-Usabilidad: ¿La interfaz de usuario es intuitiva y el sistema es fácil de usar para los ingenieros del CENACE?
 :::
