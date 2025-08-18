@@ -327,33 +327,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <figcaption>Distribución de palabras en los títulos</figcaption>
 </figure>
 </div>
+<p>A partir de esta gráfica podemos notar que alrededor de 9 palabras promedio son las que se utilizan en los títulos; lo cual es normal dado que tendemos a englobar las problemáticas en pocas palabras. Sin embargo, vemos que hay problemáticas que pueden pasar el promedio, hasta llegar a las 30 palabras aproximadamente.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="./datos/descripcion.png" class="img-fluid figure-img" style="width:100.0%"></p>
 <figcaption>Distribución de palabras en las descripciones</figcaption>
 </figure>
 </div>
+<p>Para las descripciones vemos que el promedio es mayor, aproximadamente hasta las 88 palabras, aunque en la mayoría de los casos son menos las que se utilizan. Esto también es normal ya que aquí es donde las personas desarrollan los detalles del incidente el cual están enfrentando. También vemos que hay incidentes que pueden tomar tantas palabras hasta llegar a las 400, 500, y hasta las 1000, aunque este último sea poco común.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="./datos/solucion.png" class="img-fluid figure-img" style="width:100.0%"></p>
 <figcaption>Distribución de palabras en las soluciones</figcaption>
 </figure>
 </div>
+<p>En este caso, nosotros esperábamos que en esta sección hubiéramos encontrado una mayor cantidad de palabras, porque en este caso encontramos que en promedio se utilizan 23 palabras, donde frecuentemente son menos. También encontramos que no todos los incidentes contienen una descripción detallada de la solución o de los pasos que se siguieron para resolver la situación; vimos que solo el 41% de los incidentes contienen una explicación de la solución.</p>
 </section>
 <section id="análisis-de-los-bigramas-más-comunes" class="level3">
 <h3 class="anchored" data-anchor-id="análisis-de-los-bigramas-más-comunes">0.3.3. Análisis de los bigramas más comunes</h3>
+<p>También quisimos analizar los pares de palabras más frecuentes en los incidentes, tanto para los títulos como para las descripciones. Dándonos una idea de cómo plantean las problemáticas y si hay un patrón.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="./datos/bigrama_tickets.png" class="img-fluid figure-img" style="width:100.0%"></p>
 <figcaption>Bigramas de los títulos</figcaption>
 </figure>
 </div>
+<p>En los títulos lo primero que llama la atención es la codificación de ciertas palabras, ya que por detalles confidenciales, se codificaron nombres propios, sistemas, subestaciones, etc. Luego, podemos ver que se mencionan muchas veces los despliegues de distintos sistemas de software y actualizaciones.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="./datos/bigrama_descripcion.png" class="img-fluid figure-img" style="width:100.0%"></p>
 <figcaption>Bigramas de las descripciones</figcaption>
 </figure>
 </div>
+<p>En las descripciones vemos que en la gran mayoría de los casos son saludos hacia la persona que se están dirigiendo. Dejando de lado estos saludos, vemos que se mencionan detalles muy técnicos y específicos que solo expertos en el tema podrán entender.</p>
 </section>
 </section>
 <section id="verificación-de-la-calidad-de-los-datos" class="level2" style="text-align: justify">

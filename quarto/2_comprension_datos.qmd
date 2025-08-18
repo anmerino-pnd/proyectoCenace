@@ -97,17 +97,27 @@ En esta sección, analizaremos la cantidad de palabras utilizadas en los título
 
 ![Distribución de palabras en los títulos](./datos/titulo.png){width=100%}
 
-
+A partir de esta gráfica podemos notar que alrededor de 9 palabras promedio son las que se utilizan en los títulos; lo cual es normal dado que tendemos a englobar las problemáticas en pocas palabras. Sin embargo, vemos que hay problemáticas que pueden pasar el promedio, hasta llegar a las 30 palabras aproximadamente.
 
 ![Distribución de palabras en las descripciones](./datos/descripcion.png){width=100%}
 
+Para las descripciones vemos que el promedio es mayor, aproximadamente hasta las 88 palabras, aunque en la mayoría de los casos son menos las que se utilizan. Esto también es normal ya que aquí es donde las personas desarrollan los detalles del incidente el cual están enfrentando. También vemos que hay incidentes que pueden tomar tantas palabras hasta llegar a las 400, 500, y hasta las 1000, aunque este último sea poco común.
+
 ![Distribución de palabras en las soluciones](./datos/solucion.png){width=100%}
+
+En este caso, nosotros esperábamos que en esta sección hubiéramos encontrado una mayor cantidad de palabras, porque en este caso encontramos que en promedio se utilizan 23 palabras, donde frecuentemente son menos. También encontramos que no todos los incidentes contienen una descripción detallada de la solución o de los pasos que se siguieron para resolver la situación; vimos que solo el 41% de los incidentes contienen una explicación de la solución.
 
 ### 0.3.3. Análisis de los bigramas más comunes
 
+También quisimos analizar los pares de palabras más frecuentes en los incidentes, tanto para los títulos como para las descripciones. Dándonos una idea de cómo plantean las problemáticas y si hay un patrón.
+
 ![Bigramas de los títulos](./datos/bigrama_tickets.png){width=100%}
 
+En los títulos lo primero que llama la atención es la codificación de ciertas palabras, ya que por detalles confidenciales, se codificaron nombres propios, sistemas, subestaciones, etc. Luego, podemos ver que se mencionan muchas veces los despliegues de distintos sistemas de software y actualizaciones.
+
 ![Bigramas de las descripciones](./datos/bigrama_descripcion.png){width=100%}
+
+En las descripciones vemos que en la gran mayoría de los casos son saludos hacia la persona que se están dirigiendo. Dejando de lado estos saludos, vemos que se mencionan detalles muy técnicos y específicos que solo expertos en el tema podrán entender.
 
 :::
 
@@ -115,6 +125,7 @@ En esta sección, analizaremos la cantidad de palabras utilizadas en los título
 ## 0.4 Verificación de la calidad de los datos
 
 ### 0.4.1 Datos faltantes
+
 
 
 :::
