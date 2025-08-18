@@ -9,82 +9,128 @@ toc-depth: 3
 ---
 
 ::: {style="text-align: justify"}
+## 1. Manual de instalación y despliegue
 
-1 Manual de instalación y despliegue
-1.1 Configuraciones importantes
-El proyecto está diseñado para ser desplegado en entornos Linux o Windows con Python 3.12.9. Requiere acceso a Ollama (para la ejecución de modelos open-source), así como conectividad a una instancia de MongoDB para el registro del historial de conversaciones y tickets.
+### 1.1. Configuraciones importantes
 
-La aplicación backend se expone a través de FastAPI en el puerto 8000. Es crucial asegurar que este puerto esté abierto y accesible en el entorno de despliegue.
+* El proyecto está diseñado para ser desplegado en entornos **Linux** o **Windows** con Python `3.12.9`. Requiere acceso a **Ollama** (para la ejecución de modelos open-source), así como conectividad a una instancia de **MongoDB** para el registro del historial de conversaciones y tickets.
+* La aplicación backend se expone a través de **FastAPI** en el puerto 8000. Es crucial asegurar que este puerto esté abierto y accesible en el entorno de despliegue.
+* Todas las credenciales y configuraciones sensibles se gestionan mediante un archivo de variables de entorno (`.env`), garantizando la seguridad y facilidad de configuración.
 
-Todas las credenciales y configuraciones sensibles se gestionan mediante un archivo de variables de entorno (.env), garantizando la seguridad y facilidad de configuración.
+### 1.2. Requisitos del sistema
 
-1.2 Requisitos del sistema
-Python: Versión 3.12.9
+* **Python**: Versión 3.12.9
+* **Pip**: Última versión
+* **UV**: Última versión (gestor de paquetes y entornos)
+* **Ollama**: Instalado y en ejecución en el servidor para el hosting de modelos open-source.
+* **MongoDB**: Acceso remoto configurado para las colecciones de historial de conversaciones y tickets.
 
-Pip: Última versión
+### 1.3. Dependencias principales del sistema
 
-UV: Última versión (gestor de paquetes y entornos)
+### 1.4. Instalación del sistema
 
-Ollama: Instalado y en ejecución en el servidor para el hosting de modelos open-source.
+1. Clonar el repositorio:
+```bash
+git clone https://github.com/anmerino-pnd/proyectoCenace
+cd proyectoCenace
+```
 
-MongoDB: Acceso remoto configurado para las colecciones de historial de conversaciones y tickets.
-
-1.3 Pasos para el despliegue
-Clonar el repositorio:
-git clone <URL_del_repositorio>
-
-Configurar el entorno:
+2. Configurar el entorno:
+```bash
+pip install uv
 uv venv
-.venv\Scripts\activate
+source .venv\Scripts\activate
+# o `.venv\Scripts\activate` para Windows
 uv pip install -e .
 
-Configurar Ollama:
-Asegurarse de que Ollama esté instalado y corriendo en el servidor. Descargar el modelo requerido, por ejemplo:
-ollama pull gemma3:4b
+```
 
-Configurar variables de entorno:
-Crear el archivo .env con las variables necesarias para la conexión a MongoDB y la configuración de Ollama.
+3. Configurar Ollama:
 
-Ejecutar la API:
-uvicorn main:app --reload
+   Verifica que el servicio de Ollama esté instalado y activo, y que el modelo `gemma3:12b` y `bge-m3:latest` estén disponible.
 
-2 Guía de uso
-El sistema está diseñado para ser utilizado por ingenieros del CENACE a través de una interfaz de usuario (frontend) que se conecta a la API de FastAPI. Los ingenieros pueden interactuar con el chatbot haciendo preguntas técnicas. El sistema recuperará información relevante de la base de conocimientos y generará respuestas para ayudar en la toma de decisiones.
+```bash
+curl -fsSL https://ollama.com/install.sh | sh # Para instalar Ollama
+ollama serve
+ollama list # Para verificar que el modelo gemma3:12b esté descargado y listo
+ollama pull gemma3:12b # Correr esta línea en caso que el modelo no aparezca
+ollama pull bge-m3:latest
+```
 
-3 Arquitectura del sistema
-3.1 Componentes principales
-Interfaz de Usuario (UI): Un widget o aplicación web que permite a los ingenieros interactuar con el chatbot.
+4. Configurar variables de entorno:
 
-API del Chatbot (FastAPI): La aplicación de backend que maneja las solicitudes de la UI. Orquesta las interacciones con los modelos de lenguaje y la base de datos.
+   Antes de levantar el *backend*, asegurarse de que el archivo `.env` en la raíz del proyecto contenga las siguientes variables con sus valores correctos. 
 
-Módulo de Recuperación Aumentada por Generación (RAG): Procesa las consultas del usuario, recupera información relevante de la base de conocimientos y la utiliza para generar respuestas.
+```python
+# Conexión a la base de datos SQL
+ip=
+port=
+user=
+pwd=
+db=
 
-Base de Datos Vectorial (FAISS): Almacena los embeddings de la documentación técnica del CENACE para una búsqueda semántica eficiente.
+# Clave de la API de OpenAI para correr sus modelos
+OPENAI_API_KEY=
 
-Base de Conocimientos (MongoDB): Contiene los documentos originales del CENACE, el historial de conversaciones, y los tickets generados.
+# Configuración para el servicio de fichas técnicas
+url= '' 
+Token-api=''
+Token-ct=''
+Content-Type=''
+Cookie=''
 
-Modelo de Lenguaje Grande (LLM): Un modelo open-source (ej. gemma3:4b) alojado en Ollama, responsable de generar las respuestas finales.
+dominio=""
+boundary=''
 
-3.2 Flujo de la interacción
-El ingeniero realiza una consulta a través del widget en la página web.
+# Conexión a MongoDB
+MONGO_URI = "mongodb://" # En la URI debe estar incrustrado el nombre de la DB
+MONGO_COLLECTION_SESSIONS = ""
+MONGO_COLLECTION_MESSAGE_BACKUP = ""
+MONGO_COLLECTION_PRODUCTS = ""
+MONGO_COLLECTION_SALES = ""         
+MONGO_COLLECTION_SPECIFICATIONS = ""
+```
 
-La consulta se envía a la API del chatbot.
+5. Levantar el backend con Uvicorn:
 
-La API crea o continúa una sesión de conversación y la consulta se procesa por el módulo RAG.
+  Este comando inicia la API, especificando el número del puerto
 
-El módulo RAG realiza una búsqueda en la base de datos vectorial para encontrar los fragmentos de documentos más relevantes.
+```bash
+nohup uvicorn main:app --reload &
+```
+  El uso de `nogup` y `&` asegura que el proceso continúe ejecutándose en segundo plano incluso si la sesión SSH se cierra.
 
-Los fragmentos recuperados se combinan con la consulta del usuario y se envían al LLM para generar una respuesta al usuario.
+7. Verificar logs:
 
-Todas las interacciones se registran en la base de datos de MongoDB para análisis futuros.
+  Al correr la API con `nohup`, este genera un archivo `nohup.out`, con el cual podemos ver los logs del sistema, para eso solo hay que ubicarse en donde está dicho archivo y correr lo siguiente:
 
-3.3 Flujo de datos
-La documentación técnica se procesa a través de un módulo ETL, que extrae los datos, los divide en fragmentos (chunks), y los convierte en embeddings.
+```bash
+tail -f nohup.out
+```
 
-Estos embeddings se cargan en la base de datos vectorial (FAISS).
 
-La documentación original también se almacena en MongoDB.
 
-Las interacciones de los usuarios se guardan en MongoDB.
+## 2. Documentación técnica del código
+
+### 2.1. Estructura de carpetas y módulos
+
+
+
+### 2.2. Modelos LLM utilizados
+
+
+### 2.3. Puntos de entrada y funciones clave
+
+
+## 3. Guía de entrenamiento y mejora
+
+### 3.1.  Generación de la base de datos vectorial
+
+
+
+### 3.2. Flujo de la interacción
+
+## 4. Diagrama de arquitectura
+
 
 :::
