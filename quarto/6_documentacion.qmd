@@ -62,33 +62,12 @@ ollama pull bge-m3:latest
    Antes de levantar el *backend*, asegurarse de que el archivo `.env` en la raíz del proyecto contenga las siguientes variables con sus valores correctos. 
 
 ```python
-# Conexión a la base de datos SQL
-ip=
-port=
-user=
-pwd=
-db=
-
-# Clave de la API de OpenAI para correr sus modelos
-OPENAI_API_KEY=
-
-# Configuración para el servicio de fichas técnicas
-url= '' 
-Token-api=''
-Token-ct=''
-Content-Type=''
-Cookie=''
-
-dominio=""
-boundary=''
+# Servidor donde está corriendo Ollama
+OLLAMA_BASE_URL=""
 
 # Conexión a MongoDB
-MONGO_URI = "mongodb://" # En la URI debe estar incrustrado el nombre de la DB
-MONGO_COLLECTION_SESSIONS = ""
-MONGO_COLLECTION_MESSAGE_BACKUP = ""
-MONGO_COLLECTION_PRODUCTS = ""
-MONGO_COLLECTION_SALES = ""         
-MONGO_COLLECTION_SPECIFICATIONS = ""
+MONGO_URI = "mongodb://" 
+DB_NAME = ""
 ```
 
 5. Levantar el backend con Uvicorn:
