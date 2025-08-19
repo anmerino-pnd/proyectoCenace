@@ -140,6 +140,8 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#modelos" id="toc-modelos" class="nav-link" data-scroll-target="#modelos">1.1. Modelos</a></li>
   <li><a href="#arquitectura-del-sistema" id="toc-arquitectura-del-sistema" class="nav-link" data-scroll-target="#arquitectura-del-sistema">1.2. Arquitectura del sistema</a></li>
+  <li><a href="#atributos-del-modelo-y-contexto-de-ejecución" id="toc-atributos-del-modelo-y-contexto-de-ejecución" class="nav-link" data-scroll-target="#atributos-del-modelo-y-contexto-de-ejecución">1.3. Atributos del modelo y contexto de ejecución</a></li>
+  <li><a href="#métricas-de-evaluación" id="toc-métricas-de-evaluación" class="nav-link" data-scroll-target="#métricas-de-evaluación">1.4. Métricas de evaluación</a></li>
   </ul></li>
   <li><a href="#evaluación" id="toc-evaluación" class="nav-link" data-scroll-target="#evaluación">2. Evaluación</a>
   <ul>
@@ -172,19 +174,38 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="modelado" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="modelado">1. Modelado</h2>
+<p>El objetivo de esta fase es desarrollar la arquitectura del sistema de recuperación aumentada con generación (RAG). Para ello, se utiliza como fuente de conocimiento la base de datos vectorizada construida en la etapa anterior.</p>
 <section id="modelos" class="level3">
 <h3 class="anchored" data-anchor-id="modelos">1.1. Modelos</h3>
 <p>Dado que el enfoque del proyecto se basa en el uso de modelos de lenguaje grandes (open-source) alojados localmente, los modelos considerados para esta fase son los siguientes:</p>
-<p>Modelos open-source integrados mediante Ollama: Ollama permite correr modelos de lenguaje open-source de manera local o privada. En este proyecto se contempla el modelo gemma3:4b, que ofrece un buen rendimiento en tareas conversacionales, manteniendo la privacidad de la información sensible del CENACE. Este modelo es de código abierto y no requiere una API externa, lo que se alinea con la necesidad de mantener el control sobre los datos.</p>
-<p>Modelos de embeddings: Se utiliza un modelo de embeddings como bge-m3:latest (también disponible en Ollama) para convertir los fragmentos de la documentación en vectores numéricos, lo que permite una búsqueda semántica eficiente en la base de datos vectorial.</p>
+<ul>
+<li><p><strong>Modelos open-source integrados mediante Ollama:</strong> Ollama permite correr modelos de lenguaje open-source de manera local o privada. En este proyecto se contempla el modelo <code>gemma3:4b</code>, que ofrece un buen rendimiento en tareas conversacionales, manteniendo la privacidad de la información sensible del CENACE. Este modelo es de código abierto y no requiere una API externa, lo que se alinea con la necesidad de mantener el control sobre los datos.</p></li>
+<li><p><strong>Modelos de embeddings:</strong> Se utiliza un modelo de embeddings como <code>bge-m3:latest</code> (también disponible en Ollama) para convertir los fragmentos de la documentación en vectores numéricos, lo que permite una búsqueda semántica eficiente en la base de datos vectorial.</p></li>
+</ul>
 </section>
 <section id="arquitectura-del-sistema" class="level3">
 <h3 class="anchored" data-anchor-id="arquitectura-del-sistema">1.2. Arquitectura del sistema</h3>
-<p>El sistema se basa en una arquitectura de Recuperación Aumentada por Generación (RAG). Cuando un usuario envía una consulta, el sistema realiza los siguientes pasos:</p>
-<p>La consulta se convierte en un vector.</p>
-<p>Se realiza una búsqueda de similitud en la base de datos vectorial (FAISS) para encontrar los fragmentos de documentos más relevantes.</p>
-<p>Estos fragmentos, junto con la consulta del usuario, se envían al LLM (gemma3:4b) alojado en Ollama.</p>
-<p>El LLM utiliza el contexto proporcionado para generar una respuesta coherente y precisa que es devuelta al usuario.</p>
+<p>Como se mencionó anteriormente, la arquitectura fundamental del sistema es de tipo RAG. Cuando un usuario envía una consulta, el sistema realiza los siguientes pasos:</p>
+<ol type="1">
+<li><p>La consulta se convierte en un vector.</p></li>
+<li><p>Se realiza una búsqueda de similitud en la base de datos vectorial (FAISS) para encontrar los fragmentos de documentos más relevantes.</p></li>
+<li><p>Estos fragmentos, junto con la consulta del usuario, se envían al LLM (gemma3:4b) alojado en Ollama.</p></li>
+<li><p>El LLM utiliza el contexto proporcionado para generar una respuesta coherente y precisa que es devuelta al usuario.</p></li>
+</ol>
+</section>
+<section id="atributos-del-modelo-y-contexto-de-ejecución" class="level3">
+<h3 class="anchored" data-anchor-id="atributos-del-modelo-y-contexto-de-ejecución">1.3. Atributos del modelo y contexto de ejecución</h3>
+</section>
+<section id="métricas-de-evaluación" class="level3">
+<h3 class="anchored" data-anchor-id="métricas-de-evaluación">1.4. Métricas de evaluación</h3>
+<p>A diferencia de los modelos clásicos de <em>machine learning</em> (ML), la evaluación de sistemas basados en modelos de lenguaje grande (LLMs) requiere enfoques distintos, centrados en la calidad de las respuestas generadas.</p>
+<p>En este proyecto, la evaluación se realiza mediante un análisis cualitativo de las respuestas del chatbot, tomando en cuenta los siguientes criterios:</p>
+<ul>
+<li>La información utilizada por el sistema está referenciada de los documentos cargados que se le proveen al chatbot.</li>
+<li>Las respuestas siguen un orden y van acorde al incidente que se está atendiendo.</li>
+<li>El modelo es capaz de analizar y brindar soluciones solamente a partir de la información de la base de datos vectorial sin presentar alucinaciones en el desarrollo de la respuesta, en un 95% de los casos.</li>
+</ul>
+<p>Estos criterios serán evaluados por los expertos y personas con conocimiento en la empresa.</p>
 </section>
 </section>
 <section id="evaluación" class="level2" style="text-align: justify">

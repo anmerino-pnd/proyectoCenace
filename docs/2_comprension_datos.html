@@ -173,7 +173,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#recolección-de-los-datos" id="toc-recolección-de-los-datos" class="nav-link active" data-scroll-target="#recolección-de-los-datos">0.1. Recolección de los datos</a>
   <ul class="collapse">
   <li><a href="#datos-existentes" id="toc-datos-existentes" class="nav-link" data-scroll-target="#datos-existentes">0.1.1. Datos existentes</a></li>
-  <li><a href="#datos-adquiridos" id="toc-datos-adquiridos" class="nav-link" data-scroll-target="#datos-adquiridos">0.1.2. Datos adquiridos</a></li>
+  <li><a href="#datos-iniciales" id="toc-datos-iniciales" class="nav-link" data-scroll-target="#datos-iniciales">0.1.2. Datos iniciales</a></li>
   <li><a href="#datos-adicionales" id="toc-datos-adicionales" class="nav-link" data-scroll-target="#datos-adicionales">0.1.3. Datos adicionales</a></li>
   </ul></li>
   <li><a href="#descripción-de-los-datos" id="toc-descripción-de-los-datos" class="nav-link" data-scroll-target="#descripción-de-los-datos">0.2. Descripción de los datos</a></li>
@@ -218,20 +218,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="datos-existentes">0.1.1. Datos existentes</h3>
 <p>La fuente principal de información son, los documentos de información (manuales, guías, contratos, etc.) y la base de datos que contiene todos los incidentes <strong>resueltos</strong> por parte de la gerencia <strong>Noroeste</strong> del CENACE. Además, se nos compartieron 4 archivos pdf para crear una base de datos vectorial con ellos. Los incidentes resueltos fueron extraídos de SQL y trabajados en formato csv.</p>
 </section>
-<section id="datos-adquiridos" class="level3">
-<h3 class="anchored" data-anchor-id="datos-adquiridos">0.1.2. Datos adquiridos</h3>
-<p>En una primera instancia, se realizó una Exploración de Datos (EDA) sobre un conjunto de 175 incidentes correspondientes al período de enero de 2023 a mayo de 2024. Este conjunto incluía 14 variables, como título, descripción, categoría, solución, entre otras. Se utilizará el título y la descripción para sugerir la categoría de un incidente.</p>
-<p>Aunque se obtuvieron hallazgos interesantes, este EDA evidenció la necesidad de hacer un análisis con más datos y abordar inconsistencias presentes en los registros analizados.</p>
+<section id="datos-iniciales" class="level3">
+<h3 class="anchored" data-anchor-id="datos-iniciales">0.1.2. Datos iniciales</h3>
+<p>Inicialmente, se realizó un Análisis Exploratorio de Datos (EDA) sobre un conjunto de 175 incidentes registrados entre enero de 2023 y mayo de 2024. Este conjunto incluía 14 variables, como el título, la descripción, la categoría y la solución, entre otras. El título y la descripción se utilizarán posteriormente para la clasificación de los incidentes.</p>
+<p>Aunque este EDA proporcionó hallazgos relevantes, también puso de manifiesto la necesidad de trabajar con un conjunto de datos más amplio y abordar las inconsistencias presentes en los registros.</p>
 </section>
 <section id="datos-adicionales" class="level3">
 <h3 class="anchored" data-anchor-id="datos-adicionales">0.1.3. Datos adicionales</h3>
-<p>Para ampliar la cantidad de datos disponibles, fue necesario <strong>realizar un proceso de codificación y anonimización</strong>. Esto fue para <strong>garantizar la protección de información sensible</strong>, como nombres de personal, números telefónicos, correos electrónicos, normas, y nombres de subestaciones, entre otros.</p>
-<p>Con herramientas como <strong>expresiones regulares</strong> y <strong>SpaCy</strong>, se logró recuperar un total de <strong>2,817 registros</strong>, es decir, <strong>15 veces más registros</strong> que los disponibles al inicio.</p>
+<p>Para incrementar el volumen de datos disponibles, fue necesario <strong>realizar un proceso de codificación y anonimización</strong> para <strong>proteger información sensible</strong> (nombres de personal, números telefónicos, correos electrónicos, normas, nombres de subestaciones, etc.).</p>
+<p>Utilizando herramientas como <strong>expresiones regulares</strong> y <strong>SpaCy</strong>, logramos recuperar un total de <strong>2,817 registros</strong>, lo que representa 15 veces más registros que los obtenidos inicialmente.</p>
 </section>
 </section>
 <section id="descripción-de-los-datos" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="descripción-de-los-datos">0.2. Descripción de los datos</h2>
-<p>A partir de estos últimos datos extraídos, obtenemos las siguiente información:</p>
+<p>A partir de los datos extraídos, se obtuvo la siguiente información:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>&lt;class 'pandas.core.frame.DataFrame'&gt;</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>RangeIndex: 2817 entries, 0 to 2816</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>Data columns (total 5 columns):</span>
@@ -244,7 +244,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a> 4   fecha        2817 non-null   object</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>dtypes: object(5)</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>memory usage: 110.2+ KB</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Donde cada variable tiene la siguiente descripción:</p>
+<p>Las variables se describen a continuación:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 14%">
@@ -291,7 +291,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="exploración-de-los-datos">0.3 Exploración de los datos</h2>
 <section id="variedad-de-categorías" class="level3">
 <h3 class="anchored" data-anchor-id="variedad-de-categorías">0.3.1 Variedad de categorías</h3>
-<p>Empezamos la exploración analizando la cantidad de categorías únicas que teníamos en los tickets. Ya que parte del trabajo es la creación de un modelo capaz de clasificar, o asignar la categoría de tickets a partir de su contenido.</p>
+<p>La exploración comenzó con el análisis del número de categorías únicas en los tickets. Esto es crucial, ya que parte del proyecto es desarrollar un modelo capaz de clasificar o asignar una categoría a nuevos tickets a partir de su contenido.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>categories</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ADTR SP7 &gt; SCADA                                     1410</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>INTRANET Y SOPORTE DE APLICACIONES                    379</span>
@@ -316,11 +316,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>ADTR &gt; Hospedaje de Aplicativos de Potencia (EMS)       6</span>
 <span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>MONITOREO DE ACTIVOS DE TIC                             2</span>
 <span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>Name: count, dtype: int64</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Observando los valores, tomamos la decisión de partir solamente con tickets que tengan más de 20 incidentes por categoría, esta decisión fue pensada en la cantidad de datos necesarios para entrenamiento, validación y testeo. Teniendo finalmente un total de 14 categorías.</p>
+<p>Al observar la distribución, se decidió trabajar únicamente con categorías que tuvieran más de 20 incidentes, considerando la cantidad de datos necesaria para los procesos de entrenamiento, validación y prueba. Esta selección resultó en un total de 14 categorías.</p>
 </section>
 <section id="distribución-de-las-palabras" class="level3">
 <h3 class="anchored" data-anchor-id="distribución-de-las-palabras">0.3.2. Distribución de las palabras</h3>
-<p>En esta sección, analizaremos la cantidad de palabras utilizadas en los títulos, descripciones y soluciones. Lo que nos permite darnos una idea de la cantidad de información que disponemos y la cual puede servir para responder a problemáticas que ya se han trabajado anteriormente, además de la creación de un modelo que pueda clasificar tickets a partir de títulos y descripciones.</p>
+<p>En esta sección se analiza la cantidad de palabras utilizadas en los títulos, descripciones y soluciones. Esto nos permite entender la cantidad de información disponible que puede ser útil para resolver problemas recurrentes y para el desarrollo del modelo de clasificación.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="./datos/titulo.png" class="img-fluid figure-img" style="width:100.0%"></p>
@@ -345,7 +345,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="análisis-de-los-bigramas-más-comunes" class="level3">
 <h3 class="anchored" data-anchor-id="análisis-de-los-bigramas-más-comunes">0.3.3. Análisis de los bigramas más comunes</h3>
-<p>También quisimos analizar los pares de palabras más frecuentes en los incidentes, tanto para los títulos como para las descripciones. Dándonos una idea de cómo plantean las problemáticas y si hay un patrón.</p>
+<p>Se realizó un análisis de los pares de palabras más frecuentes en los títulos y descripciones para identificar patrones en la forma en que se plantean las problemáticas.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="./datos/bigrama_tickets.png" class="img-fluid figure-img" style="width:100.0%"></p>
@@ -366,6 +366,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="verificación-de-la-calidad-de-los-datos">0.4 Verificación de la calidad de los datos</h2>
 <section id="datos-faltantes" class="level3">
 <h3 class="anchored" data-anchor-id="datos-faltantes">0.4.1 Datos faltantes</h3>
+<p>A partir de los resultados previos, se determinó que la columna con menos información es la de soluciones. Solo el 41% de los registros contienen una explicación, con un promedio de 23 palabras, aunque en muchos casos la cantidad es menor.</p>
+<p>Al discutir esta situación con los expertos, se descubrió que el desarrollo y la documentación de soluciones no es una práctica común en el departamento, lo que resulta en una pérdida de conocimiento. Esto motivó la búsqueda de una propuesta para mejorar la persistencia de las soluciones.</p>
 </section>
 </section>
 

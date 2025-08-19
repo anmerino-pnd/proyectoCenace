@@ -66,8 +66,8 @@ ollama pull bge-m3:latest
 OLLAMA_BASE_URL=""
 
 # Conexión a MongoDB
-MONGO_URI = "mongodb://" 
-DB_NAME = ""
+MONGO_URI = "mongodb://localhost:27017" 
+DB_NAME = "CENACE_LLM"
 ```
 
 5. Levantar el backend con Uvicorn:

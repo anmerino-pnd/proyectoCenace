@@ -11,6 +11,9 @@ toc-depth: 3
 ::: {style="text-align: justify"}
 
 ## 1. Revisión del proceso
+El desarrollo del proyecto de Chatbot siguió un enfoque iterativo, basado en los principios del ciclo CRISP-DM. Esta metodología estructurada permitió abordar las distintas fases del proyecto de manera organizada, con un énfasis continuo en la mejora del diseño, la calidad del código y, fundamentalmente, el rendimiento del sistema en sus componentes clave.
+
+Los principales retos se concentraron en la propuesta de una solución a la fuga de conocimientos que presentaba la empresa. Una alternativa que mitigara este problema y además, fuera punto de partida para futuras implementaciones, permitiendo la persistencia del conocimiento y el constante crecimiento de la base de conocimientos del chatbot.
 
 
 ### 1.1. Determinar próximos pasos

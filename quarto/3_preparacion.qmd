@@ -10,13 +10,13 @@ toc-depth: 5
 
 ::: {style="text-align: justify"}
 ## 1. Extracción de los datos
-
+Los datos principales vienen de la información en documentos PDF. Estos archivos se localizan en una carpeta y se toma uno por uno, separando cada contenido dentro de ellas en trozos o "chunks".
 
 ## 2. Transformación de los datos
-
+Cada trozo del documento pasa a través de un modelo de embeddings y se les asigna una representación vectorial, esto para cada trozo de cada PDF para todos los PDF's.
 
 ## 3. Carga de los datos
-
+Todos estos embeddings, o representaciones vectoriales, se almacenan en una base de datos vectorial de FAISS. Un archivo local que se carga y contiene vectores indexados con los cuales se pueden hacer las búsquedas semánticas de las consultas que hagan los usuarios.
 
 :::
 

@@ -1044,8 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentUserName && window.API_ENDPOINT) {
                     window.loadLikedSolutions(currentUserName);
                 } else {
-                    console.error("Nombre de usuario o API endpoint no disponibles para cargar soluciones.");
-                    showCustomAlert("No se pudo cargar las soluciones. Por favor, asegúrate de haber iniciado sesión.");
+                    console.error("No hay soluciones para mostrar.");
                 }
             } else {
                 console.error("loadLikedSolutions is not defined. Make sure soluciones.js is loaded correctly.");

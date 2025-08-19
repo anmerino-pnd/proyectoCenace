@@ -11,25 +11,42 @@ toc-depth: 5
 ::: {style="text-align: justify"}
 
 ## 1. Modelado
-
+El objetivo de esta fase es desarrollar la arquitectura del sistema de recuperación aumentada con generación (RAG). Para ello, se utiliza como fuente de conocimiento la base de datos vectorizada construida en la etapa anterior.
 
 ### 1.1. Modelos
 Dado que el enfoque del proyecto se basa en el uso de modelos de lenguaje grandes (open-source) alojados localmente, los modelos considerados para esta fase son los siguientes:
 
-Modelos open-source integrados mediante Ollama: Ollama permite correr modelos de lenguaje open-source de manera local o privada. En este proyecto se contempla el modelo gemma3:4b, que ofrece un buen rendimiento en tareas conversacionales, manteniendo la privacidad de la información sensible del CENACE. Este modelo es de código abierto y no requiere una API externa, lo que se alinea con la necesidad de mantener el control sobre los datos.
+* **Modelos open-source integrados mediante Ollama:** 
+Ollama permite correr modelos de lenguaje open-source de manera local o privada. En este proyecto se contempla el modelo `gemma3:4b`, que ofrece un buen rendimiento en tareas conversacionales, manteniendo la privacidad de la información sensible del CENACE. Este modelo es de código abierto y no requiere una API externa, lo que se alinea con la necesidad de mantener el control sobre los datos.
 
-Modelos de embeddings: Se utiliza un modelo de embeddings como bge-m3:latest (también disponible en Ollama) para convertir los fragmentos de la documentación en vectores numéricos, lo que permite una búsqueda semántica eficiente en la base de datos vectorial.
+* **Modelos de embeddings:** 
+Se utiliza un modelo de embeddings como `bge-m3:latest` (también disponible en Ollama) para convertir los fragmentos de la documentación en vectores numéricos, lo que permite una búsqueda semántica eficiente en la base de datos vectorial.
 
 ### 1.2. Arquitectura del sistema
-El sistema se basa en una arquitectura de Recuperación Aumentada por Generación (RAG). Cuando un usuario envía una consulta, el sistema realiza los siguientes pasos:
+Como se mencionó anteriormente, la arquitectura fundamental del sistema es de tipo RAG. Cuando un usuario envía una consulta, el sistema realiza los siguientes pasos:
 
-La consulta se convierte en un vector.
+1. La consulta se convierte en un vector.
 
-Se realiza una búsqueda de similitud en la base de datos vectorial (FAISS) para encontrar los fragmentos de documentos más relevantes.
+2. Se realiza una búsqueda de similitud en la base de datos vectorial (FAISS) para encontrar los fragmentos de documentos más relevantes.
 
-Estos fragmentos, junto con la consulta del usuario, se envían al LLM (gemma3:4b) alojado en Ollama.
+3. Estos fragmentos, junto con la consulta del usuario, se envían al LLM (gemma3:4b) alojado en Ollama.
 
-El LLM utiliza el contexto proporcionado para generar una respuesta coherente y precisa que es devuelta al usuario.
+4. El LLM utiliza el contexto proporcionado para generar una respuesta coherente y precisa que es devuelta al usuario.
+
+### 1.3. Atributos del modelo y contexto de ejecución
+
+
+### 1.4. Métricas de evaluación
+A diferencia de los modelos clásicos de *machine learning* (ML), la evaluación de sistemas basados en modelos de lenguaje grande (LLMs) requiere enfoques distintos, centrados en la calidad de las respuestas generadas.
+
+En este proyecto, la evaluación se realiza mediante un análisis cualitativo de las respuestas del chatbot, tomando en cuenta los siguientes criterios:
+
+- La información utilizada por el sistema está referenciada de los documentos cargados que se le proveen al chatbot.
+- Las respuestas siguen un orden y van acorde al incidente que se está atendiendo.
+- El modelo es capaz de analizar y brindar soluciones solamente a partir de la información de la base de datos vectorial sin presentar alucinaciones en el desarrollo de la respuesta, en un 95% de los casos.
+
+Estos criterios serán evaluados por los expertos y personas con conocimiento en la empresa.
+
 :::
 
 ::: {style="text-align: justify"}

@@ -7,15 +7,11 @@ import os
 
 load_dotenv()
 
-google_api_key = os.getenv("GOOGLE_API_KEY")
-anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
-openai_api_key = os.getenv("OPENAI_API_KEY")
-mistral_api_key = os.getenv("MISTRAL_API_KEY")
-ollama_base_url: str = os.getenv("OLLAMA_BASE_URL")
+
+#ollama_base_url: str = os.getenv("OLLAMA_BASE_URL")
 mongo_uri: str = os.getenv("MONGO_URI")
 db_name: str = os.getenv("DB_NAME")
 
-openai = openai_api.OpenAI(api_key=openai_api_key)
 ollama = ollama_api.Client() #(host=ollama_base_url)
 
 

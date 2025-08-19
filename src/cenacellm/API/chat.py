@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 from cenacellm.rag import RAG
 from pydantic import BaseModel
 from typing import AsyncGenerator, List, Dict, Any, Union, Optional
@@ -7,7 +8,6 @@ from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from cenacellm.settings.config import VECTORS_DIR, DOCUMENTS_DIR
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body # Importa Body
 from bson.objectid import ObjectId # Import ObjectId for new conversation IDs
-
 rag = RAG(vectorstore_path=VECTORS_DIR)
 
 class QueryRequest(BaseModel):
@@ -100,6 +100,10 @@ def get_preprocessed_files():
 async def upload_documents(files: List[UploadFile]):
     """Sube documentos a la carpeta de documentos."""
     uploaded_files_info = []
+    
+    # Crear carpeta si no existe
+    Path(DOCUMENTS_DIR).mkdir(parents=True, exist_ok=True)
+
     for file in files:
         file_location = os.path.join(DOCUMENTS_DIR, file.filename)
         try:
