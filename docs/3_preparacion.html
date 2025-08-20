@@ -131,8 +131,16 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Tabla de Contenidos</h2>
+   
+  <ul>
+  <li><a href="#transformación-de-los-datos" id="toc-transformación-de-los-datos" class="nav-link active" data-scroll-target="#transformación-de-los-datos">2. Transformación de los datos</a></li>
+  <li><a href="#carga-de-los-datos" id="toc-carga-de-los-datos" class="nav-link" data-scroll-target="#carga-de-los-datos">3. Carga de los datos</a></li>
+  <li><a href="#flujo-de-preparación" id="toc-flujo-de-preparación" class="nav-link" data-scroll-target="#flujo-de-preparación">4. Flujo de preparación</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -171,7 +179,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Asignación de metadatos:</strong> A cada <code>chunk</code> se ke asignan metadatos esenciales, como el nombre del archivo de origen (<code>filename</code>), el número de página (<code>page_number</code>), y un identificador único de referencia (<code>reference</code>). Estos metadatos son vitales para referenciar las fuentes en las respuestas del LLM, evitando alucinaciones y permitiendo al usuario validar la información.</li>
 </ol>
 </section>
-<section id="transformación-de-los-datos" class="level2">
+</div>
+<section id="transformación-de-los-datos" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="transformación-de-los-datos">2. Transformación de los datos</h2>
 <p>Una vez que los documentos se han dividido en <code>chunks</code>, se transforman en una representación numérica que la computadora puede entender y procesar eficientemente.</p>
 <ol type="1">
@@ -179,7 +188,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Representación vectorial:</strong> El modelo convierte el texto en un vector numérico de alta dimensión. Estos vectores capturan el significado semántico del texto; los <code>chunks</code> con un significado similar se agrupan en un espacio vectorial. Este enfoque va más allá de la simple búsqueda por palabres clave, ya que permite al sistema encontrar información relevante incluso si la consulta utiliza un vocabulario o una sintaxis diferente.</li>
 </ol>
 </section>
-<section id="carga-de-los-datos" class="level2">
+<section id="carga-de-los-datos" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="carga-de-los-datos">3. Carga de los datos</h2>
 <p>Los vectores generados se almacenan en una base de datos vectorial optimizada para la búsqueda de similitud.</p>
 <ol type="1">
@@ -188,7 +197,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Búsqueda semántica:</strong> Una vez cargados los datos, la base de datos vectorial está lista para recibir consultas. Cuando un usuario envía una pregunta, esta se convierte en un vector, que luego se utiliza para encontrar los vectores más cercanos (los <code>chunks</code> más relevantes) en el índice de FAISS.</li>
 </ol>
 </section>
-<section id="flujo-de-preparación" class="level2">
+<section id="flujo-de-preparación" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="flujo-de-preparación">4. Flujo de preparación</h2>
 <p>El proceso completo es orquestado por la clase <code>RAG</code> y es ejecutado como un flujo de trabajo de indexación:</p>
 <ol type="1">
@@ -198,7 +207,6 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Vectorización y almacenamiento:</strong> Cada <code>chunk</code> y sus metadatos asociados se envían al <code>vectorstore</code>, que a su vez utiliza el <code>embedder</code> para obtener su representación vectorial. Finalmente, los vectores se agregan al índice de FAISS, asegurando que el conocimiento esté disponible para futuras consultas.</li>
 </ol>
 </section>
-</div>
 
 
 

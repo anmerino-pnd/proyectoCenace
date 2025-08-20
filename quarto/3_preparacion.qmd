@@ -20,20 +20,26 @@ La principal fuente de información son los documentos técnicos en formato PDF,
     * **Tamaño del `chunk`:** `1500` caracteres.
     * **Solapamiento (overlap):** `200` caracteres. Este solapamiento asegura que la información contextual clave no se pierda en los límites de cada fragmento.
 3. **Asignación de metadatos:** A cada `chunk` se ke asignan metadatos esenciales, como el nombre del archivo de origen (`filename`), el número de página (`page_number`), y un identificador único de referencia (`reference`). Estos metadatos son vitales para referenciar las fuentes en las respuestas del LLM, evitando alucinaciones y permitiendo al usuario validar la información.
+:::
 
+::: {style="text-align: justify"}
 ## 2. Transformación de los datos
 Una vez que los documentos se han dividido en `chunks`, se transforman en una representación numérica que la computadora puede entender y procesar eficientemente.
 
 1. **Vectorización:** Cada `chunk` de texto es procesado por el modelo de embeddings `bge-m3:latest`, implementado en la clase `OllamaEmbedder`.
 2. **Representación vectorial:** El modelo convierte el texto en un vector numérico de alta dimensión. Estos vectores capturan el significado semántico del texto; los `chunks` con un significado similar se agrupan en un espacio vectorial. Este enfoque va más allá de la simple búsqueda por palabres clave, ya que permite al sistema encontrar información relevante incluso si la consulta utiliza un vocabulario o una sintaxis diferente.
+:::
 
+::: {style="text-align: justify"}
 ## 3. Carga de los datos
 Los vectores generados se almacenan en una base de datos vectorial optimizada para la búsqueda de similitud.
 
 1. **Base de datos vectorial:** Se utiliza **FAISS** (**Facebook AI Similarity Search**), una librería de código abierto para la búsqueda eficiente en grandes conjuntos de vectores. FAISS indexa los vectores de manera que las consultas de similitud se puedan ejecutar en milisegundos.
 2. **Persistencia:** La clase `FAISSVectorStore` es responsable de la carga y el almacenamiento de los vectores. El índice de FAISS se guarda en un archivo local (`index.faiss`), mientras que los metadatos de los `chunks` se almacenan en un diccionario (`index.pkl`).
 3. **Búsqueda semántica:** Una vez cargados los datos, la base de datos vectorial está lista para recibir consultas. Cuando un usuario envía una pregunta, esta se convierte en un vector, que luego se utiliza para encontrar los vectores más cercanos (los `chunks` más relevantes) en el índice de FAISS.
+:::
 
+::: {style="text-align: justify"}
 ## 4. Flujo de preparación
 El proceso completo es orquestado por la clase `RAG` y es ejecutado como un flujo de trabajo de indexación:
 
