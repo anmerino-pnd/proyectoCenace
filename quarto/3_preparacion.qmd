@@ -5,18 +5,42 @@ format:
          page-layout: article
 toc-title: "Tabla de Contenidos"
 toc: true
-toc-depth: 5
+toc-depth: 3
 ---
 
 ::: {style="text-align: justify"}
+
+La fase de preparación de datos es crucial para el funcionamiento del sistema RAG. Su objetivo es convertir la información no estructurada, proveniente de los documentos técnicos del CENACE, en un formato que permita una búsqueda eficiente y una recuperación semántica de alta calidad. Este proceso se divide en tres etapas principales: extracción, transformación y carga de los datos.
+
 ## 1. Extracción de los datos
-Los datos principales vienen de la información en formatos PDF. Estos archivos se localizan en una carpeta y se procesan uno por uno, separando cada contenido dentro de ellas en fragmentos de texto o "chunks".
+La principal fuente de información son los documentos técnicos en formato PDF, así como la base de datos de incidentes resueltos. Para la ingesta de documentos, el sistema utiliza el módulo `doccollection.py`, específicamente la clase `DisjointCollection`.
+
+1. **Ingesta de archivos:** Los documentos PDF se cargan y procesan de forma individual utilizando la librería `PyPDF2`. Se extrae el texto de cada página, junto con sus metadatos inherentes (título, autor, etc.).
+2. **Fragmentación de texto (chunking):** El texto extraído se divide en fragmentos lógicos o "chunks" para preservar el contexto de la información. El `TextSplitter` del módulo `doccollection` está configurado con los siguientes parámetros para optimizar la cohesión del texto:
+    * **Tamaño del `chunk`:** `1500` caracteres.
+    * **Solapamiento (overlap):** `200` caracteres. Este solapamiento asegura que la información contextual clave no se pierda en los límites de cada fragmento.
+3. **Asignación de metadatos:** A cada `chunk` se ke asignan metadatos esenciales, como el nombre del archivo de origen (`filename`), el número de página (`page_number`), y un identificador único de referencia (`reference`). Estos metadatos son vitales para referenciar las fuentes en las respuestas del LLM, evitando alucinaciones y permitiendo al usuario validar la información.
 
 ## 2. Transformación de los datos
-Cada fragmento de texto se procesa a través de un modelo de embeddings y se les asigna una representación vectorial, esto para cada trozo de cada PDF para todos los PDF's.
+Una vez que los documentos se han dividido en `chunks`, se transforman en una representación numérica que la computadora puede entender y procesar eficientemente.
+
+1. **Vectorización:** Cada `chunk` de texto es procesado por el modelo de embeddings `bge-m3:latest`, implementado en la clase `OllamaEmbedder`.
+2. **Representación vectorial:** El modelo convierte el texto en un vector numérico de alta dimensión. Estos vectores capturan el significado semántico del texto; los `chunks` con un significado similar se agrupan en un espacio vectorial. Este enfoque va más allá de la simple búsqueda por palabres clave, ya que permite al sistema encontrar información relevante incluso si la consulta utiliza un vocabulario o una sintaxis diferente.
 
 ## 3. Carga de los datos
-Todos estos embeddings, o representaciones vectoriales, se almacenan en una base de datos vectorial de FAISS. Un archivo local que se carga y contiene vectores indexados con los cuales se pueden hacer las búsquedas semánticas de las consultas que hagan los usuarios.
+Los vectores generados se almacenan en una base de datos vectorial optimizada para la búsqueda de similitud.
+
+1. **Base de datos vectorial:** Se utiliza **FAISS** (**Facebook AI Similarity Search**), una librería de código abierto para la búsqueda eficiente en grandes conjuntos de vectores. FAISS indexa los vectores de manera que las consultas de similitud se puedan ejecutar en milisegundos.
+2. **Persistencia:** La clase `FAISSVectorStore` es responsable de la carga y el almacenamiento de los vectores. El índice de FAISS se guarda en un archivo local (`index.faiss`), mientras que los metadatos de los `chunks` se almacenan en un diccionario (`index.pkl`).
+3. **Búsqueda semántica:** Una vez cargados los datos, la base de datos vectorial está lista para recibir consultas. Cuando un usuario envía una pregunta, esta se convierte en un vector, que luego se utiliza para encontrar los vectores más cercanos (los `chunks` más relevantes) en el índice de FAISS.
+
+## 4. Flujo de preparación
+El proceso completo es orquestado por la clase `RAG` y es ejecutado como un flujo de trabajo de indexación:
+
+1. **Solicitud de carga:** El usuario sube un documento PDF a través del endpoint `/documents`.
+2. **Manejo de la ingesta:** El `rag.py` recibe el archivo y delega su procesamiento al `doccollection`.
+3. **Generación de chunks y metadatos:** `doccollection` lee el PDF, extrae el texto y lo divide en `chunks`. Asigna metadatos como el ID del documento, el nombre del archivo y el número de página a cada uno de ellos.
+4. **Vectorización y almacenamiento:** Cada `chunk` y sus metadatos asociados se envían al `vectorstore`, que a su vez utiliza el `embedder` para obtener su representación vectorial. Finalmente, los vectores se agregan al índice de FAISS, asegurando que el conocimiento esté disponible para futuras consultas.
 
 :::
 

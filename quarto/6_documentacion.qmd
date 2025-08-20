@@ -147,16 +147,18 @@ El flujo de información en el sistema RAG sigue dos rutas principales:
 ## 3. Guía de entrenamiento y mejora
 
 
-### 3.1.  Generación de la base de datos vectorial
+### 3.1. Generación de la base de datos vectorial
 
 
 
 ### 3.2. Flujo de la interacción
+
+
 :::
 
 
 ::: {style="text-align: justify"}
-## 4. Diagrama de arquitectura
+## 4. Arquitectura del sistema
 El siguiente diagrama ilustra la arquitectura general del ssitema del chatbot, mostrando los componentes principales y el flujo de datos desde la interacción del usuario hasta la generación de respuestas y el almacenamiento del historial.
 
 ![Arquitectura del sistema](./datos/image.png){width=100%}

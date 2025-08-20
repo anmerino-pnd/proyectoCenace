@@ -10,7 +10,6 @@ author:
     - Hector Alberto Gutierrez Ibarra
 date: last-modified
 date-format: long
-lang: es
 ---
 
 ::: {style="text-align: justify"}

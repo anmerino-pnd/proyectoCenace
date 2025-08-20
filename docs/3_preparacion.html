@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
 
 <meta charset="utf-8">
 <meta name="generator" content="quarto-1.6.40">
@@ -56,17 +56,17 @@ ul.task-list li input[type="checkbox"] {
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
   }
 }</script>
 
@@ -85,8 +85,8 @@ ul.task-list li input[type="checkbox"] {
     <img src="./cenace.png" alt="" class="navbar-logo">
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Buscar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Navegación de palanca" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -122,7 +122,7 @@ ul.task-list li input[type="checkbox"] {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Alternar modo oscuro"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -157,23 +157,52 @@ ul.task-list li input[type="checkbox"] {
 
 
 <div style="text-align: justify">
+<p>La fase de preparación de datos es crucial para el funcionamiento del sistema RAG. Su objetivo es convertir la información no estructurada, proveniente de los documentos técnicos del CENACE, en un formato que permita una búsqueda eficiente y una recuperación semántica de alta calidad. Este proceso se divide en tres etapas principales: extracción, transformación y carga de los datos.</p>
 <section id="extracción-de-los-datos" class="level2">
 <h2 class="anchored" data-anchor-id="extracción-de-los-datos">1. Extracción de los datos</h2>
-<p>Los datos principales vienen de la información en formatos PDF. Estos archivos se localizan en una carpeta y se procesan uno por uno, separando cada contenido dentro de ellas en fragmentos de texto o “chunks”.</p>
+<p>La principal fuente de información son los documentos técnicos en formato PDF, así como la base de datos de incidentes resueltos. Para la ingesta de documentos, el sistema utiliza el módulo <code>doccollection.py</code>, específicamente la clase <code>DisjointCollection</code>.</p>
+<ol type="1">
+<li><strong>Ingesta de archivos:</strong> Los documentos PDF se cargan y procesan de forma individual utilizando la librería <code>PyPDF2</code>. Se extrae el texto de cada página, junto con sus metadatos inherentes (título, autor, etc.).</li>
+<li><strong>Fragmentación de texto (chunking):</strong> El texto extraído se divide en fragmentos lógicos o “chunks” para preservar el contexto de la información. El <code>TextSplitter</code> del módulo <code>doccollection</code> está configurado con los siguientes parámetros para optimizar la cohesión del texto:
+<ul>
+<li><strong>Tamaño del <code>chunk</code>:</strong> <code>1500</code> caracteres.</li>
+<li><strong>Solapamiento (overlap):</strong> <code>200</code> caracteres. Este solapamiento asegura que la información contextual clave no se pierda en los límites de cada fragmento.</li>
+</ul></li>
+<li><strong>Asignación de metadatos:</strong> A cada <code>chunk</code> se ke asignan metadatos esenciales, como el nombre del archivo de origen (<code>filename</code>), el número de página (<code>page_number</code>), y un identificador único de referencia (<code>reference</code>). Estos metadatos son vitales para referenciar las fuentes en las respuestas del LLM, evitando alucinaciones y permitiendo al usuario validar la información.</li>
+</ol>
 </section>
 <section id="transformación-de-los-datos" class="level2">
 <h2 class="anchored" data-anchor-id="transformación-de-los-datos">2. Transformación de los datos</h2>
-<p>Cada fragmento de texto se procesa a través de un modelo de embeddings y se les asigna una representación vectorial, esto para cada trozo de cada PDF para todos los PDF’s.</p>
+<p>Una vez que los documentos se han dividido en <code>chunks</code>, se transforman en una representación numérica que la computadora puede entender y procesar eficientemente.</p>
+<ol type="1">
+<li><strong>Vectorización:</strong> Cada <code>chunk</code> de texto es procesado por el modelo de embeddings <code>bge-m3:latest</code>, implementado en la clase <code>OllamaEmbedder</code>.</li>
+<li><strong>Representación vectorial:</strong> El modelo convierte el texto en un vector numérico de alta dimensión. Estos vectores capturan el significado semántico del texto; los <code>chunks</code> con un significado similar se agrupan en un espacio vectorial. Este enfoque va más allá de la simple búsqueda por palabres clave, ya que permite al sistema encontrar información relevante incluso si la consulta utiliza un vocabulario o una sintaxis diferente.</li>
+</ol>
 </section>
 <section id="carga-de-los-datos" class="level2">
 <h2 class="anchored" data-anchor-id="carga-de-los-datos">3. Carga de los datos</h2>
-<p>Todos estos embeddings, o representaciones vectoriales, se almacenan en una base de datos vectorial de FAISS. Un archivo local que se carga y contiene vectores indexados con los cuales se pueden hacer las búsquedas semánticas de las consultas que hagan los usuarios.</p>
+<p>Los vectores generados se almacenan en una base de datos vectorial optimizada para la búsqueda de similitud.</p>
+<ol type="1">
+<li><strong>Base de datos vectorial:</strong> Se utiliza <strong>FAISS</strong> (<strong>Facebook AI Similarity Search</strong>), una librería de código abierto para la búsqueda eficiente en grandes conjuntos de vectores. FAISS indexa los vectores de manera que las consultas de similitud se puedan ejecutar en milisegundos.</li>
+<li><strong>Persistencia:</strong> La clase <code>FAISSVectorStore</code> es responsable de la carga y el almacenamiento de los vectores. El índice de FAISS se guarda en un archivo local (<code>index.faiss</code>), mientras que los metadatos de los <code>chunks</code> se almacenan en un diccionario (<code>index.pkl</code>).</li>
+<li><strong>Búsqueda semántica:</strong> Una vez cargados los datos, la base de datos vectorial está lista para recibir consultas. Cuando un usuario envía una pregunta, esta se convierte en un vector, que luego se utiliza para encontrar los vectores más cercanos (los <code>chunks</code> más relevantes) en el índice de FAISS.</li>
+</ol>
+</section>
+<section id="flujo-de-preparación" class="level2">
+<h2 class="anchored" data-anchor-id="flujo-de-preparación">4. Flujo de preparación</h2>
+<p>El proceso completo es orquestado por la clase <code>RAG</code> y es ejecutado como un flujo de trabajo de indexación:</p>
+<ol type="1">
+<li><strong>Solicitud de carga:</strong> El usuario sube un documento PDF a través del endpoint <code>/documents</code>.</li>
+<li><strong>Manejo de la ingesta:</strong> El <code>rag.py</code> recibe el archivo y delega su procesamiento al <code>doccollection</code>.</li>
+<li><strong>Generación de chunks y metadatos:</strong> <code>doccollection</code> lee el PDF, extrae el texto y lo divide en <code>chunks</code>. Asigna metadatos como el ID del documento, el nombre del archivo y el número de página a cada uno de ellos.</li>
+<li><strong>Vectorización y almacenamiento:</strong> Cada <code>chunk</code> y sus metadatos asociados se envían al <code>vectorstore</code>, que a su vez utiliza el <code>embedder</code> para obtener su representación vectorial. Finalmente, los vectores se agregan al índice de FAISS, asegurando que el conocimiento esté disponible para futuras consultas.</li>
+</ol>
 </section>
 </div>
 
 
 
-<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Volver arriba</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
@@ -361,12 +390,12 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     // flash "checked"
     button.classList.add('code-copy-button-checked');
     var currentTitle = button.getAttribute("title");
-    button.setAttribute("title", "Copied!");
+    button.setAttribute("title", "Copiado");
     let tooltip;
     if (window.bootstrap) {
       button.setAttribute("data-bs-toggle", "tooltip");
       button.setAttribute("data-bs-placement", "left");
-      button.setAttribute("data-bs-title", "Copied!");
+      button.setAttribute("data-bs-title", "Copiado");
       tooltip = new bootstrap.Tooltip(button, 
         { trigger: "manual", 
           customClass: "code-copy-button-tooltip",
