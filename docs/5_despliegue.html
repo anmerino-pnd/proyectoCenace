@@ -139,9 +139,12 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#revisión-del-proceso" id="toc-revisión-del-proceso" class="nav-link active" data-scroll-target="#revisión-del-proceso">1. Revisión del proceso</a>
   <ul class="collapse">
   <li><a href="#determinar-próximos-pasos" id="toc-determinar-próximos-pasos" class="nav-link" data-scroll-target="#determinar-próximos-pasos">1.1. Determinar próximos pasos</a></li>
-  <li><a href="#decisión" id="toc-decisión" class="nav-link" data-scroll-target="#decisión">1.2. Decisión</a></li>
   </ul></li>
-  <li><a href="#plan-de-implementación" id="toc-plan-de-implementación" class="nav-link" data-scroll-target="#plan-de-implementación">2. Plan de implementación</a></li>
+  <li><a href="#plan-de-implementación" id="toc-plan-de-implementación" class="nav-link" data-scroll-target="#plan-de-implementación">2. Plan de implementación</a>
+  <ul class="collapse">
+  <li><a href="#arquitectura-de-producción" id="toc-arquitectura-de-producción" class="nav-link" data-scroll-target="#arquitectura-de-producción">2.1. Arquitectura de producción</a></li>
+  <li><a href="#flujo-de-despliegue" id="toc-flujo-de-despliegue" class="nav-link" data-scroll-target="#flujo-de-despliegue">2.2. Flujo de despliegue</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -173,13 +176,33 @@ ul.task-list li input[type="checkbox"] {
 <p>Los principales retos se concentraron en la propuesta de una solución a la fuga de conocimientos que presentaba la empresa. Una alternativa que mitigara este problema y además, fuera punto de partida para futuras implementaciones, permitiendo la persistencia del conocimiento y el constante crecimiento de la base de conocimientos del chatbot.</p>
 <section id="determinar-próximos-pasos" class="level3">
 <h3 class="anchored" data-anchor-id="determinar-próximos-pasos">1.1. Determinar próximos pasos</h3>
-</section>
-<section id="decisión" class="level3">
-<h3 class="anchored" data-anchor-id="decisión">1.2. Decisión</h3>
+<p>Considerando los avances y aprendizajes obtenidos, se evaluó la opción de <strong>pasar a una fase de implementación en un entorno virtual</strong> donde se puedan <strong>hacer pruebas</strong> y se garantice la escalabilidad. Esto permitirá validar el desempeño del sistema con un volumen de datos y usuarios más grande, preparando el terreno para un despliegue completo en producción.</p>
+<p>Se tuvieron pláticas con el equipo de <a href="https://www.databricks.com/">Databricks</a> para colaborar en el proyecto y nos ayuden en el despliegue del sistema en un ambiente acorde a las necesidades de poder computacional para que fluya debidamente.</p>
 </section>
 </section>
 <section id="plan-de-implementación" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="plan-de-implementación">2. Plan de implementación</h2>
+<p>El plan de despliegue se centra en migrar la arquitectura de desarrollo a un entorno de producción escalable, manteniendo la modularidad del sistema y optimizando el rendimiento. Se consideran las siguientes fases clave:</p>
+<section id="arquitectura-de-producción" class="level3">
+<h3 class="anchored" data-anchor-id="arquitectura-de-producción">2.1. Arquitectura de producción</h3>
+<p>La arquitectura final para el despliegue estará compuesta por los siguientes componentes clave, implementados en un entorno de producción como <strong>Databricks</strong> o una plataforma similar:</p>
+<ul>
+<li><strong>Servidor de la API (backend):</strong> Implementación de la API desarrollada en <strong>FastAPI</strong> (<code>main.py</code>, <code>chat.py</code>) en un servidor escalable. Este servidor manejará las peticiones de los usuarios, coordinará las operaciones del RAG y se comunicará con la base de datos y el LLM.</li>
+<li><strong>Modelo de lenguaje (LLM):</strong> El modelo de lenguaje <code>gemma3:4b</code> se desplegará en un servidor con <strong>aceleración por GPU</strong> para asegurar un rendimiento óptimo en la generación de respuestas.</li>
+<li><strong>Base de datos vectorial:</strong> La base de datos vectorial de FAISS, que almacena los embeddings de los documentos (<code>vectorstore.py</code>), se mantendrá, pero se integrará con un sistema de almacenamiento persistente y escalable en la nube para garantizar la disponibilidad y el rendimiento.</li>
+<li><strong>Base de datos de historial y tickets (MongoDB):</strong> La base de datos de MongoDB, utilizada para almacenar el historial de conversaciones y la gestión de tickets, se migrará a un servicio de bases de datos gestionado en la nube para asegurar la persistencia y la seguridad de los datos.</li>
+</ul>
+</section>
+<section id="flujo-de-despliegue" class="level3">
+<h3 class="anchored" data-anchor-id="flujo-de-despliegue">2.2. Flujo de despliegue</h3>
+<p>El flujo propuesto para el despliegue es el siguiente:</p>
+<ol type="1">
+<li><strong>Contenerización:</strong> Empaquetar la aplicación de FastAPI, el LLM y las dependencias en contenedores. Esto asegura que el entorno de ejecución sea consistente en todas las etapas del despliegue.</li>
+<li><strong>Orquestación:</strong> Utilizar una herramienta de orquestación para gestionar los contenedores, facilitando la escalabilidad, el balanceo de carga y la recuperación automática en caso de fallos.</li>
+<li><strong>Monitoreo y logging:</strong> Implementar un sistema de monitoreo que rastree el rendimiento del LLM, el uso de recursos y el flujo de la API. Esto permitirá identificar cuellos de botella y errores en tiempo real.</li>
+<li><strong>Integración con el sistema de Help Desk:</strong> El paso final es integrar la API del chatbot directamente en la plataforma de Help Desk de CENACE, permitiendo que los ingenieros puedan interactuar con el sistema desde su entorno de trabajo habitual.</li>
+</ol>
+</section>
 </section>
 
 

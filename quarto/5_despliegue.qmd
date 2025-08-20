@@ -17,14 +17,30 @@ Los principales retos se concentraron en la propuesta de una solución a la fuga
 
 
 ### 1.1. Determinar próximos pasos
+Considerando los avances y aprendizajes obtenidos, se evaluó la opción de **pasar a una fase de implementación en un entorno virtual** donde se puedan **hacer pruebas** y se garantice la escalabilidad. Esto permitirá validar el desempeño del sistema con un volumen de datos y usuarios más grande, preparando el terreno para un despliegue completo en producción.
 
-
-### 1.2. Decisión
-
+Se tuvieron pláticas con el equipo de [Databricks](https://www.databricks.com/) para colaborar en el proyecto y nos ayuden en el despliegue del sistema en un ambiente acorde a las necesidades de poder computacional para que fluya debidamente. 
 :::
 
 ::: {style="text-align: justify"}
 ## 2. Plan de implementación
+El plan de despliegue se centra en migrar la arquitectura de desarrollo a un entorno de producción escalable, manteniendo la modularidad del sistema y optimizando el rendimiento. Se consideran las siguientes fases clave:
 
+### 2.1. Arquitectura de producción
+
+La arquitectura final para el despliegue estará compuesta por los siguientes componentes clave, implementados en un entorno de producción como **Databricks** o una plataforma similar:
+
+* **Servidor de la API (backend):** Implementación de la API desarrollada en **FastAPI** (`main.py`, `chat.py`) en un servidor escalable. Este servidor manejará las peticiones de los usuarios, coordinará las operaciones del RAG y se comunicará con la base de datos y el LLM.
+* **Modelo de lenguaje (LLM):** El modelo de lenguaje `gemma3:4b` se desplegará en un servidor con **aceleración por GPU** para asegurar un rendimiento óptimo en la generación de respuestas.
+* **Base de datos vectorial:** La base de datos vectorial de FAISS, que almacena los embeddings de los documentos (`vectorstore.py`), se mantendrá, pero se integrará con un sistema de almacenamiento persistente y escalable en la nube para garantizar la disponibilidad y el rendimiento.
+* **Base de datos de historial y tickets (MongoDB):** La base de datos de MongoDB, utilizada para almacenar el historial de conversaciones y la gestión de tickets, se migrará a un servicio de bases de datos gestionado en la nube para asegurar la persistencia y la seguridad de los datos.
+
+### 2.2. Flujo de despliegue
+El flujo propuesto para el despliegue es el siguiente:
+
+1. **Contenerización:** Empaquetar la aplicación de FastAPI, el LLM y las dependencias en contenedores. Esto asegura que el entorno de ejecución sea consistente en todas las etapas del despliegue.
+2. **Orquestación:** Utilizar una herramienta de orquestación para gestionar los contenedores, facilitando la escalabilidad, el balanceo de carga y la recuperación automática en caso de fallos.
+3. **Monitoreo y logging:** Implementar un sistema de monitoreo que rastree el rendimiento del LLM, el uso de recursos y el flujo de la API. Esto permitirá identificar cuellos de botella y errores en tiempo real.
+4. **Integración con el sistema de Help Desk:** El paso final es integrar la API del chatbot directamente en la plataforma de Help Desk de CENACE, permitiendo que los ingenieros puedan interactuar con el sistema desde su entorno de trabajo habitual.
 
 :::
