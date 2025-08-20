@@ -188,7 +188,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#generación-de-la-base-de-datos-vectorial" id="toc-generación-de-la-base-de-datos-vectorial" class="nav-link" data-scroll-target="#generación-de-la-base-de-datos-vectorial">3.1. Generación de la base de datos vectorial</a></li>
   <li><a href="#flujo-de-la-interacción" id="toc-flujo-de-la-interacción" class="nav-link" data-scroll-target="#flujo-de-la-interacción">3.2. Flujo de la interacción</a></li>
   </ul></li>
-  <li><a href="#diagrama-de-arquitectura" id="toc-diagrama-de-arquitectura" class="nav-link" data-scroll-target="#diagrama-de-arquitectura">4. Diagrama de arquitectura</a></li>
+  <li><a href="#diagrama-de-arquitectura" id="toc-diagrama-de-arquitectura" class="nav-link" data-scroll-target="#diagrama-de-arquitectura">4. Diagrama de arquitectura</a>
+  <ul class="collapse">
+  <li><a href="#componentes-clave-de-conversación-y-chat" id="toc-componentes-clave-de-conversación-y-chat" class="nav-link" data-scroll-target="#componentes-clave-de-conversación-y-chat">4.1. Componentes clave de conversación y chat</a></li>
+  <li><a href="#componentes-clave-de-documentos-y-soluciones" id="toc-componentes-clave-de-documentos-y-soluciones" class="nav-link" data-scroll-target="#componentes-clave-de-documentos-y-soluciones">4.2. Componentes clave de documentos y soluciones</a></li>
+  <li><a href="#componentes-clave-de-tickets" id="toc-componentes-clave-de-tickets" class="nav-link" data-scroll-target="#componentes-clave-de-tickets">4.3. Componentes clave de tickets</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -243,7 +248,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Clonar el repositorio:</li>
 </ol>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/anmerino-pnd/proyectoCenace</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> proyectoCenace</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> cenacellm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ol start="2" type="1">
 <li>Configurar el entorno:</li>
 </ol>
@@ -275,7 +280,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Levantar el backend con Uvicorn:</li>
 </ol>
 <p>Este comando inicia la API, especificando el número del puerto</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nohup</span> uvicorn main:app <span class="at">--reload</span> <span class="kw">&amp;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nohup</span> uvicorn cenacellm.API.main:app <span class="at">--reload</span> <span class="kw">&amp;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>El uso de <code>nogup</code> y <code>&amp;</code> asegura que el proceso continúe ejecutándose en segundo plano incluso si la sesión SSH se cierra.</p>
 <ol start="7" type="1">
 <li>Verificar logs:</li>
@@ -286,14 +291,68 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="documentación-técnica-del-código" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="documentación-técnica-del-código">2. Documentación técnica del código</h2>
+<p>La solución se basa en una arquitectura de <strong>Recuperación Aumentada con Generación (RAG)</strong>. La estructura modular del código, organizada en paquetes de Python, permite una clara separación de responsabilidades.</p>
 <section id="estructura-de-carpetas-y-módulos" class="level3">
 <h3 class="anchored" data-anchor-id="estructura-de-carpetas-y-módulos">2.1. Estructura de carpetas y módulos</h3>
+<ul>
+<li><p><code>API/</code></p>
+<ul>
+<li><code>chat.py</code>: Contiene los <em>endpoints</em> de FastAPI para interactuar con el chatbot.</li>
+<li><code>main.py</code>: Archivo principal que define la aplicación FastAPI y monta los <em>endpoints</em>.</li>
+</ul></li>
+<li><p><code>ollama/</code></p>
+<ul>
+<li><code>assistant.py</code>: Clase que encapsula la lógica para generar embeddings utilizando el modelo <code>bge-m3:latest</code> de Ollama.</li>
+</ul></li>
+<li><p><code>doccollection.py</code>: Módulo que maneja la carga y el procesamiento de documentos (PDF’s) para generar fragmentos de texto.</p></li>
+<li><p><code>rag.py</code>: Clase principal del sistema RAG que integra el <code>assistant</code>, el <code>doccollection</code> y el <code>vectorstore</code>.</p></li>
+<li><p><code>vectorstore.py</code>: Módulo que implementa la base de datos vectorial con FAISS.</p></li>
+<li><p><code>settings/</code></p>
+<ul>
+<li><code>clients.py</code>: Archivo de configuración que establece la conexión con la base de datos y el cliente de Ollama.</li>
+<li><code>config.py</code>: Define las rutas de directorios para los vectores y los documentos procesados.</li>
+</ul></li>
+<li><p><code>tools/</code></p>
+<ul>
+<li><code>assistant.py</code>: Clase base abstracta para el asistente LLM.</li>
+<li><code>doccollection.py</code>: Clase base abstracta para la colección de documentos.</li>
+<li><code>embedder.py</code>: Clase base abstracta para el generador de embeddings.</li>
+<li><code>vectorstore.py</code>: Clase base abstracta para almacén de vectores.</li>
+</ul></li>
+<li><p><code>types.py</code>: Módulo que define modelos de datos con Pydantic para tipado de datos como <code>Text</code>, <code>TextMetadata</code>, <code>Question</code>, etc.</p></li>
+</ul>
 </section>
 <section id="modelos-llm-utilizados" class="level3">
 <h3 class="anchored" data-anchor-id="modelos-llm-utilizados">2.2. Modelos LLM utilizados</h3>
+<p>El flujo de información en el sistema RAG sigue dos rutas principales:</p>
+<ol type="1">
+<li>Indexación de documentos:</li>
+</ol>
+<ul>
+<li>Los archivos PDF son cargados y procesados por el módulo <code>doccollection.py</code>.</li>
+<li><code>doccollection</code> divide cada documento en fragmentos.</li>
+<li>Cada fragmento es enviado al <code>embedder.py</code> para generar su representación vectorial.</li>
+<li>Los vectores resultantes se almacenan en la base de datos vectorial de FAISS, implementada en <code>vectorstore.py</code>, junto con sus metadatos.</li>
+</ul>
+<ol start="2" type="1">
+<li>Proceso de consulta (QA):</li>
+</ol>
+<ul>
+<li>Una consulta de usuario llega el <em>endpoint</em> de <code>chat.py</code>.</li>
+<li>La consulta es vectorizada por el <code>embedder</code>.</li>
+<li>El <code>vectorstore</code> realiza una búsqueda de similitud semántica para recuperar los fragmentos de documento más relevantes.</li>
+<li>Estos fragmentos se envían al <code>assistant.py</code>, que los utiliza como contexto.</li>
+<li>El <code>assistant</code> utiliza el LLM (<code>gemma3:4b</code>) para generar una respuesta coherente y contextualizada.</li>
+<li>La respuesta es devuelta al usuario a través del <code>chat.py</code> y el <code>main.py</code>.</li>
+</ul>
 </section>
 <section id="puntos-de-entrada-y-funciones-clave" class="level3">
 <h3 class="anchored" data-anchor-id="puntos-de-entrada-y-funciones-clave">2.3. Puntos de entrada y funciones clave</h3>
+<ul>
+<li><strong>Gestión de conversaciones:</strong> El módulo <code>assistant.py</code> gestiona el historial de conversación en MongoDB, permitiendo que el chatbot mantenga un contexto limitado con el usuario.</li>
+<li><strong>Gestión de tickets:</strong> Las funciones <code>add_ticket</code> y <code>update_ticket_metadata</code> en <code>rag.py</code> y sus respectivos <em>endpoints</em> en <code>chat.py</code> demuestran la capacidad del sistema para interactuar y actualizar una base de datos de tickets.</li>
+<li><strong>Bucle de retroalimentación:</strong> La funcionalidad <code>has_liked_solution_in_conversation</code> permite identificar y potencialmente re-indexar soluciones validadas por los usuarios, mejorando continuamente la base de conocimientos.</li>
+</ul>
 </section>
 </section>
 <section id="guía-de-entrenamiento-y-mejora" class="level2" style="text-align: justify">
@@ -307,6 +366,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="diagrama-de-arquitectura" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="diagrama-de-arquitectura">4. Diagrama de arquitectura</h2>
+<p>El siguiente diagrama ilustra la arquitectura general del ssitema del chatbot, mostrando los componentes principales y el flujo de datos desde la interacción del usuario hasta la generación de respuestas y el almacenamiento del historial.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="./datos/image.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Arquitectura del sistema</figcaption>
+</figure>
+</div>
+<section id="componentes-clave-de-conversación-y-chat" class="level3">
+<h3 class="anchored" data-anchor-id="componentes-clave-de-conversación-y-chat">4.1. Componentes clave de conversación y chat</h3>
+<ul>
+<li><p><code>POST /chat/stream</code>: Endpoint principal para la interacción conversacional. Recibe una consulta y un <code>conversation_id</code>, y devuelve una respuesta generada por el LLM en tiempo real a través de un stream.</p></li>
+<li><p><code>GET /chat/history/{user_id}/{conversation_id}</code>: Recupera el historial de mensajes de una conversación específica.</p></li>
+<li><p><code>POST /conversations</code>: Crea una nueva conversación, generando un <code>conversation_id</code> único.</p></li>
+<li><p><code>GET /conversations/{user_id}</code>: Lista todas las conversaciones de un usuario, incluyendo sus títulos y la fecha de la última actualización.</p></li>
+<li><p><code>DELETE /conversations</code>: Elimina una conversación específica y su historial de la base de datos.</p></li>
+<li><p><code>PATCH /message-metadata</code>: Permite actualizar los metadatos de un mensaje, utilizado para la funcionalidad de “gustar” una solución.</p></li>
+</ul>
+</section>
+<section id="componentes-clave-de-documentos-y-soluciones" class="level3">
+<h3 class="anchored" data-anchor-id="componentes-clave-de-documentos-y-soluciones">4.2. Componentes clave de documentos y soluciones</h3>
+<ul>
+<li><p><code>POST /documents</code>: Permite cargar nuevos archivos (en formato PDF) a la base de datos vectorial para expandir la base de conocimientos.</p></li>
+<li><p><code>GET /documents</code>: Lista todos los documentos que han sido procesados y están disponibles para la consulta.</p></li>
+<li><p><code>DELETE /documents</code>: Elimina un documento específico de la base de datos vectorial, eliminando también su referencia y los fragmentos asociados.</p></li>
+<li><p><code>POST /solutions</code>: Procesa y re-indexa soluciones “gustadas” por los usuarios, agregándolas como nuevos documentos a la base de datos vectorial para mejorar la precisión del sistema.</p></li>
+<li><p><code>DELETE /solutions</code>: Elimina una solución específica de la base de datos vectorial.</p></li>
+</ul>
+</section>
+<section id="componentes-clave-de-tickets" class="level3">
+<h3 class="anchored" data-anchor-id="componentes-clave-de-tickets">4.3. Componentes clave de tickets</h3>
+<ul>
+<li><p><code>GET /tickets</code>: Recupera una lista de todos los tickets almacenados en la base de datos de MongoDB.</p></li>
+<li><p><code>POST /tickets</code>: Permite añadir un nuevo ticket a la base de datos, con campos como título, descripción y categoría.</p></li>
+<li><p><code>PATCH /tickets/{ticket_reference}</code>: Actualiza los metadatos de un ticket existente, como su estado de solución (<code>is_solved</code>).</p></li>
+</ul>
+</section>
 </section>
 
 
