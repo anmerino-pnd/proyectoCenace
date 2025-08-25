@@ -164,13 +164,33 @@ class RAG:
              ) -> Tuple[Generator[str, None, None], List, str, Dict[str, Any]]: # Updated return type hint
 
         query_vector = self.embedder.vectorize(question)
+     
+        if filter_metadata is None:
+            # proporción: 70% documentos, 30% soluciones
+            k_docs = int(round(k * 0.7))
+            k_sols = k - k_docs  # lo que sobra va a soluciones
 
-        relevant_chunks = self.vectorstore.get_similar(
-            query_vector, 
-            k=k,
-            filter_metadata=filter_metadata
-        )
-        
+            relevant_chunks_docs = self.vectorstore.get_similar(
+                query_vector,
+                k=k_docs,
+                filter_metadata="documentos"
+            )
+            relevant_chunks_sols = self.vectorstore.get_similar(
+                query_vector,
+                k=k_sols,
+                filter_metadata="soluciones"
+            )
+
+            # unir resultados en una sola lista
+            relevant_chunks = relevant_chunks_docs + relevant_chunks_sols
+        else:
+            relevant_chunks = self.vectorstore.get_similar(
+                query_vector,
+                k=k,
+                filter_metadata=filter_metadata
+            )
+
+
         text_chunks = [chunk[1] for chunk in relevant_chunks]
 
         # Call assistant.answer and unpack the new return values
