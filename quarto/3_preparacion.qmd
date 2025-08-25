@@ -9,9 +9,10 @@ toc-depth: 3
 ---
 
 ::: {style="text-align: justify"}
-
 La fase de preparación de datos es crucial para el funcionamiento del sistema RAG. Su objetivo es convertir la información no estructurada, proveniente de los documentos técnicos del CENACE, en un formato que permita una búsqueda eficiente y una recuperación semántica de alta calidad. Este proceso se divide en tres etapas principales: extracción, transformación y carga de los datos.
+::: 
 
+::: {style="text-align: justify"}
 ## 1. Extracción de los datos
 La principal fuente de información son los documentos técnicos en formato PDF, así como la base de datos de incidentes resueltos. Para la ingesta de documentos, el sistema utiliza el módulo `doccollection.py`, específicamente la clase `DisjointCollection`.
 

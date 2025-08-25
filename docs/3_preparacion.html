@@ -136,7 +136,8 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Tabla de Contenidos</h2>
    
   <ul>
-  <li><a href="#transformación-de-los-datos" id="toc-transformación-de-los-datos" class="nav-link active" data-scroll-target="#transformación-de-los-datos">2. Transformación de los datos</a></li>
+  <li><a href="#extracción-de-los-datos" id="toc-extracción-de-los-datos" class="nav-link active" data-scroll-target="#extracción-de-los-datos">1. Extracción de los datos</a></li>
+  <li><a href="#transformación-de-los-datos" id="toc-transformación-de-los-datos" class="nav-link" data-scroll-target="#transformación-de-los-datos">2. Transformación de los datos</a></li>
   <li><a href="#carga-de-los-datos" id="toc-carga-de-los-datos" class="nav-link" data-scroll-target="#carga-de-los-datos">3. Carga de los datos</a></li>
   <li><a href="#flujo-de-preparación" id="toc-flujo-de-preparación" class="nav-link" data-scroll-target="#flujo-de-preparación">4. Flujo de preparación</a></li>
   </ul>
@@ -166,7 +167,8 @@ ul.task-list li input[type="checkbox"] {
 
 <div style="text-align: justify">
 <p>La fase de preparación de datos es crucial para el funcionamiento del sistema RAG. Su objetivo es convertir la información no estructurada, proveniente de los documentos técnicos del CENACE, en un formato que permita una búsqueda eficiente y una recuperación semántica de alta calidad. Este proceso se divide en tres etapas principales: extracción, transformación y carga de los datos.</p>
-<section id="extracción-de-los-datos" class="level2">
+</div>
+<section id="extracción-de-los-datos" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="extracción-de-los-datos">1. Extracción de los datos</h2>
 <p>La principal fuente de información son los documentos técnicos en formato PDF, así como la base de datos de incidentes resueltos. Para la ingesta de documentos, el sistema utiliza el módulo <code>doccollection.py</code>, específicamente la clase <code>DisjointCollection</code>.</p>
 <ol type="1">
@@ -179,7 +181,6 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Asignación de metadatos:</strong> A cada <code>chunk</code> se ke asignan metadatos esenciales, como el nombre del archivo de origen (<code>filename</code>), el número de página (<code>page_number</code>), y un identificador único de referencia (<code>reference</code>). Estos metadatos son vitales para referenciar las fuentes en las respuestas del LLM, evitando alucinaciones y permitiendo al usuario validar la información.</li>
 </ol>
 </section>
-</div>
 <section id="transformación-de-los-datos" class="level2" style="text-align: justify">
 <h2 class="anchored" data-anchor-id="transformación-de-los-datos">2. Transformación de los datos</h2>
 <p>Una vez que los documentos se han dividido en <code>chunks</code>, se transforman en una representación numérica que la computadora puede entender y procesar eficientemente.</p>
