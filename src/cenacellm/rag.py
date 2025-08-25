@@ -166,8 +166,8 @@ class RAG:
         query_vector = self.embedder.vectorize(question)
      
         if filter_metadata is None:
-            # proporción: 70% documentos, 30% soluciones
-            k_docs = int(round(k * 0.7))
+            # proporción: 80% documentos, 20% soluciones
+            k_docs = int(round(k * 0.8))
             k_sols = k - k_docs  # lo que sobra va a soluciones
 
             relevant_chunks_docs = self.vectorstore.get_similar(
