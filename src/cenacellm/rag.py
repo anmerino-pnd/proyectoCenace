@@ -125,7 +125,10 @@ class RAG:
                         
             textos = self.collection.load_pdf(ruta_pdf, collection=collection_name)
             chunks = self.collection.get_chunks(textos)
-            
+
+            if not chunks:
+                print(f"Advertencia: No se extrajo texto o no se generaron chunks para el archivo {archivo}. Omitiendo registro.")
+                continue
             doc_chunks_count = 0
             for chunk in chunks:
                 vector = self.embedder.vectorize(chunk.content)
