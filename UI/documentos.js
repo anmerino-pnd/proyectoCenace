@@ -210,7 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok) {
-                showStatus(processStatusDiv, `Procesamiento completado. Documentos: ${result[0]}, Nuevos: ${result[1]}, Chunks: ${result[2]}`, 'success');
+                // FIX: Access properties by name (result.docs_count) instead of by index (result[0])
+                showStatus(processStatusDiv, `Procesamiento completado. Documentos: ${result.docs_count}, Nuevos: ${result.new_docs_count}, Chunks: ${result.chunks_count}`, 'success');
                 fetchAndDisplayDocuments(); // Refresh the list to reflect processed state
             } else {
                 showStatus(processStatusDiv, `Error al procesar documentos: ${result.detail || response.statusText}`, 'error');

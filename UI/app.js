@@ -993,7 +993,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`${windowwindow.API_ENDPOINT}/delete_conversation`, {
+            // FIX: Corrected a typo from "windowwindow" to "window"
+            const response = await fetch(`${window.API_ENDPOINT}/delete_conversation`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: userName, conversation_id: conversationIdToDelete })
