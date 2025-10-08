@@ -10,7 +10,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Body # Importa Bod
 from bson.objectid import ObjectId # Import ObjectId for new conversation IDs
 rag = RAG(vectorstore_path=VECTORS_DIR)
 
-class QueryRequest(BaseModel):
+class  QueryRequest(BaseModel):
     user_id: str
     conversation_id: str # Added conversation_id
     query: str
