@@ -129,17 +129,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Load conversations and then the first one, or create a new one
             await loadConversations();
-            if (!currentConversationId && conversationListDiv.children.length > 0) {
-                // If no current conversation is set, select the first one in the list
-                const firstConversationButton = conversationListDiv.querySelector('.conversation-item-button');
-                if (firstConversationButton) {
-                    firstConversationButton.click(); // Simulate click to load history
+
+            // Busca el *primer botón real* de conversación
+            const firstConversationButton = conversationListDiv.querySelector('.conversation-item-button');
+
+            if (firstConversationButton) {
+                // CASO 1: SÍ hay conversaciones.
+                // Si no hay una seleccionada, carga la primera.
+                if (!currentConversationId) {
+                    firstConversationButton.click(); // Carga la primera de la lista
+                } else {
+                    loadHistory(currentConversationId); // Recarga la actual (por si acaso)
                 }
-            } else if (!currentConversationId) {
-                // If no conversations exist, create a new one
-                await createNewConversation();
             } else {
-                 loadHistory(currentConversationId); // Load the existing conversation if already set
+                // CASO 2: NO hay botones de conversación.
+                // (El usuario no tiene conversaciones).
+                // Crea una nueva por default.
+                await createNewConversation();
             }
 
             if (userQueryTextarea) userQueryTextarea.focus();
