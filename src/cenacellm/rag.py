@@ -102,10 +102,10 @@ class RAG:
             raise FileNotFoundError(f"La carpeta {folder_path} no existe")
         
         docs_count = 0
-        new_docs_count = 0
-        chunks_count = 0
         
-        
+        print(f"\n📂 Iniciando carga de documentos desde: {folder_path}")
+        print(f"⚙️ Parámetros -> collection: {collection_name}, force_reload: {force_reload}\n")
+
         for archivo in os.listdir(folder_path):
             if not archivo.endswith(".pdf"):
                 continue
@@ -122,19 +122,26 @@ class RAG:
                 file_info.get("size") == file_size):
                 docs_count += 1
                 continue
-                        
+            
+            print(f"\n📄 Procesando nuevo documento: {archivo}")
             textos = self.collection.load_pdf(ruta_pdf, collection=collection_name)
-            chunks = self.collection.get_chunks(textos)
+            chunks : List[Text] = self.collection.get_chunks(textos)
 
             if not chunks:
                 print(f"Advertencia: No se extrajo texto o no se generaron chunks para el archivo {archivo}. Omitiendo registro.")
                 continue
+
+            batch_size = 128
+            chunks_count = 0
             doc_chunks_count = 0
-            for chunk in chunks:
-                vector = self.embedder.vectorize(chunk.content)
-                self.vectorstore.add_text(vector, chunk)
-                doc_chunks_count += 1
-                chunks_count += 1
+            for i in range(0, len(chunks), batch_size):
+                batch_chunks = chunks[i:i+batch_size]
+                texts = [chunk.content for chunk in batch_chunks]
+                vectors = self.embedder.vectorize_batch(texts=texts)
+                self.vectorstore.add_texts(vectors, batch_chunks)
+                doc_chunks_count += len(batch_chunks)
+                chunks_count += len(batch_chunks)
+                print(f"   ➜ Batch {i//batch_size + 1} agregado ({len(batch_chunks)} chunks, total global: {chunks_count})")
             
             self.processed_files[file_key] = {
                 "source": ruta_pdf,
@@ -148,6 +155,7 @@ class RAG:
             
             new_docs_count += 1
             docs_count += 1
+            print(f"📘 Documento {archivo} completado con {doc_chunks_count} chunks.\n")
         
         if new_docs_count > 0:
             self.vectorstore.save_index()

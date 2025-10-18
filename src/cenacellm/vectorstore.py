@@ -22,6 +22,13 @@ class FAISSVectorStore(VectorStore):
 
         if os.path.exists(self.index_path):
             self.index = faiss.read_index(self.index_path)
+            try:
+                res = faiss.StandardGpuResources()
+                self.index = faiss.index_cpu_to_gpu(res, 0, self.index)
+                print("✅ FAISS usando GPU.")
+            except Exception as e:
+                print("⚠ FAISS en CPU:", e)
+                
             print(f"Índice cargado desde {self.index_path}")
             if os.path.exists(self.dict_path):
                 with open(self.dict_path, "rb") as f:
@@ -55,6 +62,15 @@ class FAISSVectorStore(VectorStore):
         self.index.add(v)
         idx = self.index.ntotal - 1
         self.text_dict[idx] = (v, t)
+
+    def add_texts(self, vectors: list[np.ndarray], chunks: list[Text]):
+        array = np.vstack(vectors).astype('float32')
+        start_idx = self.index.ntotal
+        self.index.add(array)
+
+        for i, chunk in enumerate(chunks):
+            idx = start_idx + i
+            self.text_dict[idx] = (vectors[i], chunk)
 
     def save_index(self):
         os.makedirs(self.folder_path, exist_ok=True)
