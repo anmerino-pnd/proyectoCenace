@@ -84,6 +84,7 @@ def clear_user_history(user_id: str, conversation_id: str): # Added conversation
 
 def load_documents(collection_name: str, force_reload: bool = False):
     """Carga y procesa documentos."""
+    print(f"Documento recibido, colección: {collection_name} con force_reload: {force_reload}")
     docs_count, new_docs_count, chunks_count = rag.load_documents(
         DOCUMENTS_DIR, collection_name, force_reload
     )
