@@ -102,6 +102,7 @@ class RAG:
             raise FileNotFoundError(f"La carpeta {folder_path} no existe")
         
         docs_count = 0
+        new_docs_count = 0
         
         print(f"\n📂 Iniciando carga de documentos desde: {folder_path}")
         print(f"⚙️ Parámetros -> collection: {collection_name}, force_reload: {force_reload}\n")
