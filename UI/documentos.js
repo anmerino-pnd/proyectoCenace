@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Actualmente se procesan todos los documentos en la carpeta DOCUMENTS_DIR
             // Aquí puedes añadir lógica para seleccionar qué colección procesar si lo deseas.
             const collectionName = "documentos"; // O puedes hacer esto seleccionable en la UI
-            const response = await fetch(`${window.API_ENDPOINT}/load_documents?collection_name=${collectionName}&force_reload=true`, {
+            const response = await fetch(`${window.API_ENDPOINT}/load_documents?collection_name=${collectionName}&force_reload=false`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
