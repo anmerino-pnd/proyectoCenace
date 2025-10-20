@@ -869,6 +869,12 @@ textarea {
         padding: 10px 15px;
         font-size: 0.9em;
     }
+    .sidebar-logo-container {
+    padding: 10px 15px; /* Reduce el espacio vertical del logo en móviles */
+    }
+    .sidebar-logo {
+        max-width: 150px; /* Fija un tamaño máximo para el logo en móviles */
+    }
 }
 
 /* --- Estilos específicos para la sección de Documentos --- */
