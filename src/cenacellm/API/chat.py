@@ -212,3 +212,10 @@ def update_ticket_metadata_db(ticket_reference: str, new_metadata: Dict[str, Any
     if updated:
         return {"status": "success", "message": f"Metadatos del ticket {ticket_reference} actualizados."}
     raise HTTPException(status_code=404, detail="Ticket no encontrado.")
+
+def get_ticket_by_conversation(conversation_id: str):
+    """Busca un ticket por su conversation_id."""
+    ticket_info = rag.get_ticket_by_conversation(conversation_id)
+    if not ticket_info:
+        raise HTTPException(status_code=404, detail="No se encontró un ticket vinculado a esta conversación.")
+    return ticket_info

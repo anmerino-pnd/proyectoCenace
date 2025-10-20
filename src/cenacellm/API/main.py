@@ -32,7 +32,8 @@ from cenacellm.API.chat import (
     delete_conversation, # NUEVO: Importa la función para eliminar conversación
     get_tickets_list, # Importa la función para obtener la lista de tickets
     add_ticket_to_db, # NUEVO: Importa la función para agregar ticket a DB
-    update_ticket_metadata_db # NUEVO: Importa la función para actualizar metadatos de tickets en DB
+    update_ticket_metadata_db, # NUEVO: Importa la función para actualizar metadatos de tickets en DB
+    get_ticket_by_conversation
 )
 
 app = FastAPI()
@@ -167,6 +168,13 @@ def update_ticket_metadata(ticket_reference: str, new_metadata: Dict[str, Any] =
     # `embed=True` asegura que el JSON body se vea como {"new_metadata": {...}}
     return update_ticket_metadata_db(ticket_reference, new_metadata)
 
+@app.get("/get_ticket_by_conversation/{conversation_id}")
+async def get_ticket_by_conv(conversation_id: str):
+    """
+    Endpoint para verificar si una conversación está vinculada a un ticket
+    y obtener el estado 'is_solved' de ese ticket.
+    """
+    return get_ticket_by_conversation(conversation_id)
 
 ui_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "UI")
 ui_path = os.path.abspath(ui_path)  # Normaliza la ruta

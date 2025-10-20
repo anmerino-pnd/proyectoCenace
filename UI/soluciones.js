@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const questionDiv = document.createElement('div');
                 questionDiv.classList.add('solution-question');
-                questionDiv.innerHTML = `${solution.question} <span class="toggle-icon">+</span>`;
+                questionDiv.innerHTML = `<span>${solution.question}</span> <span class="toggle-icon">+</span>`;
                 questionDiv.dataset.solutionId = solution.id; // Store solution ID
 
                 const answerDiv = document.createElement('div');

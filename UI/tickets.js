@@ -64,17 +64,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const titleBar = document.createElement('div');
                 titleBar.classList.add('ticket-title-bar');
-                titleBar.innerHTML = `
-                    <span>${ticket.titulo}</span>
-                    <span class="toggle-icon">+</span>
-                `;
-                // Add a visual indicator for solved directly in the title bar
+                const titleSpan = `<span>${ticket.titulo}</span>`;
+                let controlsWrapper = '<div class="ticket-controls-wrapper">'; // Nuevo div contenedor
+
+                // 1. Añade el indicador "Resuelto" PRIMERO (si aplica)
                 if (ticket.is_solved) {
-                    const solvedIndicator = document.createElement('span');
-                    solvedIndicator.classList.add('ticket-solved-indicator');
-                    solvedIndicator.innerHTML = '<i class="fas fa-check-circle"></i> Resuelto';
-                    titleBar.appendChild(solvedIndicator);
+                    controlsWrapper += `
+                        <span class="ticket-solved-indicator">
+                            <i class="fas fa-check-circle"></i> Resuelto
+                        </span>
+                    `;
                 }
+                
+                // 2. Añade el ícono "+" / "-" SIEMPRE al final del contenedor
+                controlsWrapper += '<span class="toggle-icon">+</span>';
+                controlsWrapper += '</div>'; // Cierra el div contenedor
+
+                // 3. Establece el HTML final
+                titleBar.innerHTML = titleSpan + controlsWrapper;
 
                 const detailsContent = document.createElement('div');
                 detailsContent.classList.add('ticket-details-content', 'hidden'); // Asegurarse que inicia oculto

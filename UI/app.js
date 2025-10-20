@@ -28,12 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const customAlertMessageDiv = customAlertModalOverlay ? customAlertModalOverlay.querySelector('.modal-message') : null;
     const customAlertOkButton = customAlertModalOverlay ? customAlertModalOverlay.querySelector('.custom-alert-ok-button') : null;
     let customAlertCallback = null; // To store callback for custom alert
+    const solveTicketBtn = document.getElementById('solveTicketBtn');
 
     let userName = '';
     window.userName = ''; // Make userName globally accessible
     let currentConversationId = null;
     window.currentConversationId = null; // Make currentConversationId globally accessible
     let isGeneratingResponse = false;
+    let currentTicketReference = null; // NUEVA: Almacena la ref del ticket de la convo actual
 
     const sendIconSVG = `
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -43,10 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     const likeIconSVG = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-heart">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        <svg id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <path d="M29.845,17.099l-2.489,8.725C26.989,27.105,25.804,28,24.473,28H11c-0.553,0-1-0.448-1-1V13 c0-0.215,0.069-0.425,0.198-0.597l5.392-7.24C16.188,4.414,17.05,4,17.974,4C19.643,4,21,5.357,21,7.026V12h5.002 c1.265,0,2.427,0.579,3.188,1.589C29.954,14.601,30.192,15.88,29.845,17.099z" id="XMLID_254_"></path>
+            <path d="M7,12H3c-0.553,0-1,0.448-1,1v14c0,0.552,0.447,1,1,1h4c0.553,0,1-0.448,1-1V13C8,12.448,7.553,12,7,12z" id="XMLID_256_"></path>
         </svg>
     `;
+
 
     // CORREGIDO: SVG del icono de la papelera
     const trashIconSVG = `
@@ -164,8 +168,118 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // window.apiEndpoint = "http://localhost:8000";
+    /**
+     * (NUEVA FUNCIÓN)
+     * Comprueba si la conversación actual está vinculada a un ticket
+     * y actualiza el botón "Marcar como Resuelto".
+     * @param {string} convId - El ID de la conversación.
+     */
+    async function updateTicketStatusForConversation(convId) {
+        if (!solveTicketBtn) return; // Si el botón no existe, salir
 
+        // Ocultar el botón por defecto y resetear la referencia
+        solveTicketBtn.classList.add('hidden');
+        currentTicketReference = null; 
+
+        try {
+            // Este es el NUEVO endpoint que creaste en el backend
+            const response = await fetch(`${window.API_ENDPOINT}/get_ticket_by_conversation/${convId}`);
+
+            if (!response.ok) {
+                if (response.status !== 404) {
+                    // Si no es 404, fue un error real
+                    console.error("Error al verificar el estado del ticket:", await response.text());
+                }
+                // Si es 404, simplemente no es una convo de ticket (normal)
+                return; // Salir, el botón permanece oculto
+            }
+
+            const ticketStatus = await response.json();
+
+            if (ticketStatus && ticketStatus.ticket_reference) {
+                currentTicketReference = ticketStatus.ticket_reference;
+                
+                // Actualizar el estado visual del botón
+                if (ticketStatus.is_solved) {
+                    solveTicketBtn.classList.add('solved');
+                    solveTicketBtn.innerHTML = '<i class="fas fa-check-circle"></i> <span>Resuelto</span>';
+                    solveTicketBtn.title = "Marcar Ticket como No Resuelto";
+                } else {
+                    solveTicketBtn.classList.remove('solved');
+                    solveTicketBtn.innerHTML = '<i class="fas fa-check-circle"></i> <span>Marcar como Resuelto</span>';
+                    solveTicketBtn.title = "Marcar Ticket como Resuelto";
+                }
+                
+                // Mostrar el botón
+                solveTicketBtn.classList.remove('hidden');
+            }
+
+        } catch (error) {
+            console.error("Error en updateTicketStatusForConversation:", error);
+            solveTicketBtn.classList.add('hidden'); // Ocultar en caso de error
+        }
+    }
+
+    /**
+     * (NUEVA FUNCIÓN)
+     * Maneja el clic en el botón "Marcar como Resuelto".
+     * Hace un toggle del estado 'is_solved' del ticket en el backend.
+     */
+    async function handleSolveTicket() {
+        if (!currentTicketReference || !solveTicketBtn) {
+            showCustomAlert("Error: No se ha identificado un ticket para esta conversación.");
+            return;
+        }
+
+        // Determinar el *nuevo* estado deseado
+        const isCurrentlySolved = solveTicketBtn.classList.contains('solved');
+        const newSolvedState = !isCurrentlySolved; // El estado opuesto
+
+        solveTicketBtn.disabled = true; // Deshabilitar mientras se procesa
+
+        try {
+            // Este es el endpoint PATCH que ya tenías y modificamos
+            const response = await fetch(`${window.API_ENDPOINT}/tickets/${currentTicketReference}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                // Enviamos el nuevo estado 'is_solved' en el body
+                body: JSON.stringify({ new_metadata: { is_solved: newSolvedState } }) 
+                // NOTA: Tu backend espera {"new_metadata": {...}}. Si lo cambiaste para aceptar {"is_solved": ...} directamente, ajusta este body.
+                // Basado en tu main.py, espera {"new_metadata": ...}, así que esto debería funcionar.
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error al actualizar ticket: ${errorText}`);
+            }
+
+            // El backend no devuelve el ticket actualizado, así que confiamos en nuestro newSolvedState
+            // Actualizar el botón en el frontend (Toggle)
+            if (newSolvedState) {
+                solveTicketBtn.classList.add('solved');
+                solveTicketBtn.innerHTML = '<i class="fas fa-check-circle"></i> <span>Resuelto</span>';
+                solveTicketBtn.title = "Marcar Ticket como No Resuelto";
+            } else {
+                solveTicketBtn.classList.remove('solved');
+                solveTicketBtn.innerHTML = '<i class="fas fa-check-circle"></i> <span>Marcar como Resuelto</span>';
+                solveTicketBtn.title = "Marcar Ticket como Resuelto";
+            }
+
+            // Recargar la lista de tickets si la pestaña está activa
+            const ticketsTabButton = document.querySelector('.tab-button[data-tab="tickets"]');
+            if (ticketsTabButton && ticketsTabButton.classList.contains('active')) {
+                if (typeof window.loadTickets === 'function') {
+                    window.loadTickets();
+                }
+            }
+
+        } catch (error) {
+            console.error("Error en handleSolveTicket:", error);
+            showCustomAlert(`Error al marcar el ticket: ${error.message}`);
+        } finally {
+            solveTicketBtn.disabled = false; // Rehabilitar el botón
+        }
+    }
     // Solicitar nombre de usuario al cargar la página
     requestUsername();
 
@@ -272,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentConversationId = convId; // Set the current conversation ID
         window.currentConversationId = currentConversationId; // Update global
-
+        updateTicketStatusForConversation(convId);
         // Highlight the active conversation button
         document.querySelectorAll('.conversation-item-button').forEach(btn => {
             if (btn.dataset.conversationId === convId) {
@@ -655,16 +769,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             window.loadLikedSolutions(userName, window.API_ENDPOINT);
                         }
                     }
-                    // If tickets tab is active, reload it to reflect potential solved status change
-                    const ticketsTabButton = document.querySelector('.tab-button[data-tab="tickets"]');
-                    if (ticketsTabButton && ticketsTabButton.classList.contains('active')) {
-                        if (typeof window.loadTickets === 'function') {
-                            window.loadTickets();
-                        }
-                    }
-                    // No need to explicitly reload chat history here; the backend already manages 'disable' state,
-                    // and if user switches tabs, loadHistory will be called anyway, reflecting the correct state.
-                    // For immediate visual feedback on the same tab, optimistic update is sufficient.
+                
+                    
                 });
             }
         });
@@ -954,6 +1060,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.currentConversationId = currentConversationId; // Update global
                 await loadConversations(); // Reload conversation list to show new one
                 loadHistory(currentConversationId); // Load the empty new conversation
+
+                if (solveTicketBtn) solveTicketBtn.classList.add('hidden');
+                currentTicketReference = null;
             } else {
                 console.error("Error creating new conversation:", result.detail || response.statusText);
                 showCustomAlert(`Error al crear nueva conversación: ${result.detail || response.statusText}`);
@@ -1109,7 +1218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delete conversation modal buttons
     if (deleteConversationCancelButton) deleteConversationCancelButton.addEventListener('click', hideDeleteConversationConfirmation);
     if (deleteConversationConfirmButton) deleteConversationConfirmButton.addEventListener('click', deleteSpecificConversation);
-
+    if (solveTicketBtn) solveTicketBtn.addEventListener('click', handleSolveTicket);
 
     // Event listener for tab changes to load content
     const tabButtons = document.querySelectorAll('.tab-button');

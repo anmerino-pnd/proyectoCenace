@@ -353,10 +353,7 @@ class RAG:
                 ticket['reference'] = new_reference
             
             # Check if the ticket's solucion_id is linked to a conversation with a liked solution
-            is_solved = False
-            if ticket.get('solucion_id'): # If there's a linked conversation
-                is_solved = self.assistant.has_liked_solution_in_conversation(ticket['solucion_id'])
-            
+            is_solved = ticket.get('is_solved', False) # Lee el campo 'is_solved' del ticket, default a False
             ticket['is_solved'] = is_solved # Add the solved status to the ticket dictionary
             tickets_list.append(ticket)
         return tickets_list
@@ -372,7 +369,8 @@ class RAG:
             "categories": categories,
             "reference": new_ticket_id,  # Asigna un UUID como reference
             "created_at": datetime.now().isoformat(),
-            "solucion_id": None # Inicializa solucion_id como None
+            "solucion_id": None, # Inicializa solucion_id como None
+            "is_solved": False   # <--- AÑADE ESTA LÍNEA
         }
         self.tickets_collection.insert_one(new_ticket)
         # Retorna el ticket sin el _id de MongoDB, pero con el reference
@@ -388,3 +386,22 @@ class RAG:
             {"$set": new_metadata} # Establecer los nuevos metadatos
         )
         return result.modified_count > 0 # Retorna True si se modificó al menos un documento
+    
+    def get_ticket_by_conversation(self, conversation_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Busca un ticket que esté vinculado a un conversation_id específico.
+        """
+        # Busca un ticket que tenga el solucion_id
+        ticket = self.tickets_collection.find_one(
+            {"solucion_id": conversation_id},
+            # Devuelve solo los campos que necesitamos
+            {"_id": 0, "reference": 1, "is_solved": 1} 
+        )
+        
+        if ticket:
+            # Asegura que 'is_solved' exista, si no, es False
+            ticket['is_solved'] = ticket.get('is_solved', False) 
+            return {"ticket_reference": ticket['reference'], "is_solved": ticket['is_solved']}
+        
+        # Si no se encuentra ningún ticket, devuelve None
+        return None
