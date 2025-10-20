@@ -1562,3 +1562,14 @@ textarea {
     justify-content: flex-end; /* Alinea el botón a la derecha */
     gap: 10px;
 }
+
+.sidebar-logo-container {
+    text-align: center; /* Centra la imagen */
+    padding: 20px 15px; /* Añade espacio vertical */
+    border-bottom: 1px solid #e0e0e0; /* Línea divisoria, igual que la del header */
+}
+
+.sidebar-logo {
+    max-width: 90%;   /* Ajusta el logo al 90% del ancho de la barra */
+    height: auto;     /* Mantiene la proporción de la imagen */
+}
