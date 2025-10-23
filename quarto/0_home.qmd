@@ -5,11 +5,16 @@ format:
          page-layout: article
 toc: false
 author: 
-    - Angel Alberto Merino Cedeño
-    - Eduardo Yeomans Acuña
-    - Hector Alberto Gutierrez Ibarra
+  - name: "Angel Merino Cedeño"
+    email: "acedeno00@gmail.com"     
+    url: "https://www.linkedin.com/in/anmerino-pnd"          
+    affiliations:
+        - name : "[📄 CV](https://unisonmx-my.sharepoint.com/:w:/g/personal/a218204710_unison_mx/EYLVn5p-js9Hh7hr8HmUKOgBZq5L1wHwtZzyjEZG_SeUGA?e=Q7U9pP)"
+    - name: "Eduardo Yeomans Acuña"
+    - name: "Hector Alberto Gutierrez Ibarra"
 date: last-modified
 date-format: long
+lang: es
 ---
 
 ::: {style="text-align: justify"}

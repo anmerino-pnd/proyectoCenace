@@ -62,17 +62,22 @@ ollama pull bge-m3:latest
 
 ```python
 # Servidor donde está corriendo Ollama
-OLLAMA_BASE_URL=""
+OLLAMA_BASE_URL="http://localhost:11434"
 
 # Conexión a MongoDB
 MONGO_URI = "mongodb://localhost:27017" 
 DB_NAME = "CENACE_LLM"
 ```
 
-5. Levantar el backend con Uvicorn:
+5. Preparar el backend:
 
+  Con la ayuda de este comando arranca el contenedor de Mongo el cual es utilizado para guardar la información de las sesiones, conversaciones, documentos, etc.
+```bash
+podman run -d --name mongo \
+  -p 27017:27017 \
+  docker.io/library/mongo:7.0
+```
   Este comando inicia la API, especificando el número del puerto
-
 ```bash
 nohup uvicorn cenacellm.API.main:app --reload &
 ```
@@ -149,11 +154,35 @@ El flujo de información en el sistema RAG sigue dos rutas principales:
 
 ### 3.1. Generación de la base de datos vectorial
 
+La base de conocimientos del chatbot se construye a partir de un proceso que comprende la extracción, segmentación y vectorización del contenido textual proveniente de documentos en formato PDF.
 
+Los vectores resultantes son posteriormente indexados y almacenados en una base de datos vectorial, la cual constituye el núcleo de la recuperación de información relevante durante las interacciones con el chatbot.
 
 ### 3.2. Flujo de la interacción
 
+El usuario debe acceder a la pestaña **Documentos**, donde podrá seleccionar los archivos que desea incorporar a la base de conocimientos del sistema.
+Una vez elegidos, los documentos **se suben a la carpeta** correspondiente dentro del entorno donde se encuentra desplegado el sistema (backend).
+Posteriormente, estos archivos son procesados siguiendo el flujo descrito en el apartado anterior, dando como resultado la creación de la base vectorial o base de conocimientos del sistema.
 
+![Generación de la base de datos vectorial](./datos/sesion_documentos.png){width=100%}
+
+### 3.3. Recomendaciones para futura mejora
+
+1. **Lectura de documentos escaneados**
+
+  Actualmente, el sistema **no puede extraer información de documentos escaneados**. Sería recomendable integrar un módulo de **Reconocimiento Óptico de Caracteres (OCR)** para ampliar la capacidad de análisis, o de igual manera, **Modelo Multimodales** que pudieran extraer la información y almacenarla en documentos PDF que sean posteriormente vectorizados.
+
+2. **Sistema de seguridad para el inicio de sesión**
+
+  El mecanismo de inicio de sesión actual es básico, pues solo requiere ingresar el nombre del usuario.
+
+  Aunque esta simplicidad se ajusta al alcance inicial del proyecto, se sugiere incorporar un sistema de autenticación más robusto, que garantice la seguridad de acceso y manejo de información.
+
+3. **Sistema de corrección de ortografía**
+
+  Durante el desarrollo de los modelos de clasificación, se identificó que la falta de ortografía en los tickets afectaba la calidad del análisis.
+
+  Se propuso el desarrollo de un sistema tipo journalist capaz de identificar [las 5 W's](https://en.wikipedia.org/wiki/Five_Ws) y reconstruir el contexto completo del texto, corrigiendo iterativamente los errores ortográficos al momento de cargar los datos.
 :::
 
 
