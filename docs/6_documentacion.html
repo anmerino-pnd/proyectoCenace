@@ -233,15 +233,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="requisitos-del-sistema" class="level3">
 <h3 class="anchored" data-anchor-id="requisitos-del-sistema">1.2. Requisitos del sistema</h3>
 <ul>
-<li><strong>Python</strong>: Versión 3.12.9</li>
-<li><strong>Pip</strong>: Última versión</li>
-<li><strong>UV</strong>: Última versión (gestor de paquetes y entornos)</li>
+<li><strong>CUDA</strong>: Tarjeta de video y con drivers actualizados en el ambiente.</li>
+<li><strong>Python</strong>: Versión 3.12.9.</li>
+<li><strong>Pip</strong>: Última versión.</li>
+<li><strong>UV</strong>: Última versión (gestor de paquetes y entornos).</li>
 <li><strong>Ollama</strong>: Instalado y en ejecución en el servidor para el hosting de modelos open-source.</li>
 <li><strong>MongoDB</strong>: Acceso remoto configurado para las colecciones de historial de conversaciones y tickets.</li>
+<li><strong>Podman</strong>: Herramienta de virtualización y contenedores sin daemon; utilizado para correr MongoDB.</li>
 </ul>
 </section>
 <section id="dependencias-principales-del-sistema" class="level3">
 <h3 class="anchored" data-anchor-id="dependencias-principales-del-sistema">1.3. Dependencias principales del sistema</h3>
+<ul>
+<li><strong>FastAPI</strong> y <strong>Uvicorn</strong>: Utilizados para construir y servir la <strong>API web</strong> que expone los endpointsmdel <em>chatbot</em> y la gestión de documentos. Permiten crear una interfaz robusta y asíncrona.</li>
+<li><strong>Ollama (Python Client)</strong>: Librería cliente para interactuar con el servicio <strong>Ollama</strong>, que hospeda y ejecuta los modelos de lenguaje <em>open-source</em> (<code>gemma:4b</code>) y de <em>embeddings</em> (<code>bge-m3:latest</code>) localmente.</li>
+<li><strong>Pymongo</strong>: El controlador oficial de Python para <strong>MongoDB</strong>. Es esencial para interactuar con la base de datos donde se almacena el <strong>historial de conversaciones</strong>, la información de los <strong>tickets</strong> y el registro de <strong>archivos procesados</strong>.</li>
+<li><strong>FAISS (faiss-cpu)</strong>: Biblioteca desarrollada por Meta AI para la <strong>búsqueda eficiente de similitud</strong> y agrupamiento de vectores densos. Es el núcleo de la <strong>base de datos vectorial</strong> del sistema.</li>
+<li><strong>UV</strong>: Gestor de paquetes y entornos virtuales, asegura la reproducibilidad del entorno.</li>
+<li><strong>Otras dependencias</strong>: Todas las demás librerías requeridas se detallan en el archivo <code>pyproject.toml</code>. La instalación de este archivo se detalla más adelante.</li>
+</ul>
 </section>
 <section id="instalación-del-sistema" class="level3">
 <h3 class="anchored" data-anchor-id="instalación-del-sistema">1.4. Instalación del sistema</h3>

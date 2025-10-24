@@ -199,6 +199,17 @@ ul.task-list li input[type="checkbox"] {
 <section id="desarrollo-del-frontend" class="level3">
 <h3 class="anchored" data-anchor-id="desarrollo-del-frontend">2.2. Desarrollo del frontend</h3>
 <p>La interfaz se desarrolló con ayuda de 3 tipos de archivos básicos para páginas web. Múltiples archivos de <code>JavaScript</code>, un archivo <code>HTML</code> y estilos modernos que mejoraran la experiencia del usuario gracias a un archivo <code>CSS</code>.</p>
+<section id="interfaz-del-usuario-final" class="level4">
+<h4 class="anchored" data-anchor-id="interfaz-del-usuario-final">2.2.1. Interfaz del usuario final</h4>
+<p>A continuación, se presentan capturas de pantalla de las principales secciones de la interfaz de usuario final desplegada, mostrando las funcionalidades clave del sistema:</p>
+<ul>
+<li><p><strong>Inicio de sesión</strong>: Sección inicial donde el usuario puede acceder a su sesión. Por delimitaciones del proyecto, una sesión más segura no fue implementada. <img src="./datos/sesion_inicio.png" class="img-fluid" style="width:100.0%" alt="Inicio de sesión"></p></li>
+<li><p><strong>Pestaña de Chat:</strong> Interfaz principal de conversación donde el usuario interactúa con el LLM para resolver incidentes. Muestra el historial de mensajes y las referencias utilizadas por el modelo. <img src="./datos/sesion_chat.png" class="img-fluid" style="width:100.0%" alt="Interfaz de la pestaña de Chat"></p></li>
+<li><p><strong>Pestaña de Documentos:</strong> Permite a los usuarios cargar nuevos documentos PDF a la base de conocimientos y visualizar los documentos ya procesados. <img src="./datos/sesion_documentos.png" class="img-fluid" style="width:100.0%" alt="Interfaz de la pestaña de Documentos"></p></li>
+<li><p><strong>Pestaña de Soluciones:</strong> Muestra las soluciones que han sido marcadas como “útiles” por los usuarios (a través del botón “like”). Desde aquí se pueden procesar estas soluciones para re-indexarlas en la base vectorial. <img src="./datos/sesion_soluciones.png" class="img-fluid" style="width:100.0%" alt="Interfaz de la pestaña de Soluciones"></p></li>
+<li><p><strong>Pestaña de Tickets:</strong> Presenta la lista de tickets registrados, permitiendo visualizar su detalle (descripción, categoría) y llevar un ticket específico a una nueva conversación en el chat. <img src="./ruta/a/imagen_tickets.png" class="img-fluid" style="width:100.0%" alt="Interfaz de la pestaña de Tickets"></p></li>
+</ul>
+</section>
 </section>
 <section id="plan-de-monitoreo" class="level3">
 <h3 class="anchored" data-anchor-id="plan-de-monitoreo">2.3. Plan de monitoreo</h3>
@@ -222,13 +233,15 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="flujo-de-despliegue-en-el-ambiente-virtual" class="level3">
 <h3 class="anchored" data-anchor-id="flujo-de-despliegue-en-el-ambiente-virtual">2.5. Flujo de despliegue en el ambiente virtual</h3>
-<p>El flujo propuesto para el despliegue es el siguiente:</p>
+<p>El despliegue del sistema en un ambiente virtual o de nube (como el entorno piloto propuesto) implica una transición desde la configuración de desarrollo local hacia una arquitectura gestionada, escalable y robusta. El flujo general se compone de las siguientes etapas conceptuales:</p>
 <ol type="1">
-<li><strong>Contenerización:</strong> Empaquetar la aplicación de FastAPI, el LLM y las dependencias en contenedores. Esto asegura que el entorno de ejecución sea consistente en todas las etapas del despliegue.</li>
-<li><strong>Orquestación:</strong> Utilizar una herramienta de orquestación para gestionar los contenedores, facilitando la escalabilidad, el balanceo de carga y la recuperación automática en caso de fallos.</li>
-<li><strong>Monitoreo y logging:</strong> Implementar un sistema de monitoreo que rastree el rendimiento del LLM, el uso de recursos y el flujo de la API. Esto permitirá identificar cuellos de botella y errores en tiempo real.</li>
-<li><strong>Integración con el sistema de Help Desk:</strong> El paso final es integrar la API del chatbot directamente en la plataforma de Help Desk de CENACE, permitiendo que los ingenieros puedan interactuar con el sistema desde su entorno de trabajo habitual.</li>
+<li><p><strong>Contenerización de la Aplicación:</strong> El primer paso consiste en empaquetar la aplicación <em>backend</em> de FastAPI, junto con todas sus dependencias Python, en una imagen de contenedor (utilizando Docker o Podman). Esto garantiza un entorno de ejecución consistente y aislado, independientemente de la infraestructura subyacente. Si se opta por auto-alojar el LLM con Ollama en producción, este también podría ser contenerizado. Los detalles técnicos para construir estas imágenes se basan en la configuración del entorno descrita en el manual de instalación.</p></li>
+<li><p><strong>Configuración de Servicios Gestionados:</strong> A diferencia del entorno local, en un ambiente virtual o de nube se aprovecharán servicios gestionados para componentes clave. Esto incluye la configuración de una instancia de <strong>MongoDB Atlas</strong> (o similar) para la persistencia del historial y los tickets, y potencialmente un servicio de inferencia de modelos con <strong>aceleración GPU</strong> para hospedar <code>gemma3:4b</code>, asegurando rendimiento y escalabilidad. La conexión a estos servicios se configurará mediante variables de entorno, similar a lo descrito en el archivo <code>.env</code> del manual. La base vectorial de <strong>FAISS</strong> requerirá un sistema de almacenamiento persistente asociado al contenedor o servicio que la gestione.</p></li>
+<li><p><strong>Orquestación de Contenedores:</strong> Para gestionar la aplicación contenerizada (y potencialmente el LLM), se utilizará una herramienta de orquestación (como Podman). La orquestación facilitará el despliegue de múltiples instancias de la API para <strong>escalabilidad horizontal</strong>, gestionará el <strong>balanceo de carga</strong> entre ellas y asegurará la <strong>alta disponibilidad</strong> mediante la recuperación automática en caso de fallos.</p></li>
+<li><p><strong>Implementación de Monitoreo y Logging:</strong> Se configurarán herramientas de monitoreo específicas del entorno de nube para rastrear el rendimiento de la API, la latencia del LLM, el uso de recursos (CPU, GPU, memoria) y el estado de las bases de datos. Se establecerán sistemas de <em>logging</em> centralizados para capturar los registros de la aplicación (como los generados en <code>nohup.out</code> localmente) y facilitar la depuración y el análisis de errores en tiempo real, alineados con las métricas definidas en el plan de monitoreo.</p></li>
+<li><p><strong>Integración y Pruebas Finales:</strong> Una vez desplegada y configurada la API en el nuevo entorno, el paso final es la integración con el sistema de Help Desk del CENACE (si aplica para la fase piloto). Se realizarán pruebas funcionales y de carga en este entorno para validar la correcta operación antes de ponerlo a disposición de los usuarios piloto.</p></li>
 </ol>
+<p>Para obtener las instrucciones técnicas detalladas, comandos específicos y configuraciones de ejemplo para cada una de estas etapas, consulte la sección <strong>“Manual de instalación y despliegue”</strong> en la <strong>Documentación Técnica</strong> (<code>6_documentacion.qmd</code>).</p>
 </section>
 </section>
 

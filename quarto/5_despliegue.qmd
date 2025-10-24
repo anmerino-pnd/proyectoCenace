@@ -40,6 +40,26 @@ La arquitectura final para el despliegue estará compuesta por los siguientes co
 
 La interfaz se desarrolló con ayuda de 3 tipos de archivos básicos para páginas web. Múltiples archivos de `JavaScript`, un archivo `HTML` y estilos modernos que mejoraran la experiencia del usuario gracias a un archivo `CSS`.
 
+#### 2.2.1. Interfaz del usuario final
+
+A continuación, se presentan capturas de pantalla de las principales secciones de la interfaz de usuario final desplegada, mostrando las funcionalidades clave del sistema:
+
+* **Inicio de sesión**: Sección inicial donde el usuario puede acceder a su sesión. Por delimitaciones del proyecto, una sesión más segura no fue implementada.
+  ![Inicio de sesión](./datos/sesion_inicio.png){width=100%}
+  
+
+* **Pestaña de Chat:** Interfaz principal de conversación donde el usuario interactúa con el LLM para resolver incidentes. Muestra el historial de mensajes y las referencias utilizadas por el modelo.
+  ![Interfaz de la pestaña de Chat](./datos/sesion_chat.png){width=100%}
+
+* **Pestaña de Documentos:** Permite a los usuarios cargar nuevos documentos PDF a la base de conocimientos y visualizar los documentos ya procesados.
+  ![Interfaz de la pestaña de Documentos](./datos/sesion_documentos.png){width=100%}
+
+* **Pestaña de Soluciones:** Muestra las soluciones que han sido marcadas como "útiles" por los usuarios (a través del botón "like"). Desde aquí se pueden procesar estas soluciones para re-indexarlas en la base vectorial.
+  ![Interfaz de la pestaña de Soluciones](./datos/sesion_soluciones.png){width=100%}
+
+* **Pestaña de Tickets:** Presenta la lista de tickets registrados, permitiendo visualizar su detalle (descripción, categoría) y llevar un ticket específico a una nueva conversación en el chat.
+  ![Interfaz de la pestaña de Tickets](./ruta/a/imagen_tickets.png){width=100%}
+
 ### 2.3. Plan de monitoreo
 
 Durante la fase de pruebas, se implementará un plan de monitoreo para evaluar el rendimiento y comportamiento del sistema. Las métricas clave a seguir incluirán:
@@ -60,11 +80,22 @@ Se establecerá un plan de mantenimiento periódico para asegurar la estabilidad
 
 ### 2.5. Flujo de despliegue en el ambiente virtual
 
-El flujo propuesto para el despliegue es el siguiente:
+El despliegue del sistema en un ambiente virtual o de nube (como el entorno piloto propuesto) implica una transición desde la configuración de desarrollo local hacia una arquitectura gestionada, escalable y robusta. El flujo general se compone de las siguientes etapas conceptuales:
 
-1. **Contenerización:** Empaquetar la aplicación de FastAPI, el LLM y las dependencias en contenedores. Esto asegura que el entorno de ejecución sea consistente en todas las etapas del despliegue.
-2. **Orquestación:** Utilizar una herramienta de orquestación para gestionar los contenedores, facilitando la escalabilidad, el balanceo de carga y la recuperación automática en caso de fallos.
-3. **Monitoreo y logging:** Implementar un sistema de monitoreo que rastree el rendimiento del LLM, el uso de recursos y el flujo de la API. Esto permitirá identificar cuellos de botella y errores en tiempo real.
-4. **Integración con el sistema de Help Desk:** El paso final es integrar la API del chatbot directamente en la plataforma de Help Desk de CENACE, permitiendo que los ingenieros puedan interactuar con el sistema desde su entorno de trabajo habitual.
+1.  **Contenerización de la Aplicación:**
+    El primer paso consiste en empaquetar la aplicación *backend* de FastAPI, junto con todas sus dependencias Python, en una imagen de contenedor (utilizando Docker o Podman). Esto garantiza un entorno de ejecución consistente y aislado, independientemente de la infraestructura subyacente. Si se opta por auto-alojar el LLM con Ollama en producción, este también podría ser contenerizado. Los detalles técnicos para construir estas imágenes se basan en la configuración del entorno descrita en el manual de instalación.
 
+2.  **Configuración de Servicios Gestionados:**
+    A diferencia del entorno local, en un ambiente virtual o de nube se aprovecharán servicios gestionados para componentes clave. Esto incluye la configuración de una instancia de **MongoDB Atlas** (o similar) para la persistencia del historial y los tickets, y potencialmente un servicio de inferencia de modelos con **aceleración GPU** para hospedar `gemma3:4b`, asegurando rendimiento y escalabilidad. La conexión a estos servicios se configurará mediante variables de entorno, similar a lo descrito en el archivo `.env` del manual. La base vectorial de **FAISS** requerirá un sistema de almacenamiento persistente asociado al contenedor o servicio que la gestione.
+
+3.  **Orquestación de Contenedores:**
+    Para gestionar la aplicación contenerizada (y potencialmente el LLM), se utilizará una herramienta de orquestación (como Podman). La orquestación facilitará el despliegue de múltiples instancias de la API para **escalabilidad horizontal**, gestionará el **balanceo de carga** entre ellas y asegurará la **alta disponibilidad** mediante la recuperación automática en caso de fallos.
+
+4.  **Implementación de Monitoreo y Logging:**
+    Se configurarán herramientas de monitoreo específicas del entorno de nube para rastrear el rendimiento de la API, la latencia del LLM, el uso de recursos (CPU, GPU, memoria) y el estado de las bases de datos. Se establecerán sistemas de *logging* centralizados para capturar los registros de la aplicación (como los generados en `nohup.out` localmente) y facilitar la depuración y el análisis de errores en tiempo real, alineados con las métricas definidas en el plan de monitoreo.
+
+5.  **Integración y Pruebas Finales:**
+    Una vez desplegada y configurada la API en el nuevo entorno, el paso final es la integración con el sistema de Help Desk del CENACE (si aplica para la fase piloto). Se realizarán pruebas funcionales y de carga en este entorno para validar la correcta operación antes de ponerlo a disposición de los usuarios piloto.
+
+Para obtener las instrucciones técnicas detalladas, comandos específicos y configuraciones de ejemplo para cada una de estas etapas, consulte la sección **"Manual de instalación y despliegue"** en la **Documentación Técnica** (`6_documentacion.qmd`).
 :::

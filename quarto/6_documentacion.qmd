@@ -19,13 +19,22 @@ toc-depth: 3
 
 ### 1.2. Requisitos del sistema
 
-* **Python**: Versión 3.12.9
-* **Pip**: Última versión
-* **UV**: Última versión (gestor de paquetes y entornos)
+* **CUDA**: Tarjeta de video y con drivers actualizados en el ambiente.
+* **Python**: Versión 3.12.9.
+* **Pip**: Última versión.
+* **UV**: Última versión (gestor de paquetes y entornos).
 * **Ollama**: Instalado y en ejecución en el servidor para el hosting de modelos open-source.
 * **MongoDB**: Acceso remoto configurado para las colecciones de historial de conversaciones y tickets.
+* **Podman**: Herramienta de virtualización y contenedores sin daemon; utilizado para correr MongoDB.
 
 ### 1.3. Dependencias principales del sistema
+
+* **FastAPI** y **Uvicorn**: Utilizados para construir y servir la **API web** que expone los endpointsmdel *chatbot* y la gestión de documentos. Permiten crear una interfaz robusta y asíncrona.
+* **Ollama (Python Client)**: Librería cliente para interactuar con el servicio **Ollama**, que hospeda y ejecuta los modelos de lenguaje *open-source* (`gemma:4b`) y de *embeddings* (`bge-m3:latest`) localmente.
+* **Pymongo**: El controlador oficial de Python para **MongoDB**. Es esencial para interactuar con la base de datos donde se almacena el **historial de conversaciones**, la información de los **tickets** y el registro de **archivos procesados**.
+* **FAISS (faiss-cpu)**: Biblioteca desarrollada por Meta AI para la **búsqueda eficiente de similitud** y agrupamiento de vectores densos. Es el núcleo de la **base de datos vectorial** del sistema.
+* **UV**: Gestor de paquetes y entornos virtuales, asegura la reproducibilidad del entorno.
+* **Otras dependencias**: Todas las demás librerías requeridas se detallan en el archivo `pyproject.toml`. La instalación de este archivo se detalla más adelante.
 
 ### 1.4. Instalación del sistema
 
