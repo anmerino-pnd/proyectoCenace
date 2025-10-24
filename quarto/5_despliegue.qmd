@@ -57,8 +57,8 @@ A continuación, se presentan capturas de pantalla de las principales secciones 
 * **Pestaña de Soluciones:** Muestra las soluciones que han sido marcadas como "útiles" por los usuarios (a través del botón "like"). Desde aquí se pueden procesar estas soluciones para re-indexarlas en la base vectorial.
   ![Interfaz de la pestaña de Soluciones](./datos/sesion_soluciones.png){width=100%}
 
-* **Pestaña de Tickets:** Presenta la lista de tickets registrados, permitiendo visualizar su detalle (descripción, categoría) y llevar un ticket específico a una nueva conversación en el chat.
-  ![Interfaz de la pestaña de Tickets](./ruta/a/imagen_tickets.png){width=100%}
+* **Pestaña de Tickets:** Presenta la lista de tickets registrados, permitiendo visualizar su detalle (título, descripción y categoría) y llevar un ticket específico a una nueva conversación en el chat, iterando hasta llegar a la solución del ticket.
+  ![Interfaz de la pestaña de Tickets](./datos/sesion_tickets.png){width=100%}
 
 ### 2.3. Plan de monitoreo
 
