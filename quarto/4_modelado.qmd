@@ -65,5 +65,11 @@ La fase de evaluación es crucial para validar el desempeño del sistema y asegu
 
 ### 2.1 Criterios de evaluación
 
+La evaluación de un sistema de este tipo es una tarea no trivial. En lugar de métricas tradicionales, se adoptó un enfoque basado en la calidad de la recuperación y la generación, utilizando el marco propuesto por RAGAS. Este enfoque se centra en tres dimensiones clave: 
 
+* Fidelidad: Las respuestas se basan únicamente en el contexto recuperado (los PDF y base de conocimientos). Que no presente alucinaciones en un 95% de los casos. ¿La respuesta se basa fielmente en el contexto recuperado?
+* Relevancia de la respuesta: Las respuestas generadas respondan a la consulta del usuario. ¿La respuesta aborda directamente la consulta del usuario?
+* Relevancia del contexto: La información recuperada hayan sido relevantes y útiles. ¿La información recuperada es pertinente para la pregunta?
+ 
+Estas métricas, alineadas con el juicio humano, permiten un ciclo de evaluación robusto y ágil.
 :::
