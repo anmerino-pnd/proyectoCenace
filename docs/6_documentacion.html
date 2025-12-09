@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.6.40">
+<meta name="generator" content="quarto-1.7.31">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -21,8 +21,9 @@ ul.task-list li input[type="checkbox"] {
   vertical-align: middle;
 }
 /* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -33,7 +34,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -65,17 +66,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./favicon.png" rel="icon" type="image/png">
-<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-8ea72dc5fed832574809a9c94082fbbb.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ddd961a2510921635943dfbbd19534c4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-ae2d0dcda2edce4ab590422bb373b64f.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-08799928d293638fe9563d5c5a2794e5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -108,7 +112,169 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -201,6 +367,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
+
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Documentación</h1>
@@ -258,7 +425,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ol type="1">
 <li>Clonar el repositorio:</li>
 </ol>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/anmerino-pnd/proyectoCenace</span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> repo fork https://github.com/anmerino-pnd/proyectoCenace</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> cenacellm</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ol start="2" type="1">
 <li>Configurar el entorno:</li>
@@ -309,33 +476,518 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>La solución se basa en una arquitectura de <strong>Recuperación Aumentada con Generación (RAG)</strong>. La estructura modular del código, organizada en paquetes de Python, permite una clara separación de responsabilidades.</p>
 <section id="estructura-de-carpetas-y-módulos" class="level3">
 <h3 class="anchored" data-anchor-id="estructura-de-carpetas-y-módulos">2.1. Estructura de carpetas y módulos</h3>
+<p>El proyecto sigue una estructura modular para facilitar la gestión y el mantenimiento. A continuación, se detalla el propósito de los módulos y clases principales, además de sus funciones clave.</p>
+<section id="documentos" class="level4">
+<h4 class="anchored" data-anchor-id="documentos">2.1.1. Documentos</h4>
+<section id="cenacellmdoccollection.py" class="level5">
+<h5 class="anchored" data-anchor-id="cenacellmdoccollection.py"><strong>cenacellm/doccollection.py</strong></h5>
 <ul>
-<li><p><code>API/</code></p>
+<li><p><strong>Clases y funciones clave</strong></p>
 <ul>
-<li><code>chat.py</code>: Contiene los <em>endpoints</em> de FastAPI para interactuar con el chatbot.</li>
-<li><code>main.py</code>: Archivo principal que define la aplicación FastAPI y monta los <em>endpoints</em>.</li>
+<li><code>class DisjointCollection(DocCollection)</code>:
+<ul>
+<li><code>__init__</code>:
+<ul>
+<li><strong>Propósito</strong>: Inicializar la configuración predeterminada para la segmentación de textos.</li>
+<li><strong>Comportamiento</strong>: Establece el tamaño del fragmento (chunk_size) en 1500 caracteres y el solapamiento máximo (<code>max_overlap</code>) en 200 caracteres para asegurar continuidad entre segmentos.</li>
 </ul></li>
-<li><p><code>ollama/</code></p>
+<li><code>get_chunks() -&gt; list</code>:
 <ul>
-<li><code>assistant.py</code>: Clase que encapsula la lógica para generar embeddings utilizando el modelo <code>bge-m3:latest</code> de Ollama.</li>
-</ul></li>
-<li><p><code>doccollection.py</code>: Módulo que maneja la carga y el procesamiento de documentos (PDF’s) para generar fragmentos de texto.</p></li>
-<li><p><code>rag.py</code>: Clase principal del sistema RAG que integra el <code>assistant</code>, el <code>doccollection</code> y el <code>vectorstore</code>.</p></li>
-<li><p><code>vectorstore.py</code>: Módulo que implementa la base de datos vectorial con FAISS.</p></li>
-<li><p><code>settings/</code></p>
+<li><strong>Propósito</strong>: Dividir uno o varios objetos de texto en fragmentos más pequeños basados en la configuración semántica definida.</li>
+<li><strong>Parámetros</strong>:
 <ul>
-<li><code>clients.py</code>: Archivo de configuración que establece la conexión con la base de datos y el cliente de Ollama.</li>
-<li><code>config.py</code>: Define las rutas de directorios para los vectores y los documentos procesados.</li>
+<li><code>texts (Union[Text, List[Text]])</code>: Un objeto Text individual o una lista de objetos <code>Text</code> que contienen el contenido a fragmentar.</li>
 </ul></li>
-<li><p><code>tools/</code></p>
+<li><strong>Retorna</strong>: Una lista de objetos <code>Text</code> donde cada elemento es un fragmento del contenido original, conservando los metadatos.</li>
+<li><strong>Comportamiento</strong>: Utiliza <code>TextSplitter</code> para segmentar el contenido. Si la entrada es un solo texto, lo convierte en lista. Itera sobre los textos, genera los chunks y crea nuevos objetos <code>Text</code> heredando los metadatos del padre.</li>
+</ul></li>
+<li><code>load_pdf() -&gt; List[Text]</code>:
 <ul>
-<li><code>assistant.py</code>: Clase base abstracta para el asistente LLM.</li>
-<li><code>doccollection.py</code>: Clase base abstracta para la colección de documentos.</li>
-<li><code>embedder.py</code>: Clase base abstracta para el generador de embeddings.</li>
-<li><code>vectorstore.py</code>: Clase base abstracta para almacén de vectores.</li>
+<li><strong>Propósito</strong>: Leer un archivo PDF, extraer su contenido textual página por página y generar metadatos detallados.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>pdf_path (str)</code>: La ruta del archivo PDF a procesar.</li>
+<li><code>collection (str)</code>: El nombre opcional de la colección a la que pertenecerá el documento.</li>
 </ul></li>
-<li><p><code>types.py</code>: Módulo que define modelos de datos con Pydantic para tipado de datos como <code>Text</code>, <code>TextMetadata</code>, <code>Question</code>, etc.</p></li>
+<li><strong>Retorna</strong>: Una lista de objetos <code>Text</code>, donde cada objeto representa el contenido de una página del PDF.</li>
+<li><strong>Comportamiento</strong>: Utiliza PdfReader para leer el archivo. Genera un ID de referencia único (<code>uuid4</code>). Extrae metadatos nativos del PDF y crea un diccionario de metadatos enriquecido para cada página (incluyendo número de página, total de páginas, nombre de archivo y referencia). Finalmente, instancia objetos <code>Text</code> con el contenido extraído y estos metadatos.</li>
+</ul></li>
+</ul></li>
+</ul></li>
 </ul>
+</section>
+</section>
+<section id="embedder" class="level4">
+<h4 class="anchored" data-anchor-id="embedder">2.1.2. Embedder</h4>
+<section id="cenacellmollamaembedder.py" class="level5">
+<h5 class="anchored" data-anchor-id="cenacellmollamaembedder.py"><strong>cenacellm/ollama/embedder.py</strong></h5>
+<ul>
+<li><p><strong>Clases y funciones clave</strong></p>
+<ul>
+<li><code>class OllamaEmbedder(Embedder)</code>:
+<ul>
+<li><code>__init__</code>:
+<ul>
+<li><strong>Propósito</strong>: Configurar el modelo de embeddings que se utilizará para la vectorización.</li>
+<li><strong>Comportamiento</strong>: Define el modelo bge-m3:latest como el motor predeterminado para generar los vectores.</li>
+</ul></li>
+<li><code>vectorize() -&gt; NDarray</code>:
+<ul>
+<li><strong>Propósito</strong>: Convertir una cadena de texto en su representación vectorial numérica.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>s (str)</code>: La cadena de texto (prompt) que se desea vectorizar.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Un arreglo de NumPy (<code>np.array</code>) con tipo de dato <code>float32</code> que representa el embedding del texto.</li>
+<li><strong>Comportamiento</strong>: Realiza una llamada a la API de Ollama utilizando el modelo configurado y retorna el vector resultante extraído de la respuesta.</li>
+</ul></li>
+<li><code>vectorize_batch() -&gt; list[np.ndarray]</code>:
+<ul>
+<li><strong>Propósito</strong>: Generar embeddings para una lista de textos múltiples en secuencia.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>texts (list[str])</code>: Lista de cadenas de texto a vectorizar.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Una lista de arreglos de NumPy, correspondientes a los vectores de cada texto de entrada.</li>
+<li><strong>Comportamiento</strong>: Itera sobre la lista de textos proporcionada y llama al método <code>vectorize</code> para cada elemento individualmente, acumulando los resultados.</li>
+</ul></li>
+<li><code>dim() -&gt; int</code>:
+<ul>
+<li><strong>Propósito</strong>: Obtener la dimensión del espacio vectorial generado por el modelo</li>
+<li><strong>Retorna</strong>: Un entero que representa la longitud del vector (número de dimensiones).</li>
+<li><strong>Comportamiento</strong>: Vectoriza una palabra de prueba (“Hola”) y calcula la longitud del arreglo resultante para determinar la dimensionalidad del modelo.</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+</section>
+</section>
+<section id="vector-store" class="level4">
+<h4 class="anchored" data-anchor-id="vector-store">2.1.3. Vector Store</h4>
+<section id="cenacellmvectorstore.py" class="level5">
+<h5 class="anchored" data-anchor-id="cenacellmvectorstore.py"><strong>cenacellm/vectorstore.py</strong></h5>
+<ul>
+<li><p><strong>Clases y funciones clave</strong></p>
+<ul>
+<li><code>class FAISSVectorStore(VectorStore)</code>:
+<ul>
+<li><code>__init__</code>:
+<ul>
+<li><strong>Propósito</strong>: Inicializar el índice de búsqueda vectorial (FAISS) y cargar datos persistentes si existen.</li>
+<li><strong>Comportamiento</strong>: Verifica si existe un índice previo en disco. Si existe, lo carga (intentando usar GPU si es posible) junto con el diccionario de textos (<code>pickle</code>). Si no, crea un índice <code>IndexFlatL2</code> nuevo.</li>
+</ul></li>
+<li><code>get_similar() -&gt; list</code>:
+<ul>
+<li><strong>Propósito</strong>: Realizar una búsqueda de similitud semántica en el índice vectorial.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>v (np.ndarray)</code>: El vector de consulta (query embedding).</li>
+<li><code>k (int)</code>: Número de vecinos más cercanos a recuperar (por defecto 10).</li>
+<li><code>filter_metadata (Dict[str, str])</code>: Filtros opcionales para restringir la búsqueda (ej. por colección).</li>
+</ul></li>
+<li><strong>Retorna</strong>: Una lista de tuplas <code>(vector, texto)</code> con los resultados más relevantes.</li>
+<li><strong>Comportamiento</strong>: Ejecuta <code>index.search</code> y filtra los resultados basándose en los metadatos proporcionados y la validez de los índices recuperados.</li>
+</ul></li>
+<li><code>add_text() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Añadir un único vector y su texto asociado al índice.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>v (np.ndarray)</code>: El vector a añadir.</li>
+<li><code>t (Text)</code>: El objeto de texto asociado.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Añade el vector al índice FAISS y almacena el par <code>(vector, texto)</code> en el diccionario en memoria.</li>
+</ul></li>
+<li><code>add_texts() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Añadir un lote de vectores y textos al índice de manera eficiente.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>vectors (list[np.ndarrar])</code>: Lista de vectores.</li>
+<li><code>chunks (list[Text])</code>: Lista de objetos de texto correspondientes.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Apila los vectores en una matriz <code>numpy</code> y los añade al índice en una sola operación, actualizando luego el diccionario secuencialmente.</li>
+</ul></li>
+<li><code>save_index() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Persistir el estado actual del índice y los textos en disco.</li>
+<li><strong>Comportamiento</strong>: Escribe el índice FAISS en un archivo .faiss y serializa el diccionario de textos en un archivo .pkl.</li>
+</ul></li>
+<li><code>distance() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Calcular la distancia euclidiana entre dos vectores.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>v1 (np.ndarrar)</code>: Primer vector.</li>
+<li><code>v2 (np.ndarrar)</code>: Segundo vector.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Un valor flotante representando la distancia (norma L2).</li>
+</ul></li>
+<li><code>delete() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Eliminar un elemento específico del índice por su ID interno.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>idx (int)</code>: Índice numérico del elemento a eliminar.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Elimina la entrada del diccionario y remueve el ID del índice FAISS.</li>
+</ul></li>
+<li><code>update_metadata() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Actualizar los metadatos de un texto ya indexado.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>idx (int)</code>: Índice del elemento.</li>
+<li><code>new_metadata (Dict[str, str])</code>: Diccionario con los valores a actualizar.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Crea una copia del objeto <code>Text</code> y <code>TextMetadata</code> con los nuevos valores y actualiza la referencia en el diccionario.</li>
+</ul></li>
+<li><code>delete_by_reference() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Eliminar todos los vectores asociados a un documento específico.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>reference_id (str)</code>: UUID del documento a eliminar.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Itera sobre el diccionario para encontrar todos los índices que coincidan con la referencia y los elimina tanto del diccionario como del índice FAISS.</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+</section>
+</section>
+<section id="agente" class="level4">
+<h4 class="anchored" data-anchor-id="agente">2.1.4. Agente</h4>
+<section id="cenacellmollamaassistant.py" class="level5">
+<h5 class="anchored" data-anchor-id="cenacellmollamaassistant.py"><strong>cenacellm/ollama/assistant.py</strong></h5>
+<ul>
+<li><p><strong>Clases y funciones clave</strong></p>
+<ul>
+<li><code>class OllamaAssistant(Assistant)</code>:
+<ul>
+<li><code>__init__</code>:
+<ul>
+<li><strong>Propósito</strong>: Configurar la conexión a MongoDB y definir el modelo LLM (<code>gemma3:4b</code>).</li>
+<li><strong>Comportamiento</strong>: Establece la conexión con la base de datos, selecciona las colecciones y crea índices para consultas eficientes.</li>
+</ul></li>
+<li><code>load_history() -&gt; list</code>:
+<ul>
+<li><strong>Propósito</strong>: Recuperar el historial de chat de una conversación.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>conversation_id (str)</code>: ID de la conversación.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Lista de mensajes (diccionarios).</li>
+<li><strong>Comportamiento</strong>: Consulta MongoDB filtrando por usuario y conversación.</li>
+</ul></li>
+<li><code>save_history() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Guardar o actualizar el historial de una conversación.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>conversation_id (str)</code>: ID de la conversación.</li>
+<li><code>history (list)</code>: Lista actualizada de mensajes.</li>
+<li><code>conversation_title (Optional[str])</code>: Título opcional para la conversación.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Realiza una operación <code>update_one</code> con <code>upsert=True</code> en MongoDB, actualizando mensajes, fecha de modificación y título si se provee.</li>
+</ul></li>
+<li><code>save_backup() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Guardar un respaldo incremental del historial.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>history_chunk (list)</code>: Fragmento de mensajes a respaldar.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Hace un <code>push</code> de los nuevos mensajes a una colección de respaldo separada.</li>
+</ul></li>
+<li><code>clear_conversation_history() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Limpiar los mensajes de una conversación sin borrar el registro de la misma.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>conversation_id (str)</code>: ID de la conversación.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Establece el campo <code>messages</code> como una lista vacía en MongoDB.</li>
+</ul></li>
+<li><code>delete_conversation() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Eliminar completamente una conversación.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>conversation_id (str)</code>: ID de la conversación.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Elimina el documento completo de la colección de conversaciones.</li>
+</ul></li>
+<li><code>make_metadata() -&gt; CallMetadata</code>:
+<ul>
+<li><strong>Propósito</strong>: Estructurar los metadatos de una llamada al LLM.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>response (GenerateResponse)</code>: Objeto de respuesta de Ollama.</li>
+<li><code>duration (float)</code>: Tiempo de ejecución.</li>
+<li><code>references</code>: Chunks utilizados como contexto.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Objeto <code>CallMetadata</code> estandarizado.</li>
+</ul></li>
+<li><code>answer() -&gt; Tuple[Generator[str, None, None], str, Dict[str, Any]]</code>:
+<ul>
+<li><strong>Propósito</strong>: Generar una respuesta del asistente utilizando contexto y streaming.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>question (Question)</code>: Pregunta del usuario.</li>
+<li><code>chunks (Chunks)</code>: Contexto recuperado.</li>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>conversation_id (str)</code>: ID de la conversación.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Un generador de tokens, el ID del mensaje del bot y los metadatos finales.</li>
+<li><strong>Comportamiento</strong>: Construye el prompt con historial y contexto, llama a api.generate en modo stream, acumula tokens, y al finalizar guarda el turno en el historial y calcula metadatos.</li>
+</ul></li>
+<li><code>update_message_metadata() -&gt; bool</code>:
+<ul>
+<li><strong>Propósito</strong>: Actualizar metadatos de un mensaje específico (ej. “like”).</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>message_id (str)</code>: ID del mensaje completo.</li>
+<li><code>new_metadata (Dict[str, Any])</code>: Metadatos nuevos a actualizar.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Busca el mensaje en el historial del usuario y actualiza sus campos de metadatos en MongoDB.</li>
+</ul></li>
+<li><code>get_liked_solutions() -&gt; List[Dict[str, Any]]</code>:
+<ul>
+<li><strong>Propósito</strong>: Obtener todas las respuestas marcadas como útiles (“liked”) por el usuario.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Lista de pares pregunta-respuesta útiles.</li>
+<li><strong>Comportamiento</strong>: Itera sobre todas las conversaciones del usuario buscando mensajes con <code>metadata.disable = True</code>.</li>
+</ul></li>
+<li><code>get_user_conversations() -&gt; List[Dict[str, Any]]</code>:
+<ul>
+<li><strong>Propósito</strong>: Listar las conversaciones activas del usuario.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Lista con ID, título y fecha de actualización.</li>
+<li><strong>Comportamiento</strong>: Consulta MongoDB proyectando solo los campos necesarios y ordenando por fecha. Genera un título por defecto si no existe.</li>
+</ul></li>
+<li><code>has_liked_solution_in_conversation() -&gt; bool</code>:
+<ul>
+<li><strong>Propósito</strong>: Verificar si una conversación contiene soluciones validadas.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>conversation_id (str)</code>: ID de la conversación.</li>
+</ul></li>
+<li><strong>Retorna</strong>: <code>True</code> si existe al menos un mensaje “liked”.</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+</section>
+</section>
+<section id="rag" class="level4">
+<h4 class="anchored" data-anchor-id="rag">2.1.5. RAG</h4>
+<section id="cenacellmrag.py" class="level5">
+<h5 class="anchored" data-anchor-id="cenacellmrag.py"><strong>cenacellm/rag.py</strong></h5>
+<ul>
+<li><p><strong>Clases y funciones clave</strong></p>
+<ul>
+<li><code>class RAG</code>:
+<ul>
+<li><code>__init__</code>:
+<ul>
+<li><strong>Propósito</strong>: Orquestar todos los componentes del sistema (Assistant, Embedder, VectorStore, DB).</li>
+<li><strong>Comportamiento</strong>: Inicializa las instancias, conecta a MongoDB, carga cachés de archivos procesados y configura índices únicos en la base de datos.</li>
+</ul></li>
+<li><code>_load_processed_files() -&gt; Dict[str, Any]</code>:
+<ul>
+<li><strong>Propósito</strong>: Cargar en memoria el registro de archivos ya procesados para evitar re-procesamiento.</li>
+<li><strong>Retorna</strong>: Diccionario mapeando claves de archivo a sus metadatos.</li>
+</ul></li>
+<li><code>_save_processed_files() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Persistir el estado de los archivos procesados en MongoDB.</li>
+</ul></li>
+<li><code>_delete_processed_file() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Eliminar registros de archivos procesados de la base de datos y memoria.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>file_key (List[str])</code>: ID del documento procesado en MongoDB.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Cargar IDs de soluciones ya indexadas para evitar duplicados.</li>
+</ul></li>
+<li><code>_load_processed_solutions_ids() -&gt; set</code>:
+<ul>
+<li><strong>Propósito</strong>: Cargar IDs de soluciones ya indexadas para evitar duplicados.</li>
+</ul></li>
+<li><code>_add_processed_solution_id() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Registrar una nueva solución como procesada en MongoDB.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>message_id (str)</code>: ID del documento del mensaje en MongoDB.</li>
+</ul></li>
+</ul></li>
+<li><code>load_documents() -&gt; list</code>:
+<ul>
+<li><strong>Propósito</strong>: Procesar una carpeta de PDFs e indexarlos.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>folder_path (str)</code>: Ruta de los archivos.</li>
+<li><code>collection_name (str)</code>: Nombre de la colección lógica.</li>
+<li><code>force_reload (bool)</code>: Forzar re-procesamiento si ya existen.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Estadísticas [docs_totales, nuevos_docs, chunks_totales]</li>
+<li><strong>Comportamiento</strong>: Lee PDFs, verifica cambios (tamaño/fecha), fragmenta, vectoriza por lotes, guarda en vectorstore y actualiza el registro de archivos procesados.</li>
+</ul></li>
+<li><code>query() -&gt; Tuple[Generator[str, None, None], List, str, Dict[str, Any]]</code>:
+<ul>
+<li><strong>Propósito</strong>: Ejecutar la lógica de recuperación y llamada al asistente (núcleo del RAG).</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>conversation_id (str)</code>: ID de la conversación.</li>
+<li><code>question (str)</code>: Consulta del usuario.</li>
+<li><code>k (int)</code>: Número de chunks a recuperar.</li>
+<li><code>filter_metadata (Optional[Dict[str, Any]])</code>: Filtros de búsqueda.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Generador de tokens, chunks usados, ID del mensaje y metadatos.</li>
+<li><strong>Comportamiento</strong>: Vectoriza la pregunta, busca en el vectorstore (balanceando documentos y soluciones si no hay filtro), y delega la generación al <code>assistant</code>.</li>
+</ul></li>
+<li><code>answer() -&gt; Generator[Union[str, Dict[str, Any]], None, None]</code>:
+<ul>
+<li><strong>Propósito</strong>: Wrapper sobre <code>query</code> para exponer una interfaz de streaming unificada.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>conversation_id (str)</code>: ID de la conversación.</li>
+<li><code>question (str)</code>: Consulta del usuario.</li>
+<li><code>k (int)</code>: Número de chunks a recuperar.</li>
+<li><code>filter_metadata (Optional[Dict[str, Any]])</code>: Filtros de búsqueda.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Generador que emite tokens de texto y finalmente un JSON con metadatos.</li>
+</ul></li>
+<li><code>delete_conversation() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Eliminar una conversación y desvincular tickets asociados</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+<li><code>conversation_id (str)</code>: ID de la conversación.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Llama a <code>assistant.delete_conversation</code> y actualiza tickets en MongoDB poniendo su <code>solucion_id</code> en <code>None</code>.</li>
+</ul></li>
+<li><code>add_liked_solutions_to_vectorstore() -&gt; int</code>:
+<ul>
+<li><strong>Propósito</strong>: Convertir interacciones exitosas en nuevo conocimiento vectorial.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>user_id (str)</code>: ID del usuario.</li>
+</ul></li>
+<li><strong>Retorna</strong>: Cantidad de soluciones añadidas.</li>
+<li><strong>Retorna</strong>: Obtiene soluciones “liked”, verifica si ya existen, extrae metadatos, crea nuevos objetos <code>Text</code> y los indexa en el vectorstore.</li>
+</ul></li>
+<li><code>delete_from_vectorstore() -&gt; None</code>:
+<ul>
+<li><strong>Propósito</strong>: Eliminar documentos o soluciones del índice vectorial.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>reference_id (str)</code>: ID del vector almacenado en la base de datos vectorial.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Toma un índice del vector objetivo, lo busca en el archivo indexado y lo elimina.</li>
+</ul></li>
+<li><code>get_tickets() -&gt; List</code>:
+<ul>
+<li><strong>Propósito</strong>: Obtener todos los tickets con su estado de resolución.</li>
+<li><strong>Comportamiento</strong>: Consulta MongoDB y calcula dinámicamente el campo <code>is_solved</code>.</li>
+</ul></li>
+<li><code>add_ticket() -&gt; Dict</code>:
+<ul>
+<li><strong>Propósito</strong>: Obtener todos los tickets con su estado de resolución.</li>
+<li><strong>Comportamiento</strong>: Consulta MongoDB y calcula dinámicamente el campo <code>is_solved</code>.</li>
+</ul></li>
+<li><code>update_ticket_metadata() -&gt; bool</code>:
+<ul>
+<li><strong>Propósito</strong>: Modificar campos de un ticket existente.</li>
+<li><strong>Parámetros</strong>:
+<ul>
+<li><code>ticket_reference (str)</code>: ID del ticket almacenado en MongoDB.</li>
+<li><code>new_metadata (Dict[str, Any])</code>: Nuevos metadatos a actualizar.</li>
+</ul></li>
+<li><strong>Comportamiento</strong>: Actualiza los metadatos de un ticket específico en la base de datos basado en su ‘reference’.</li>
+</ul></li>
+<li><code>get_ticket_by_conversation() -&gt; Optional[Dict]</code>:
+<ul>
+<li><strong>Propósito</strong>: Encontrar el ticket asociado a una conversación activa.</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+</section>
+</section>
+<section id="api" class="level4">
+<h4 class="anchored" data-anchor-id="api">2.1.6. API</h4>
+<section id="cenacellmapichat.py" class="level5">
+<h5 class="anchored" data-anchor-id="cenacellmapichat.py"><strong>cenacellm/API/chat.py</strong></h5>
+<p>Esta capa actúa como lógica de negocio intermedia entre FastAPI y el sistema RAG.</p>
+<ul>
+<li><p><strong>Clases y funciones clave</strong></p></li>
+<li><p><code>class QueryRequest</code>: Modelo de datos para la solicitud de chat (<code>user_id</code>, <code>query</code>, <code>conversation_id</code>, etc.).</p></li>
+<li><p><code>class UpdateMetadataRequest</code>: Modelo para actualizar metadatos (ej. likes).</p></li>
+<li><p><code>class CreateConversationRequest</code>: Modelo para iniciar conversaciones (<code>title opcional</code>).</p></li>
+<li><p><code>class AddTicketRequest</code>: Modelo para creación de tickets.</p></li>
+<li><p><code>async_chat_stream() -&gt; StreamingResponse</code>:</p>
+<ul>
+<li><strong>Propósito</strong>: Iniciar el flujo de respuesta del chat.</li>
+<li><strong>Comportamiento</strong>: Llama a <code>rag.answer</code> y devuelve un <code>StreamingResponse</code> para envío en tiempo real.</li>
+</ul></li>
+<li><p><code>load_documents(), get_preprocessed_files()</code>: Wrappers para exponer funciones del RAG.</p></li>
+<li><p><code>upload_documents() -&gt; Dict</code>:</p>
+<ul>
+<li><strong>Propósito</strong>: Guardar archivos físicos en el servidor.</li>
+<li><strong>Comportamiento</strong>: Recibe <code>UploadFile</code>, escribe en disco y retorna estado.</li>
+</ul></li>
+<li><p><code>delete_document() -&gt; Dict</code>:</p>
+<ul>
+<li><strong>Propósito</strong>: Orquestar la eliminación de documentos.</li>
+<li><strong>Comportamiento</strong>: Elimina del vectorstore (vía RAG) y borra el archivo físico del disco.</li>
+</ul></li>
+<li><p><code>process_liked_solutions_to_vectorstore()</code>: Dispara la re-indexación de soluciones útiles.</p></li>
+<li><p><code>delete_solution_by_reference()</code>: Elimina soluciones aprendidas del vectorstore.</p></li>
+</ul>
+</section>
+<section id="cenacellmapimain.py" class="level5">
+<h5 class="anchored" data-anchor-id="cenacellmapimain.py"><strong>cenacellm/API/main.py</strong></h5>
+<p>Aquí se encuentra el main de todo el sistema y las llamadas FastAPI…</p>
+<ul>
+<li><p><strong>Clases y funciones clave</strong></p>
+<ul>
+<li><code>POST/chat</code>: Inicia la generación de respuesta en streaming.</li>
+<li><code>GET /history/{user_id}/{conversation_id}</code>: Devuelve el historial de mensajes.</li>
+<li><code>DELETE /history/{user_id}/{conversation_id}</code>: Borra el historial de una conversación.</li>
+<li><code>POST /upload_documents</code>: Sube archivos PDF al servidor.</li>
+<li><code>POST /load_documents</code>: Dispara el procesamiento e indexación de los PDFs subidos.</li>
+<li><code>POST /delete_document</code>: Elimina documentos procesados.</li>
+<li><code>PATCH /history/{user_id}/messages/{message_id}</code>: Actualiza metadatos (usado para dar like).</li>
+<li><code>POST /process_liked_solutions/{user_id}</code>: Convierte likes en conocimiento vectorial.</li>
+<li><code>GET /conversations/{user_id}</code>: Lista conversaciones del usuario.</li>
+<li><code>POST /new_conversation</code>: Crea una nueva sesión de chat.</li>
+<li><code>POST /delete_conversation</code>: Elimina una sesión.</li>
+<li><code>GET /tickets</code> y <code>POST /tickets</code>: Gestión de tickets de soporte.</li>
+<li><code>GET /</code>: Sirve la interfaz de usuario (UI) renderizando index.html.</li>
+</ul></li>
+</ul>
+</section>
+</section>
 </section>
 <section id="modelos-llm-utilizados" class="level3">
 <h3 class="anchored" data-anchor-id="modelos-llm-utilizados">2.2. Modelos LLM utilizados</h3>
@@ -346,7 +998,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li>Los archivos PDF son cargados y procesados por el módulo <code>doccollection.py</code>.</li>
 <li><code>doccollection</code> divide cada documento en fragmentos.</li>
-<li>Cada fragmento es enviado al <code>embedder.py</code> para generar su representación vectorial.</li>
+<li>Cada fragmento es enviado al que se encuentra en <code>embedder.py</code> y el modelo <code>bge-m3</code> genera su representación vectorial.</li>
 <li>Los vectores resultantes se almacenan en la base de datos vectorial de FAISS, implementada en <code>vectorstore.py</code>, junto con sus metadatos.</li>
 </ul>
 <ol start="2" type="1">
@@ -449,380 +1101,255 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Volver arriba</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
-window.document.addEventListener("DOMContentLoaded", function (event) {
-  const toggleBodyColorMode = (bsSheetEl) => {
-    const mode = bsSheetEl.getAttribute("data-mode");
-    const bodyEl = window.document.querySelector("body");
-    if (mode === "dark") {
-      bodyEl.classList.add("quarto-dark");
-      bodyEl.classList.remove("quarto-light");
-    } else {
-      bodyEl.classList.add("quarto-light");
-      bodyEl.classList.remove("quarto-dark");
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
     }
-  }
-  const toggleBodyColorPrimary = () => {
-    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
-    if (bsSheetEl) {
-      toggleBodyColorMode(bsSheetEl);
-    }
-  }
-  toggleBodyColorPrimary();  
-  const disableStylesheet = (stylesheets) => {
-    for (let i=0; i < stylesheets.length; i++) {
-      const stylesheet = stylesheets[i];
-      stylesheet.rel = 'prefetch';
-    }
-  }
-  const enableStylesheet = (stylesheets) => {
-    for (let i=0; i < stylesheets.length; i++) {
-      const stylesheet = stylesheets[i];
-      stylesheet.rel = 'stylesheet';
-    }
-  }
-  const manageTransitions = (selector, allowTransitions) => {
-    const els = window.document.querySelectorAll(selector);
-    for (let i=0; i < els.length; i++) {
-      const el = els[i];
-      if (allowTransitions) {
-        el.classList.remove('notransition');
-      } else {
-        el.classList.add('notransition');
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
       }
+      return false;
     }
-  }
-  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
-    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
-    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
-    let newTheme = '';
-    if(darkModeDefault) {
-      newTheme = isAlternate ? baseTheme : alternateTheme;
-    } else {
-      newTheme = isAlternate ? alternateTheme : baseTheme;
-    }
-    const changeGiscusTheme = () => {
-      // From: https://github.com/giscus/giscus/issues/336
-      const sendMessage = (message) => {
-        const iframe = document.querySelector('iframe.giscus-frame');
-        if (!iframe) return;
-        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
       }
-      sendMessage({
-        setConfig: {
-          theme: newTheme
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
         }
       });
     }
-    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
-    if (isGiscussLoaded) {
-      changeGiscusTheme();
-    }
-  }
-  const toggleColorMode = (alternate) => {
-    // Switch the stylesheets
-    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
-    manageTransitions('#quarto-margin-sidebar .nav-link', false);
-    if (alternate) {
-      enableStylesheet(alternateStylesheets);
-      for (const sheetNode of alternateStylesheets) {
-        if (sheetNode.id === "quarto-bootstrap") {
-          toggleBodyColorMode(sheetNode);
-        }
-      }
-    } else {
-      disableStylesheet(alternateStylesheets);
-      toggleBodyColorPrimary();
-    }
-    manageTransitions('#quarto-margin-sidebar .nav-link', true);
-    // Switch the toggles
-    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
-    for (let i=0; i < toggles.length; i++) {
-      const toggle = toggles[i];
-      if (toggle) {
-        if (alternate) {
-          toggle.classList.add("alternate");     
-        } else {
-          toggle.classList.remove("alternate");
-        }
-      }
-    }
-    // Hack to workaround the fact that safari doesn't
-    // properly recolor the scrollbar when toggling (#1455)
-    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
-      manageTransitions("body", false);
-      window.scrollTo(0, 1);
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-        manageTransitions("body", true);
-      }, 40);  
-    }
-  }
-  const isFileUrl = () => { 
-    return window.location.protocol === 'file:';
-  }
-  const hasAlternateSentinel = () => {  
-    let styleSentinel = getColorSchemeSentinel();
-    if (styleSentinel !== null) {
-      return styleSentinel === "alternate";
-    } else {
-      return false;
-    }
-  }
-  const setStyleSentinel = (alternate) => {
-    const value = alternate ? "alternate" : "default";
-    if (!isFileUrl()) {
-      window.localStorage.setItem("quarto-color-scheme", value);
-    } else {
-      localAlternateSentinel = value;
-    }
-  }
-  const getColorSchemeSentinel = () => {
-    if (!isFileUrl()) {
-      const storageValue = window.localStorage.getItem("quarto-color-scheme");
-      return storageValue != null ? storageValue : localAlternateSentinel;
-    } else {
-      return localAlternateSentinel;
-    }
-  }
-  const darkModeDefault = false;
-  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
-  // Dark / light mode switch
-  window.quartoToggleColorScheme = () => {
-    // Read the current dark / light value 
-    let toAlternate = !hasAlternateSentinel();
-    toggleColorMode(toAlternate);
-    setStyleSentinel(toAlternate);
-    toggleGiscusIfUsed(toAlternate, darkModeDefault);
-  };
-  // Ensure there is a toggle, if there isn't float one in the top right
-  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-    const a = window.document.createElement('a');
-    a.classList.add('top-right');
-    a.classList.add('quarto-color-scheme-toggle');
-    a.href = "";
-    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
-    const i = window.document.createElement("i");
-    i.classList.add('bi');
-    a.appendChild(i);
-    window.document.body.appendChild(a);
-  }
-  // Switch to dark mode if need be
-  if (hasAlternateSentinel()) {
-    toggleColorMode(true);
-  } else {
-    toggleColorMode(false);
-  }
-  const icon = "";
-  const anchorJS = new window.AnchorJS();
-  anchorJS.options = {
-    placement: 'right',
-    icon: icon
-  };
-  anchorJS.add('.anchored');
-  const isCodeAnnotation = (el) => {
-    for (const clz of el.classList) {
-      if (clz.startsWith('code-annotation-')) {                     
-        return true;
-      }
-    }
-    return false;
-  }
-  const onCopySuccess = function(e) {
-    // button target
-    const button = e.trigger;
-    // don't keep focus
-    button.blur();
-    // flash "checked"
-    button.classList.add('code-copy-button-checked');
-    var currentTitle = button.getAttribute("title");
-    button.setAttribute("title", "Copiado");
-    let tooltip;
-    if (window.bootstrap) {
-      button.setAttribute("data-bs-toggle", "tooltip");
-      button.setAttribute("data-bs-placement", "left");
-      button.setAttribute("data-bs-title", "Copiado");
-      tooltip = new bootstrap.Tooltip(button, 
-        { trigger: "manual", 
-          customClass: "code-copy-button-tooltip",
-          offset: [0, -8]});
-      tooltip.show();    
-    }
-    setTimeout(function() {
-      if (tooltip) {
-        tooltip.hide();
-        button.removeAttribute("data-bs-title");
-        button.removeAttribute("data-bs-toggle");
-        button.removeAttribute("data-bs-placement");
-      }
-      button.setAttribute("title", currentTitle);
-      button.classList.remove('code-copy-button-checked');
-    }, 1000);
-    // clear code selection
-    e.clearSelection();
-  }
-  const getTextToCopy = function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-  }
-  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
-    text: getTextToCopy
-  });
-  clipboard.on('success', onCopySuccess);
-  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
-    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
-      text: getTextToCopy,
-      container: window.document.getElementById('quarto-embedded-source-code-modal')
-    });
-    clipboardModal.on('success', onCopySuccess);
-  }
-    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-    var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
-    var isInternal = (href) => {
-        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
-    }
-    // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-    for (var i=0; i<links.length; i++) {
-      const link = links[i];
-      if (!isInternal(link.href)) {
-        // undo the damage that might have been done by quarto-nav.js in the case of
-        // links that we want to consider external
-        if (link.dataset.originalHref !== undefined) {
-          link.href = link.dataset.originalHref;
-        }
-      }
-    }
-  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
-    const config = {
-      allowHTML: true,
-      maxWidth: 500,
-      delay: 100,
-      arrow: false,
-      appendTo: function(el) {
-          return el.parentElement;
-      },
-      interactive: true,
-      interactiveBorder: 10,
-      theme: 'quarto',
-      placement: 'bottom-start',
-    };
-    if (contentFn) {
-      config.content = contentFn;
-    }
-    if (onTriggerFn) {
-      config.onTrigger = onTriggerFn;
-    }
-    if (onUntriggerFn) {
-      config.onUntrigger = onUntriggerFn;
-    }
-    window.tippy(el, config); 
-  }
-  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
-  for (var i=0; i<noterefs.length; i++) {
-    const ref = noterefs[i];
-    tippyHover(ref, function() {
-      // use id or data attribute instead here
-      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
-      try { href = new URL(href).hash; } catch {}
-      const id = href.replace(/^#\/?/, "");
-      const note = window.document.getElementById(id);
-      if (note) {
-        return note.innerHTML;
-      } else {
-        return "";
-      }
-    });
-  }
-  const xrefs = window.document.querySelectorAll('a.quarto-xref');
-  const processXRef = (id, note) => {
-    // Strip column container classes
-    const stripColumnClz = (el) => {
-      el.classList.remove("page-full", "page-columns");
-      if (el.children) {
-        for (const child of el.children) {
-          stripColumnClz(child);
-        }
-      }
-    }
-    stripColumnClz(note)
-    if (id === null || id.startsWith('sec-')) {
-      // Special case sections, only their first couple elements
-      const container = document.createElement("div");
-      if (note.children && note.children.length > 2) {
-        container.appendChild(note.children[0].cloneNode(true));
-        for (let i = 1; i < note.children.length; i++) {
-          const child = note.children[i];
-          if (child.tagName === "P" && child.innerText === "") {
-            continue;
-          } else {
-            container.appendChild(child.cloneNode(true));
-            break;
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
           }
         }
-        if (window.Quarto?.typesetMath) {
-          window.Quarto.typesetMath(container);
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
         }
-        return container.innerHTML
       } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
         if (window.Quarto?.typesetMath) {
           window.Quarto.typesetMath(note);
         }
-        return note.innerHTML;
-      }
-    } else {
-      // Remove any anchor links if they are present
-      const anchorLink = note.querySelector('a.anchorjs-link');
-      if (anchorLink) {
-        anchorLink.remove();
-      }
-      if (window.Quarto?.typesetMath) {
-        window.Quarto.typesetMath(note);
-      }
-      if (note.classList.contains("callout")) {
-        return note.outerHTML;
-      } else {
-        return note.innerHTML;
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
       }
     }
-  }
-  for (var i=0; i<xrefs.length; i++) {
-    const xref = xrefs[i];
-    tippyHover(xref, undefined, function(instance) {
-      instance.disable();
-      let url = xref.getAttribute('href');
-      let hash = undefined; 
-      if (url.startsWith('#')) {
-        hash = url;
-      } else {
-        try { hash = new URL(url).hash; } catch {}
-      }
-      if (hash) {
-        const id = hash.replace(/^#\/?/, "");
-        const note = window.document.getElementById(id);
-        if (note !== null) {
-          try {
-            const html = processXRef(id, note.cloneNode(true));
-            instance.setContent(html);
-          } finally {
-            instance.enable();
-            instance.show();
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
           }
         } else {
-          // See if we can fetch this
-          fetch(url.split('#')[0])
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
           .then(res => res.text())
           .then(html => {
             const parser = new DOMParser();
             const htmlDoc = parser.parseFromString(html, "text/html");
-            const note = htmlDoc.getElementById(id);
+            const note = htmlDoc.querySelector('main.content');
             if (note !== null) {
-              const html = processXRef(id, note);
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
               instance.setContent(html);
             } 
           }).finally(() => {
@@ -830,185 +1357,161 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             instance.show();
           });
         }
-      } else {
-        // See if we can fetch a full url (with no hash to target)
-        // This is a special case and we should probably do some content thinning / targeting
-        fetch(url)
-        .then(res => res.text())
-        .then(html => {
-          const parser = new DOMParser();
-          const htmlDoc = parser.parseFromString(html, "text/html");
-          const note = htmlDoc.querySelector('main.content');
-          if (note !== null) {
-            // This should only happen for chapter cross references
-            // (since there is no id in the URL)
-            // remove the first header
-            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
-              note.children[0].remove();
-            }
-            const html = processXRef(null, note);
-            instance.setContent(html);
-          } 
-        }).finally(() => {
-          instance.enable();
-          instance.show();
-        });
-      }
-    }, function(instance) {
-    });
-  }
-      let selectedAnnoteEl;
-      const selectorForAnnotation = ( cell, annotation) => {
-        let cellAttr = 'data-code-cell="' + cell + '"';
-        let lineAttr = 'data-code-annotation="' +  annotation + '"';
-        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
-        return selector;
-      }
-      const selectCodeLines = (annoteEl) => {
-        const doc = window.document;
-        const targetCell = annoteEl.getAttribute("data-target-cell");
-        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
-        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
-        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
-        const lineIds = lines.map((line) => {
-          return targetCell + "-" + line;
-        })
-        let top = null;
-        let height = null;
-        let parent = null;
-        if (lineIds.length > 0) {
-            //compute the position of the single el (top and bottom and make a div)
-            const el = window.document.getElementById(lineIds[0]);
-            top = el.offsetTop;
-            height = el.offsetHeight;
-            parent = el.parentElement.parentElement;
-          if (lineIds.length > 1) {
-            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-            height = bottom - top;
-          }
-          if (top !== null && height !== null && parent !== null) {
-            // cook up a div (if necessary) and position it 
-            let div = window.document.getElementById("code-annotation-line-highlight");
-            if (div === null) {
-              div = window.document.createElement("div");
-              div.setAttribute("id", "code-annotation-line-highlight");
-              div.style.position = 'absolute';
-              parent.appendChild(div);
-            }
-            div.style.top = top - 2 + "px";
-            div.style.height = height + 4 + "px";
-            div.style.left = 0;
-            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-            if (gutterDiv === null) {
-              gutterDiv = window.document.createElement("div");
-              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-              gutterDiv.style.position = 'absolute';
-              const codeCell = window.document.getElementById(targetCell);
-              const gutter = codeCell.querySelector('.code-annotation-gutter');
-              gutter.appendChild(gutterDiv);
-            }
-            gutterDiv.style.top = top - 2 + "px";
-            gutterDiv.style.height = height + 4 + "px";
-          }
-          selectedAnnoteEl = annoteEl;
-        }
-      };
-      const unselectCodeLines = () => {
-        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
-        elementsIds.forEach((elId) => {
-          const div = window.document.getElementById(elId);
-          if (div) {
-            div.remove();
-          }
-        });
-        selectedAnnoteEl = undefined;
-      };
-        // Handle positioning of the toggle
-    window.addEventListener(
-      "resize",
-      throttle(() => {
-        elRect = undefined;
-        if (selectedAnnoteEl) {
-          selectCodeLines(selectedAnnoteEl);
-        }
-      }, 10)
-    );
-    function throttle(fn, ms) {
-    let throttle = false;
-    let timer;
-      return (...args) => {
-        if(!throttle) { // first call gets through
-            fn.apply(this, args);
-            throttle = true;
-        } else { // all the others get throttled
-            if(timer) clearTimeout(timer); // cancel #2
-            timer = setTimeout(() => {
-              fn.apply(this, args);
-              timer = throttle = false;
-            }, ms);
-        }
-      };
-    }
-      // Attach click handler to the DT
-      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
-      for (const annoteDlNode of annoteDls) {
-        annoteDlNode.addEventListener('click', (event) => {
-          const clickedEl = event.target;
-          if (clickedEl !== selectedAnnoteEl) {
-            unselectCodeLines();
-            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
-            if (activeEl) {
-              activeEl.classList.remove('code-annotation-active');
-            }
-            selectCodeLines(clickedEl);
-            clickedEl.classList.add('code-annotation-active');
-          } else {
-            // Unselect the line
-            unselectCodeLines();
-            clickedEl.classList.remove('code-annotation-active');
-          }
-        });
-      }
-  const findCites = (el) => {
-    const parentEl = el.parentElement;
-    if (parentEl) {
-      const cites = parentEl.dataset.cites;
-      if (cites) {
-        return {
-          el,
-          cites: cites.split(' ')
-        };
-      } else {
-        return findCites(el.parentElement)
-      }
-    } else {
-      return undefined;
-    }
-  };
-  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-  for (var i=0; i<bibliorefs.length; i++) {
-    const ref = bibliorefs[i];
-    const citeInfo = findCites(ref);
-    if (citeInfo) {
-      tippyHover(citeInfo.el, function() {
-        var popup = window.document.createElement('div');
-        citeInfo.cites.forEach(function(cite) {
-          var citeDiv = window.document.createElement('div');
-          citeDiv.classList.add('hanging-indent');
-          citeDiv.classList.add('csl-entry');
-          var biblioDiv = window.document.getElementById('ref-' + cite);
-          if (biblioDiv) {
-            citeDiv.innerHTML = biblioDiv.innerHTML;
-          }
-          popup.appendChild(citeDiv);
-        });
-        return popup.innerHTML;
+      }, function(instance) {
       });
     }
-  }
-});
-</script>
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
 </div> <!-- /content -->
 
 
