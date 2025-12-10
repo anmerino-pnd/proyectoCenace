@@ -44,11 +44,11 @@ class AddTicketRequest(BaseModel):
 class UpdateTicketMetadataRequest(BaseModel):
     new_metadata: Dict[str, Any]
 
-# NUEVO: Modelo Pydantic para la creación de nueva conversación con título opcional
+# NUEVO: Modelo Pydantic para la creación de nueva conversación con título opcional y contexto
 class CreateConversationRequest(BaseModel):
     user_id: str
-    title: Optional[str] = None # Nuevo campo para el título de la conversación
-
+    title: Optional[str] = None 
+    ticket_context: Optional[Dict[str, str]] = None # Campo nuevo para recibir {title, description} del ticket
 
 async def async_chat_stream(request: QueryRequest) -> StreamingResponse:
     """Función asíncrona para manejar el streaming del chat."""
@@ -175,7 +175,6 @@ def delete_solution_by_reference(reference_ids: List[str]):
     deleted_count = 0
     for ref_id in reference_ids:
         rag.delete_from_vectorstore(ref_id)
-        # También elimina del registro de processed_files_registro si existe
         rag.processed_files_collection.delete_one({"reference": ref_id, "collection": "soluciones"})
         deleted_count += 1
     rag.refresh_processed_data() # Refresh cache
@@ -186,11 +185,16 @@ def get_user_conversations(user_id: str) -> List[Dict[str, Any]]:
     """Obtiene una lista de las conversaciones de un usuario."""
     return rag.assistant.get_user_conversations(user_id)
 
-def create_new_conversation(request: CreateConversationRequest) -> Dict[str, str]: # Modified signature
-    """Crea una nueva conversación y devuelve su ID, con un título opcional."""
+def create_new_conversation(request: CreateConversationRequest) -> Dict[str, str]: 
+    """Crea una nueva conversación y devuelve su ID, con un título opcional y contexto inicial si existe."""
     new_conversation_id = str(ObjectId())
-    # Pass the title to save_history
-    rag.assistant.save_history(request.user_id, new_conversation_id, [], conversation_title=request.title)
+    
+    rag.assistant.create_conversation(
+        user_id=request.user_id,
+        conversation_id=new_conversation_id,
+        title=request.title,
+        ticket_context=request.ticket_context # Pasamos el contexto del ticket
+    )
     return {"conversation_id": new_conversation_id}
 
 def delete_conversation(user_id: str, conversation_id: str): # New function

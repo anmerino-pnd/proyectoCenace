@@ -8,16 +8,19 @@ class Assistant(ABC):
     def answer(self, q : Question, cs : Chunks) -> Tuple[Text, CallMetadata]:
         pass
 
-    def answer_system(self) -> str:
-        return (
+    def answer_system(self, history) -> str:
+        return Template(
             """
             Eres un asistente técnico especializado. 
             Siempre contesta de manera amable, clara y concisa.
 
             Tu objetivo es analizar la pregunta del usuario y responderla de manera precisa.
-            Si se te pregunta por un problema o error, analiza, explica el problema y proporciona una solución.          
+            Si se te pregunta por un problema o error, analiza, explica el problema y proporciona una solución.       
+
+            Ten en cuenta el historial del usuario:
+            ${history}   
             """
-        )
+        ).substitute(history=history)
 
     def answer_user(self, q : Question, cs : Chunks) -> str:
         ref_tpl = Template(

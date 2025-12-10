@@ -169,30 +169,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /**
-     * (NUEVA FUNCIÓN)
-     * Comprueba si la conversación actual está vinculada a un ticket
-     * y actualiza el botón "Marcar como Resuelto".
+     * (CORREGIDA)
+     * Comprueba si la conversación actual está vinculada a un ticket.
+     * Ignora el 404 (lo trata como "no es ticket" en lugar de error).
      * @param {string} convId - El ID de la conversación.
      */
     async function updateTicketStatusForConversation(convId) {
-        if (!solveTicketBtn) return; // Si el botón no existe, salir
+        if (!solveTicketBtn) return; 
 
         // Ocultar el botón por defecto y resetear la referencia
         solveTicketBtn.classList.add('hidden');
         currentTicketReference = null; 
 
         try {
-            // Este es el NUEVO endpoint que creaste en el backend
             const response = await fetch(`${window.API_ENDPOINT}/get_ticket_by_conversation/${convId}`);
 
-            if (!response.ok) {
-                if (response.status !== 404) {
-                    // Si no es 404, fue un error real
-                    console.error("Error al verificar el estado del ticket:", await response.text());
-                }
-                // Si es 404, simplemente no es una convo de ticket (normal)
-                return; // Salir, el botón permanece oculto
+            // --- CORRECCIÓN AQUÍ ---
+            if (response.status === 404) {
+                // Esto es NORMAL. Significa que es una conversación de chat, no de ticket.
+                // No lanzamos error, simplemente salimos.
+                return;
             }
+
+            if (!response.ok) {
+                // Cualquier otro error (500, 403) sí lo reportamos
+                console.error("Error al verificar el estado del ticket:", await response.text());
+                return;
+            }
+            // -----------------------
 
             const ticketStatus = await response.json();
 
@@ -216,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Error en updateTicketStatusForConversation:", error);
-            solveTicketBtn.classList.add('hidden'); // Ocultar en caso de error
+            solveTicketBtn.classList.add('hidden'); 
         }
     }
 
@@ -386,7 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentConversationId = convId; // Set the current conversation ID
         window.currentConversationId = currentConversationId; // Update global
-        updateTicketStatusForConversation(convId);
+        
+        // Esperamos a que la verificación del ticket termine, pero NO detenemos
+        // la carga del historial si la verificación falla o da 404.
+        await updateTicketStatusForConversation(convId);
+        
         // Highlight the active conversation button
         document.querySelectorAll('.conversation-item-button').forEach(btn => {
             if (btn.dataset.conversationId === convId) {
@@ -1187,7 +1195,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.changeTab = changeTab; // Hacer changeTab accesible globalmente
     window.showCustomAlert = showCustomAlert; // Make custom alert globally accessible
-
+    // IMPORTANTE: Exponer loadConversations para que tickets.js pueda actualizar la UI
+    window.loadConversations = loadConversations;
 
     // Existing event listeners
     if (sendBtn && userQueryTextarea) {

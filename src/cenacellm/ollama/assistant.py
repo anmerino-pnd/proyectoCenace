@@ -1,11 +1,12 @@
 import os
 import json
 import time
-from datetime import datetime
-from typing import Generator, Dict, Any, List, Tuple, Optional
+import pymongo
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from ollama import GenerateResponse
+from datetime import datetime, timezone
+from typing import Generator, Dict, Any, List, Tuple, Optional
 
 from cenacellm.settings.clients import ollama as api, mongo_uri, db_name
 from cenacellm.tools.assistant import Assistant
@@ -24,61 +25,215 @@ class OllamaAssistant(Assistant):
 
         self.mongo_uri = mongo_uri
         self.db_name = db_name
-        self.collection_name = "conversations" # Changed to conversations
-        self.collection_backup_name = "user_histories_backup" # Kept for backup if needed
+
+        self.LLM_CONTEXT_WINDOW = 30
 
         self.client = MongoClient(self.mongo_uri)
         self.db = self.client[self.db_name]
-        self.collection = self.db[self.collection_name]
-        self.collection_backup = self.db[self.collection_backup_name]
+        self.conversations = self.db["conversations"] # Aquí se almacenan las conversaciones 
+        self.messages = self.db["messages"] # Cada documento es un par de Pregunta-Respuesta
 
         # Create indexes for efficient querying
-        self.collection.create_index([("user_id", 1), ("conversation_id", 1)])
-        self.collection.create_index([("user_id", 1), ("messages.id", 1)]) # For updating specific messages
+        self.messages.create_index([
+            ("user_id", pymongo.ASCENDING), 
+            ("conversation_id", pymongo.ASCENDING), 
+            ("timestamp", pymongo.ASCENDING)
+        ])
 
+        self.conversations.create_index([
+            ("user_id", pymongo.ASCENDING),
+            ("last_updated", pymongo.DESCENDING)
+        ])
 
-    def load_history(self, user_id: str, conversation_id: str) -> list:
-        """Carga el historial de chat de una conversación específica para un usuario."""
-        doc = self.collection.find_one({"user_id": user_id, "conversation_id": conversation_id})
-        return doc["messages"] if doc and "messages" in doc else []
-
-    def save_history(self, user_id: str, conversation_id: str, history: list, conversation_title: Optional[str] = None):
+    def _add_message(self, 
+                     conversation_id: str, 
+                     bot_message_id, 
+                     user_id: str, 
+                     question: str, 
+                     full_answer: str,
+                     metadata: Dict = None) -> str:
         """
-        Guarda el historial de chat de una conversación específica para un usuario.
-        Puede opcionalmente guardar o actualizar el título de la conversación.
+        Método interno para guardar un mensaje único y actualizar la conversación padre.
+        Retorna el ID del mensaje insertado (string).
         """
-        update_fields = {"messages": history, "last_updated": datetime.now()}
-        if conversation_title:
-            update_fields["title"] = conversation_title # Add or update title
+        message_doc = {
+            "conversation_id": conversation_id,
+            "bot_message_id": bot_message_id,
+            "user_id": user_id,
+            "question": question,
+            "full_answer": full_answer,
+            "metadata": metadata or {},
+            "timestamp": metadata.get("timestamp") if metadata else datetime.now(timezone.utc).isoformat()
+        }
         
-        self.collection.update_one(
-            {"user_id": user_id, "conversation_id": conversation_id},
-            {"$set": update_fields},
+        result = self.messages.insert_one(message_doc)
+        
+        self.conversations.update_one(
+            {"conversation_id": conversation_id, "user_id": user_id},
+            {"$set": {"last_updated": datetime.now(timezone.utc)}}
+        )
+        
+        return str(result.inserted_id)
+    
+    def _conversation_history(self,
+                                conversation_id,
+                                user_id,
+                                role,
+                                content):
+            if content:
+                short_msg = {
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+                self.conversations.update_one(
+                    {"conversation_id": conversation_id,
+                    "user_id": user_id},
+                    {
+                        "$push":{
+                            "history": {
+                                "$each": [short_msg],
+                                "$sort": {"timestamp": 1},
+                                "$slice": -self.LLM_CONTEXT_WINDOW  
+                            }
+                        },
+                        "$set": {"last_updated": datetime.now(timezone.utc)}
+                    }
+                )
+            else:
+                self.conversations.update_one(
+                    {"conversation_id": conversation_id,
+                    "user_id": user_id},
+                    {"$set": {"last_updated": datetime.now(timezone.utc)}}
+                )
+
+    def create_conversation(self, user_id: str, conversation_id: str, title: str = None, ticket_context: Dict[str, str] = None) -> Dict[str, Any]:
+        """
+        Crea una nueva conversación en la base de datos.
+        Si se proporciona 'ticket_context', inserta un mensaje inicial automático.
+        """
+        # MODIFICACIÓN CLAVE: Si title es None, guardamos None en la DB.
+        # Esto permite que get_user_conversations genere un título dinámico basado en el historial después.
+        new_conversation = {
+            "conversation_id": conversation_id,
+            "user_id": user_id,
+            "title": title, # Antes: title or "Nueva Conversación". Ahora dejamos que sea None si no hay título.
+            "history": [],
+            "created_at": datetime.now(timezone.utc),
+            "last_updated": datetime.now(timezone.utc)
+        }
+        
+        # Usar upsert para evitar duplicados
+        self.conversations.update_one(
+            {"conversation_id": conversation_id, "user_id": user_id},
+            {"$setOnInsert": new_conversation},
             upsert=True
         )
 
-    def save_backup(self, user_id: str, history_chunk: list):
-        """Guarda una copia de seguridad de un chunk del historial de chat."""
-        # This backup mechanism needs to be re-evaluated for conversations
-        # For now, it just appends the chunk to a general backup history for the user
-        self.collection_backup.update_one(
-            {"user_id": user_id},
-            {"$push": {"history": {"$each": history_chunk}}},
-            upsert=True
+        # Si hay contexto de ticket, inyectamos el primer "mensaje" automáticamente
+        if ticket_context:
+            ticket_title = ticket_context.get("title", "Sin título")
+            ticket_desc = ticket_context.get("description", "Sin descripción")
+            
+            # Formateamos bonito el mensaje del usuario (contexto)
+            formatted_question = (
+                f"**Contexto del Ticket**\n\n"
+                f"**Título:** {ticket_title}\n"
+                f"**Descripción:** {ticket_desc}\n\n"
+                f"Por favor, analiza este problema y ayúdame a solucionarlo."
+            )
+
+            # Respuesta automática del sistema para confirmar recepción
+            initial_answer = (
+                f"Entendido. He recibido la información del ticket **{ticket_title}**.\n"
+                "Estoy analizando el contexto. ¿En qué puedo ayudarte específicamente con este problema?"
+            )
+            
+            # ID ficticio para este mensaje inicial
+            initial_bot_id = str(ObjectId())
+
+            # 1. Guardar en la colección de mensajes (History visual persistente)
+            self._add_message(
+                conversation_id=conversation_id,
+                bot_message_id=initial_bot_id,
+                user_id=user_id,
+                question=formatted_question,
+                full_answer=initial_answer,
+                metadata={"disable": False, "source": "ticket_initialization"}
+            )
+
+            # 2. Guardar en la memoria a corto plazo del LLM (conversations.history)
+            self._conversation_history(conversation_id, user_id, "human", formatted_question)
+            self._conversation_history(conversation_id, user_id, "assistant", initial_answer)
+        
+        return new_conversation
+
+    def load_history(self, user_id: str, conversation_id: str) -> List[Dict]:
+        """
+        Recupera TODO el historial para mostrarlo en el Frontend.
+        Transforma la estructura de pares (pregunta-respuesta) de la DB
+        a una lista plana de mensajes {role, content} que el JS puede renderizar.
+        """
+        cursor = self.messages.find(
+            {"user_id": user_id, "conversation_id": conversation_id}
+        ).sort("timestamp", pymongo.ASCENDING)
+        
+        history = []
+        for doc in cursor:
+            # Normalizar timestamp
+            timestamp = doc.get('timestamp')
+            if isinstance(timestamp, datetime):
+                timestamp = timestamp.isoformat()
+
+            # 1. Procesar el mensaje del usuario
+            # Usamos "user" en lugar de "human" para que app.js lo pinte a la derecha
+            if "question" in doc and doc["question"]:
+                history.append({
+                    "role": "user", 
+                    "content": doc["question"],
+                    "timestamp": timestamp
+                })
+            
+            # 2. Procesar la respuesta del asistente
+            if "full_answer" in doc and doc["full_answer"]:
+                # Es vital pasar el 'id' correcto para que funcionen los likes/referencias
+                bot_msg_id = doc.get("bot_message_id", str(doc['_id']))
+                
+                history.append({
+                    "role": "assistant",
+                    "content": doc["full_answer"],
+                    "id": bot_msg_id,
+                    "metadata": doc.get("metadata", {}),
+                    "timestamp": timestamp
+                })
+            
+        return history
+
+    def _get_llm_context(self, user_id: str, conversation_id: str) -> List[Dict]:
+        """
+        Recupera solo los últimos N mensajes para dárselos al LLM.
+        Esto es lo que hace el sistema eficiente.
+        """
+        # Obtenemos los últimos N (orden descendente por tiempo para obtener los recientes)
+        conversation = self.conversations.find_one(
+            {"user_id": user_id, "conversation_id": conversation_id},
+            {"history": 1, "_id": 0}
         )
+        
+        if conversation and "history" in conversation:
+            return conversation["history"][-self.LLM_CONTEXT_WINDOW:]
+        
+        return []
 
     def clear_conversation_history(self, user_id: str, conversation_id: str):
         """Borra el historial de chat de una conversación específica SIN eliminar el documento de la conversación."""
-        self.collection.update_one(
+        self.conversations.update_one(
             {"user_id": user_id, "conversation_id": conversation_id},
-            {"$set": {"messages": []}}
+            {"$set": {"history": [], "last_updated": datetime.now(timezone.utc)}}
         )
 
     def delete_conversation(self, user_id: str, conversation_id: str):
-        """Elimina una conversación completa de la base de datos."""
-        self.collection.delete_one({"user_id": user_id, "conversation_id": conversation_id})
-
-
+        self.conversations.delete_one({"user_id": user_id, "conversation_id": conversation_id})
 
     def make_metadata(self, response: GenerateResponse, duration: float, references) -> CallMetadata:
         """Crea los metadatos para una respuesta del modelo."""
@@ -92,86 +247,98 @@ class OllamaAssistant(Assistant):
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             references=references,
-            # Añade el nuevo campo 'disable' a los metadatos, por defecto en False
             disable=False
         )
 
     def answer(self, question: Question, chunks: Chunks, user_id: str, conversation_id: str) -> Tuple[Generator[str, None, None], str, Dict[str, Any]]: # Updated return type hint
         """Genera una respuesta a una pregunta del usuario."""
         user_msg = self.answer_user(question, chunks)
-        system = self.answer_system()
+        context_messages = self._get_llm_context(user_id, conversation_id)
 
-        history: list = self.load_history(user_id, conversation_id)
-        window = history[-self.memory_window_size:]
+        system = self.answer_system(context_messages)
 
-        if window:
-            past = "\n".join([f"{m['role']}: {m['content']}" for m in window])
-            prompt = past + "\nuser: " + user_msg
-        else:
-            prompt = user_msg
-
-        response_tokens = [] # To accumulate tokens for final response
+        full_answer = ""
         bot_message_id = str(ObjectId()) # Generate ID early
         final_metadata = {} # To store final metadata
 
         def token_generator_func(): # Define a nested generator function
-            nonlocal response_tokens, final_metadata # Allow modification of outer scope variables
+            nonlocal full_answer, final_metadata # Allow modification of outer scope variables
             try:
                 start_time = time.perf_counter()
+                last_chunk = None
+
                 for chunk in api.generate(
                     model=self.model,
                     system=system,
                     options={"temperature": 0},
-                    prompt=prompt,
+                    prompt=user_msg,
                     stream=True
                 ):
                     if hasattr(chunk, "response"):
                         token = chunk.response
-                        response_tokens.append(token) # Accumulate tokens
+                        full_answer += token
                         yield token
+                    last_chunk = chunk
+                
                 end_time = time.perf_counter()
-
                 duration = end_time - start_time
-                # Use the last chunk for metadata, as it contains final counts
-                final_metadata = self.make_metadata(chunk, duration, chunks).model_dump()
 
-                # Store both user and bot messages in history
-                history.append({"role": "user", "content": question, "id": str(ObjectId())}) # Add ID to user messages
-                history.append({"role": "assistant", "content": "".join(response_tokens), "metadata": final_metadata, "id": bot_message_id})
+                # CORRECCIÓN CRÍTICA:
+                # Usamos last_chunk para asegurarnos de tener la última info del stream.
+                # Usamos .update() para mutar el diccionario original que tiene rag.py
+                if last_chunk:
+                    metadata_values = self.make_metadata(last_chunk, duration, chunks).model_dump()
+                    final_metadata.update(metadata_values) # <--- AQUÍ: Mutar, no reasignar.
 
-                self.save_history(user_id, conversation_id, history)
-                self.save_backup(user_id, [history[-2], history[-1]]) # Re-evaluate backup strategy
+                    print(f"DEBUG MONGO: Guardando mensaje {bot_message_id} con metadata keys: {list(final_metadata.keys())}")
+
+                    if full_answer.strip():  
+                        self._add_message(
+                            conversation_id,
+                            bot_message_id,
+                            user_id,
+                            question,
+                            full_answer,
+                            final_metadata
+                        )
+                        self._conversation_history(
+                            conversation_id,
+                            user_id,
+                            role="human",
+                            content=question
+                        )
+                        self._conversation_history(
+                            conversation_id,
+                            user_id,
+                            role="assistant",
+                            content=full_answer
+                        )
+                else:
+                    print("DEBUG MONGO: No se recibieron chunks, no se guardó nada.")
 
             except Exception as e:
+                print(f"DEBUG MONGO ERROR: {e}")
                 raise LLMError("ollama assistant", e)
 
         return token_generator_func(), bot_message_id, final_metadata
 
     def update_message_metadata(self, user_id: str, message_id: str, new_metadata: Dict[str, Any]) -> bool:
         """
-        Actualiza los metadatos de un mensaje específico en el historial de un usuario,
-        buscando a través de todas las conversaciones.
+        Actualiza los metadatos de un mensaje específico en el historial de un usuario.
+        CORREGIDO: Usa notación de puntos (metadata.field) para NO sobrescribir todo el objeto metadata.
         """
-        # Find the conversation that contains the message
-        conversation = self.collection.find_one(
-            {"user_id": user_id, "messages.id": message_id}
+        # Transformamos {'disable': True} en {'metadata.disable': True}
+        update_fields = {f"metadata.{key}": value for key, value in new_metadata.items()}
+        
+        if not update_fields:
+            return False
+
+        result = self.messages.update_one(
+            {"user_id": user_id, "bot_message_id": message_id},
+            {"$set": update_fields}  # Ahora usamos el diccionario con notación de puntos
         )
         
-        if not conversation:
-            return False # Message not found
-
-        updated = False
-        for i, message in enumerate(conversation["messages"]):
-            if message.get("role") == "assistant" and message.get("id") == message_id:
-                current_metadata = message.get("metadata", {})
-                current_metadata.update(new_metadata)
-                conversation["messages"][i]["metadata"] = current_metadata
-                updated = True
-                break
-        
-        if updated:
-            self.save_history(user_id, conversation["conversation_id"], conversation["messages"])
-        return updated
+        return result.modified_count > 0
 
     def get_liked_solutions(self, user_id: str) -> List[Dict[str, Any]]:
         """
@@ -180,27 +347,30 @@ class OllamaAssistant(Assistant):
         También devuelve la pregunta de usuario precedente.
         """
         liked_solutions = []
-        # Iterar sobre todas las conversaciones del usuario
-        conversations = self.collection.find({"user_id": user_id}).sort("last_updated", -1)
+        messages = self.messages.find(
+            {"user_id": user_id, "metadata.disable": True}
+        ).sort("timestamp", -1)
 
-        for conversation in conversations:
-            history = conversation.get("messages", [])
-            for i, message in enumerate(history):
-                if message.get("role") == "assistant" and message.get("metadata", {}).get("disable") is True:
-                    # Encuentra la pregunta de usuario precedente en la misma conversación
-                    user_question = None
-                    for j in range(i - 1, -1, -1):
-                        if history[j].get("role") == "user":
-                            user_question = history[j].get("content")
-                            break
-                    liked_solutions.append({
-                        "question": user_question,
-                        "answer": message.get("content"),
-                        "metadata": message.get("metadata"),
-                        "id": message.get("id"),
-                        "conversation_id": conversation.get("conversation_id") # Add conversation_id
-                    })
+        for message in messages:
+            liked_solutions.append({
+                "question": message.get('question'),
+                "answer": message.get('full_answer'),
+                "metadata": message.get("metadata"),
+                "id": message.get("bot_message_id"),
+                "conversation_id": message.get("conversation_id") 
+            })
         return liked_solutions
+
+    def unmark_solution(self, message_id: str) -> bool:
+        """
+        NUEVA FUNCIÓN: Elimina el estado 'disable: True' (like) de un mensaje.
+        Esto es crucial para que desaparezca de la lista de Soluciones después de borrarlo del VectorStore.
+        """
+        result = self.messages.update_one(
+            {"bot_message_id": message_id},
+            {"$set": {"metadata.disable": False}}
+        )
+        return result.modified_count > 0
 
     def get_user_conversations(self, user_id: str) -> List[Dict[str, Any]]:
         """
@@ -209,42 +379,32 @@ class OllamaAssistant(Assistant):
         Prioriza el título guardado explícitamente.
         """
         conversations_data = []
-        conversations_cursor = self.collection.find(
-            {"user_id": user_id},
-            {"conversation_id": 1, "messages": {"$slice": 1}, "last_updated": 1, "title": 1} # Get only the first message and the title
-        ).sort("last_updated", -1) # Sort by last updated, newest first
+        conversations_cursor = self.conversations.find(
+            {"user_id": user_id}
+        ).sort("last_updated", -1)
 
         for conv in conversations_cursor:
             conversation_id = conv.get("conversation_id")
-            # Prioritize the explicitly stored title
             title = conv.get("title")
-            if not title: # If no explicit title, fall back to first user message
-                if conv.get("messages") and len(conv["messages"]) > 0:
-                    first_message = conv["messages"][0]
-                    if first_message.get("role") == "user" and first_message.get("content"):
-                        # Use the first 5 words of the first user message as title
-                        title = " ".join(first_message["content"].split()[:5]) + "..." if len(first_message["content"].split()) > 5 else first_message["content"]
+            
+            # Si NO hay título O el título es el genérico "Nueva Conversación", intentamos generar uno mejor
+            if not title or title == "Nueva Conversación": 
+                if conv.get("history") and len(conv["history"]) > 0:
+                    first_message = conv["history"][0]
+                    if first_message.get("role") == "human" and first_message.get("content"):
+                        # Usar las primeras 5 palabras como título
+                        # Limpiamos el texto de posibles prefijos como "**Contexto del Ticket**" si es muy largo
+                        content = first_message["content"]
+                        title = " ".join(content.split()[:5]) + "..."
+                        
+                        # Opcional: Actualizar el título en la base de datos para no recalcularlo siempre
+                        # self.conversations.update_one({"_id": conv["_id"]}, {"$set": {"title": title}})
                 else:
-                    title = "Nueva Conversación" # Default if no title and no messages
+                    title = "Nueva Conversación"
 
             conversations_data.append({
                 "conversation_id": conversation_id,
                 "title": title,
-                "last_updated": conv.get("last_updated")
+                "last_updated": conv.get("last_updated").isoformat() if conv.get("last_updated") else None
             })
         return conversations_data
-
-    def has_liked_solution_in_conversation(self, conversation_id: str) -> bool:
-        """
-        Checks if a given conversation_id contains any bot messages marked as 'liked' (disable: True).
-        """
-        doc = self.collection.find_one(
-            {"conversation_id": conversation_id, "messages.metadata.disable": True},
-            {"messages": {"$elemMatch": {"metadata.disable": True, "role": "assistant"}}} # Project only the first matching message
-        )
-        # Check if a document was found and if any message within it has disable: True
-        if doc and "messages" in doc and len(doc["messages"]) > 0:
-            for message in doc["messages"]:
-                if message.get("role") == "assistant" and message.get("metadata", {}).get("disable") is True:
-                    return True
-        return False

@@ -324,12 +324,18 @@ class RAG:
             pass
         return solutions_added_count
 
-    def delete_from_vectorstore(self, reference_id):
+    def delete_from_vectorstore(self, reference_id: str):
         """
-        Elimina un documento del vectorstore basado en su referencia.
+        Elimina un documento o solución del vectorstore basado en su referencia.
+        TAMBIÉN asegura que si es una solución, se desmarque en la base de datos de mensajes.
         """
+        # 1. Eliminar del VectorStore (FAISS + Pickle)
         self.vectorstore.delete_by_reference(reference_id)
-        # No necesitas self.processed_files aquí, ya que la colección se actualiza en chat.py
+        
+        # 2. IMPORTANTE: Desmarcar en la colección de mensajes para que no reaparezca en la lista de Soluciones
+        self.assistant.unmark_solution(reference_id)
+        
+
     
     def refresh_processed_data(self):
         """Refresca la caché en memoria de processed_files y processed_solutions_ids desde la DB."""

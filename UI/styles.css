@@ -1071,7 +1071,7 @@ textarea {
     cursor: pointer;
     position: relative;
     flex-shrink: 0; /* Prevent it from shrinking */
-    margin: 15px 0 0 15px; /* Adjusted margin for consistent positioning */
+    margin: 10px 10px 10px 10px; /* Adjusted margin for consistent positioning */
     transition: background-color 0.2s, border-color 0.2s;
 }
 

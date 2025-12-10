@@ -209,16 +209,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let conversationIdToUse = existingSolucionId;
-        const chatbox = document.getElementById('messages-container');
 
         if (!conversationIdToUse) {
-            // No existing conversation for this ticket, create a new one
+            // No existing conversation for this ticket, create a new one WITH CONTEXT
             try {
                 showStatus(ticketStatusDiv, '<i class="fas fa-spinner fa-spin"></i> Creando nueva conversación...', '');
-                const newConversationResponse = await fetch(`${window.API_ENDPOINT}/new_conversation`, { // Changed endpoint
+                
+                const newConversationResponse = await fetch(`${window.API_ENDPOINT}/new_conversation`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: window.userName, title: ticketTitle }) // Pass user_id and title
+                    body: JSON.stringify({ 
+                        user_id: window.userName, 
+                        title: ticketTitle,
+                        // AQUÍ enviamos el contexto del ticket limpiamente al backend
+                        ticket_context: {
+                            title: ticketTitle,
+                            description: ticketDescription
+                        }
+                    }) 
                 });
                 const newConversationResult = await newConversationResponse.json();
 
@@ -244,37 +252,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(`Ticket ${ticketReference} vinculado a la nueva conversación ${conversationIdToUse}.`);
                 showStatus(ticketStatusDiv, 'Ticket vinculado a la conversación.', 'success');
 
-                // Now, send the initial context message to the chatbot
+                // Al cargar el historial, el mensaje de contexto YA existirá porque el backend lo creó
                 if (typeof window.loadHistory === 'function' && typeof window.changeTab === 'function') {
-                    await window.loadHistory(conversationIdToUse); // Load the new conversation
-                    window.changeTab('chat'); // Switch to chat tab
-                    showStatus(ticketStatusDiv, '', ''); // Clear status message after successful action
-
-                    const userQueryTextarea = document.getElementById('userQuery');
-                    const sendButton = document.getElementById('sendBtn');
-
-                    if (userQueryTextarea && sendButton) {
-                        const contextMessage = `Solo quiero que leas la información y entiendas el contexto de lo que está sucediendo, comprender el problema y entender lo que pasa.
-Contexto del ticket:
-"""
-Título: ${ticketTitle}
-Descripción: ${ticketDescription}
-"""
-`;
-                        userQueryTextarea.value = contextMessage;
-
-                        const event = new Event('input', { bubbles: true });
-                        userQueryTextarea.dispatchEvent(event);
-
-                        sendButton.click(); // Simulate a click on the send button
-
-                        if (chatbox) {
-                            chatbox.scrollTop = chatbox.scrollHeight;
-                        }
-                    } else {
-                        console.error("Elementos del chat no encontrados para pasar el ticket.");
-                        window.showCustomAlert("No se pudo pasar el ticket al chat. Recarga la página y vuelve a intentarlo.");
-                    }
+                    // FIX: Aseguramos recargar la lista de conversaciones para que aparezca la nueva
+                    if (typeof window.loadConversations === 'function') { await window.loadConversations(); }
+                    
+                    // FORZAMOS EL CAMBIO DE TAB PRIMERO para que el usuario vea que algo pasó
+                    window.changeTab('chat'); 
+                    
+                    // Luego cargamos el historial
+                    await window.loadHistory(conversationIdToUse); 
+                    
+                    showStatus(ticketStatusDiv, '', ''); // Clear status message
                 } else {
                     console.error("Funciones globales (loadHistory, changeTab) no disponibles.");
                     window.showCustomAlert("Funciones internas del chat no disponibles. Recarga la página.");
@@ -289,14 +278,15 @@ Descripción: ${ticketDescription}
             // Conversation already exists, just navigate
             showStatus(ticketStatusDiv, '<i class="fas fa-info-circle"></i> Cargando conversación existente...', '');
             if (typeof window.loadHistory === 'function' && typeof window.changeTab === 'function') {
-                await window.loadHistory(conversationIdToUse); // Load the existing conversation
-                window.changeTab('chat'); // Switch to chat tab
+                // FIX: También aquí aseguramos que la lista esté actualizada
+                if (typeof window.loadConversations === 'function') { await window.loadConversations(); }
+                
+                // FORZAMOS EL CAMBIO DE TAB PRIMERO
+                window.changeTab('chat'); 
+                
+                await window.loadHistory(conversationIdToUse); 
+                
                 showStatus(ticketStatusDiv, '', ''); // Clear status message
-
-                // Do NOT send another message if it's an existing conversation
-                if (chatbox) {
-                    chatbox.scrollTop = chatbox.scrollHeight;
-                }
             } else {
                 console.error("Funciones globales (loadHistory, changeTab) no disponibles.");
                 window.showCustomAlert("Funciones internas del chat no disponibles. Recarga la página.");
