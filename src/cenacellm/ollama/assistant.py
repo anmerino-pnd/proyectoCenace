@@ -292,6 +292,8 @@ class OllamaAssistant(Assistant):
 
                     print(f"DEBUG MONGO: Guardando mensaje {bot_message_id} con metadata keys: {list(final_metadata.keys())}")
 
+                    print(f"Duración: ", duration)
+
                     if full_answer.strip():  
                         self._add_message(
                             conversation_id,
